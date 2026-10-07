@@ -1,4 +1,12 @@
-"""Extract full MoP details for paper update."""
+"""Full MoP detail dump, for inspection.
+
+Not a source for anything in the paper: no table or number in the manuscript
+comes from this script. It sets its own hyperparameters (``D = 100``, so
+``lambda_u = lambda_sigma = n/100``, against the paper's ``lambda_u = 1e-6``
+and ``lambda_sigma = n/50``) and the credibility figures it prints sample an
+approximate posterior. Use ``step7_analyze.py`` for the paper's fits and
+``_gen_tables.py`` for its tables.
+"""
 import sys, json, math
 import numpy as np
 from scipy.special import logit
@@ -100,7 +108,8 @@ def run_mop_full(pairs, label=""):
         modal_rank = tuple(np.argsort(-mp_vec))
         count = 0
         for _ in range(n_samples):
-            s2_sample = 1 / np.random.gamma((ls + len(idx_p) + 2)/2,
+            # v_p = (lambda_sigma + n_p + A - 3)/2, with A = nA + 1 alternatives
+            s2_sample = 1 / np.random.gamma((ls + len(idx_p) + nA - 2)/2,
                                              1/(ls * s2_bar / 2 + 1e-10) if ls * s2_bar > 0 else 1)
             # Actually proper sampling requires q_p which is complex. Approximate.
             u_sample = np.random.multivariate_normal(mp_vec, sigma2_arr[p] * Sp)

@@ -104,7 +104,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     惩罚对数似然函数 (Eq.10 的对数)，与 manuscript 完全一致
 
     先验 (Eq.5-7):
-      1/σ²_p ~ Gamma((λ_σ+2)/2, λ_σ s̄²/2)
+      σ²_p ~ InvGamma((λ_σ-2)/2, λ_σ s̄²/2)
       u_p | σ²_p ~ N(ū, λ_u⁻¹ σ²_p I)
       π ~ Dirichlet(λ_π, ..., λ_π)
 
@@ -144,7 +144,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
         PLL -= (lambda_u[p] / (2.0 * sp2)) * np.sum(diff ** 2)
         PLL -= (nA_minus_1 / 2.0) * np.log(2.0 * np.pi * sp2 / lambda_u[p])
 
-    # 2. σ² 的先验: 1/σ²_p ~ Gamma((λ_{σ,p}-2)/2, λ_{σ,p} s̄²/2) — Eq.(5)
+    # 2. σ² 的先验: σ²_p ~ InvGamma((λ_{σ,p}-2)/2, λ_{σ,p} s̄²/2) — Eq.(5)
     for p, sp2 in enumerate(sigma2):
         if sp2 < 1e-300:
             continue
@@ -210,7 +210,7 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         link_functions: 链接函数列表
         nP: 优先级组件数量
         lambda_u: u的L2正则系数
-        lambda_sigma: sigma2的Gamma先验系数
+        lambda_sigma: sigma2 的 inverse-Gamma 先验系数
         lambda_pi: mp的Dirichlet先验系数
         s2: 先验方差模式
         u_bar: u的先验均值向量 (nA-1,)，默认为零向量
@@ -323,7 +323,7 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 #                     prior, whose density carries
                 #                     phi_p^{-(nA-1)/2}
                 #   lambda_sigma      = 2(alpha+1) with alpha=(lambda_sigma-2)/2
-                #                     from the Gamma density on 1/phi_p
+                #                     from the inverse-Gamma density on phi_p
                 # The numerator carries the utility prior's quadratic term.
                 # An earlier version omitted nA_minus_1, which put this update
                 # off the stationary point; see PARAMETERISATION.md section 3.

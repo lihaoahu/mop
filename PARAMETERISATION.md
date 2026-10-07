@@ -19,7 +19,7 @@ It must print `ALL CONVENTIONS VERIFIED` and exit with status 0.
 | Judgment transform | `logit(score)`, natural log | `scipy.special.logit` | |
 | Structural inconsistency | `sigma2` is a **variance** on the log-odds scale | `norm.logpdf(x, scale=)` takes a **standard deviation** | `scale = sqrt(sigma2)` |
 | Aggregate ranking | `sum_p pi_p * log(w_pi / w_pA)` | – | expected utility; utilities are the logs of the normalised priority vector, taken against the benchmark alternative |
-| Variance prior | `1/sigma2 ~ Gamma((lambda_s-2)/2, lambda_s*s2bar/2)` | `invgamma.logpdf(sigma2, a=(lambda_s-2)/2, scale=lambda_s*s2bar/2)` | Inverse-Gamma density, **Jacobian included** |
+| Variance prior | `sigma2 ~ InvGamma((lambda_s-2)/2, lambda_s*s2bar/2)` | `invgamma.logpdf(sigma2, a=(lambda_s-2)/2, scale=lambda_s*s2bar/2)` | density in `sigma2`; the shape exponent is `(alpha+1)` |
 | Utility prior | `u_p \| sigma2_p ~ N(ubar, lambda_u^-1 sigma2_p I)` | `norm.logpdf(u, loc=ubar, scale=sqrt(sigma2/lambda_u))` | |
 | Mixture prior | `pi ~ Dirichlet(lambda_pi, ..., lambda_pi)` | `numpy.random.dirichlet` | concentration |
 | Repeated binary judgment | `m_k ~ BetaBinomial(n_k, mu_kp, rho_p)` | `betabinom.logpmf(k, n_k, a, b)` | `a = mu*(1-rho)/rho`, `b = (1-mu)*(1-rho)/rho` |
@@ -48,12 +48,14 @@ alpha * log(beta) - gammaln(alpha) - (alpha + 1) * log(sigma2) - beta / sigma2
 ```
 
 with `alpha = (lambda_s - 2) / 2` and `beta = lambda_s * s2bar / 2`. That is
-exactly `scipy.stats.invgamma.logpdf(sigma2, a=alpha, scale=beta)`: the
-`(alpha + 1)` exponent comes from the change of variables `tau = 1/sigma2`, so
-the prior is stated on `1/sigma2` but the density the code evaluates lives on
-`sigma2`. Dropping the Jacobian would give exponent `(alpha - 1)` and would no
-longer match. This is consistent with the manuscript wording "a moderately
-informative inverse-Gamma prior" (`sections/03_empirical.tex`).
+exactly `scipy.stats.invgamma.logpdf(sigma2, a=alpha, scale=beta)`, which is how
+the manuscript states the prior, as `phi_p ~ InvGamma((lambda_s-2)/2,
+lambda_s*s2bar/2)` in `eq:prior1` of `sections/02_model.tex`. The same
+distribution can be written as a Gamma on `1/sigma2`, but only if the density is
+then read on `sigma2` with the Jacobian the change of variables contributes;
+dropping that Jacobian would give exponent `(alpha - 1)` instead of
+`(alpha + 1)` and would no longer match. Writing the prior directly on
+`sigma2`, as the manuscript now does, avoids the question.
 
 ### 3. The M-step is the exact MAP of the stated prior
 

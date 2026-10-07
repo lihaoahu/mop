@@ -74,12 +74,13 @@ for lam_s, s2bar, sp2 in [(108.0, 0.5, 0.8), (10.0, 0.2, 0.05), (200.0, 1.0, 2.5
           f"code={code:>12.6f}  invgamma.logpdf={ref:>12.6f}  diff={abs(code-ref):.2e}")
     check(f"matches invgamma(shape={alpha}, scale={beta})", abs(code - ref) < 1e-9)
 
-# the same prior written as a Gamma on 1/sigma^2, WITHOUT the Jacobian, differs
+# the same prior read as a Gamma on 1/sigma^2, WITHOUT the Jacobian that turns
+# it into a density in sigma^2, differs; the code must evaluate the latter
 alpha, beta, sp2 = (108.0 - 2) / 2, 108.0 * 0.5 / 2, 0.8
 no_jacobian = alpha * np.log(beta) - gammaln(alpha) - (alpha - 1.0) * np.log(sp2) - beta / sp2
 print(f"\n   dropping the Jacobian gives {no_jacobian:.6f} vs {float(invgamma.logpdf(sp2, alpha, scale=beta)):.6f}")
-print("   -> the code uses the inverse-Gamma density (with Jacobian), consistent with")
-print("      'inverse-Gamma prior' in 03_empirical.tex:83")
+print("   -> the code evaluates a density in sigma^2, which is the inverse-Gamma")
+print("      prior eq:prior1 of sections/02_model.tex")
 check("code PLL is NOT the Jacobian-free version",
       abs(no_jacobian - float(invgamma.logpdf(sp2, alpha, scale=beta))) > 1e-6)
 
@@ -106,8 +107,8 @@ for A, n_eff, lam_s, SS, SSU in [(2, 5401, 108.0, 100.0, 0.0),
     alpha = (lam_s - 2.0) / 2.0
     beta = lam_s * s2bar / 2.0
     # denominator: n_p (likelihood) + d (utility-prior normalisation)
-    #              + lambda_s + 4, where 4 = 2(alpha+1) from the
-    #              inverse-Gamma density stated on 1/sigma2
+    #              + lambda_s, where lambda_s = 2(alpha+1) comes from the
+    #              inverse-Gamma density on sigma2
     closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + d)
 
     # each term carries one factor of phi in the posterior density
