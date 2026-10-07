@@ -1,0 +1,2197 @@
+{
+  "n_rep": 12,
+  "p_max": 4,
+  "n_starts": 1,
+  "seed": 20260101,
+  "summary": [
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "regime": "binomial",
+      "binomial": {
+        "mean_P": 1.0,
+        "P_distribution": {
+          "1": 12,
+          "2": 0,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 1.0,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.0,
+        "P_distribution": {
+          "1": 12,
+          "2": 0,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 1.0,
+        "mean_rho_hat": 0.00041118960232712395
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "mean_P": 1.9166666666666667,
+        "P_distribution": {
+          "1": 1,
+          "2": 11,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.08333333333333333,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.3333333333333333,
+        "P_distribution": {
+          "1": 8,
+          "2": 4,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.6666666666666666,
+        "mean_rho_hat": 0.03763433553528912
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "regime": "beta-binomial",
+      "binomial": {
+        "mean_P": 1.9166666666666667,
+        "P_distribution": {
+          "1": 1,
+          "2": 11,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.08333333333333333,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.5,
+        "P_distribution": {
+          "1": 6,
+          "2": 6,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.5,
+        "mean_rho_hat": 0.05297562465973652
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "regime": "binomial",
+      "binomial": {
+        "mean_P": 1.8333333333333333,
+        "P_distribution": {
+          "1": 4,
+          "2": 6,
+          "3": 2,
+          "4": 0
+        },
+        "frac_correct_P": 0.5,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.4166666666666667,
+        "P_distribution": {
+          "1": 7,
+          "2": 5,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.4166666666666667,
+        "mean_rho_hat": 0.018988570787243628
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "mean_P": 2.0,
+        "P_distribution": {
+          "1": 1,
+          "2": 10,
+          "3": 1,
+          "4": 0
+        },
+        "frac_correct_P": 0.8333333333333334,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.5,
+        "P_distribution": {
+          "1": 6,
+          "2": 6,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.5,
+        "mean_rho_hat": 0.05233618243886668
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "regime": "beta-binomial",
+      "binomial": {
+        "mean_P": 2.3333333333333335,
+        "P_distribution": {
+          "1": 0,
+          "2": 8,
+          "3": 4,
+          "4": 0
+        },
+        "frac_correct_P": 0.6666666666666666,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.4166666666666667,
+        "P_distribution": {
+          "1": 7,
+          "2": 5,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.4166666666666667,
+        "mean_rho_hat": 0.12902166011438262
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "regime": "binomial",
+      "binomial": {
+        "mean_P": 1.8333333333333333,
+        "P_distribution": {
+          "1": 2,
+          "2": 10,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.0,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.5833333333333333,
+        "P_distribution": {
+          "1": 5,
+          "2": 7,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.0,
+        "mean_rho_hat": 0.012971586540427798
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "mean_P": 2.0,
+        "P_distribution": {
+          "1": 0,
+          "2": 12,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.0,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.6666666666666667,
+        "P_distribution": {
+          "1": 4,
+          "2": 8,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.0,
+        "mean_rho_hat": 0.04843085995084919
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "regime": "beta-binomial",
+      "binomial": {
+        "mean_P": 2.1666666666666665,
+        "P_distribution": {
+          "1": 0,
+          "2": 10,
+          "3": 2,
+          "4": 0
+        },
+        "frac_correct_P": 0.16666666666666666,
+        "mean_rho_hat": 0.0
+      },
+      "beta-binomial": {
+        "mean_P": 1.6666666666666667,
+        "P_distribution": {
+          "1": 4,
+          "2": 8,
+          "3": 0,
+          "4": 0
+        },
+        "frac_correct_P": 0.0,
+        "mean_rho_hat": 0.06327039558849362
+      }
+    }
+  ],
+  "replicates": [
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 0,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.45666628723603
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.458115158835426
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 1,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.194718508456745
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0026327901230986726,
+        "max_rho": 0.0026327901230986726,
+        "loglik": -37.147307884712745
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 2,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.598639553213076
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.59987753559835
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 3,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.06012939519284
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.06174002867192
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 4,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.06566701505493
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -36.06689872429706
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 5,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -27.4847480389287
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -27.48701746854931
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 6,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -30.871774384343436
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -30.87422038684599
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 7,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -33.2215688331528
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -33.22301663970575
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 8,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -35.307923528008274
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0022014851048268165,
+        "max_rho": 0.0022014851048268165,
+        "loglik": -35.27052793532948
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 9,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -32.291506259575996
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -32.29327704850584
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 10,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -28.581521739438195
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -28.584103981032968
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.0,
+      "replicate": 11,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -35.17803652154048
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -35.178664601175115
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 0,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.20160507242758
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.06357621683814098,
+        "max_rho": 0.06357621683814098,
+        "loglik": -43.487118958408814
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.149551008490754
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -37.15176163639093
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 2,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -46.02525952700622
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.12543316908136368,
+        "max_rho": 0.12543316908136368,
+        "loglik": -51.931101400205065
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 3,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.10445756744755
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.10667183771994
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 4,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -42.319797063315534
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.07189158616559495,
+        "max_rho": 0.07189158616559495,
+        "loglik": -48.22115931539686
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 5,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -33.68695183819193
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.047738409023004,
+        "max_rho": 0.047738409023004,
+        "loglik": -39.49971386306584
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 6,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.33985748361544
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.06439350473670122,
+        "max_rho": 0.06439350473670122,
+        "loglik": -42.32115799843122
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 7,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.94274717688536
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0009922300744697324,
+        "max_rho": 0.001974460148939465,
+        "loglik": -38.250893007086674
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 8,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.43237893139877
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -37.434829092306984
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 9,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.91441886268718
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.02800903555837406,
+        "max_rho": 0.02800903555837406,
+        "loglik": -43.44279550196613
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 10,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -29.7156387343405
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -29.716351049486548
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.1,
+      "replicate": 11,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.45801496237321
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.04953787494582081,
+        "max_rho": 0.04953787494582081,
+        "loglik": -42.983739631063614
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 0,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -31.664628851196834
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.08967918319982048,
+        "max_rho": 0.08967918319982048,
+        "loglik": -40.634156219349634
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -44.19376185680028
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0029274667601674118,
+        "max_rho": 0.005844933520334824,
+        "loglik": -38.86509364495594
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 2,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.2172847983083
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.68282749892389
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 3,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -41.586800084409646
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -35.30047426755258
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 4,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -32.6252377068851
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.13736355958949642,
+        "max_rho": 0.13736355958949642,
+        "loglik": -42.198648066674515
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 5,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -44.18515883406874
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.13621100770769562,
+        "max_rho": 0.13621100770769562,
+        "loglik": -50.01506426593546
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 6,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -32.0146739027041
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.057359096073840286,
+        "max_rho": 0.057359096073840286,
+        "loglik": -39.42683457230865
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 7,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.325823737598284
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -33.112919773155525
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 8,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -14.61611244011476
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -14.617934234207496
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 9,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.79473461521672
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.21210718258581818,
+        "max_rho": 0.21210718258581818,
+        "loglik": -48.65552533174475
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 10,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.16115544978764
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.16337499867779
+      }
+    },
+    {
+      "P_true": 1,
+      "rho_gen": 0.25,
+      "replicate": 11,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.27456622355987
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.276836544539655
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 0,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -43.69427866486144
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.03392172665378
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 1,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.7321307592572
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.046081148081613905,
+        "max_rho": 0.046081148081613905,
+        "loglik": -42.80055486817248
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 2,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.609564373502224
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.611896754254126
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 3,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -43.000926345850566
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.016492466277378735,
+        "max_rho": 0.016492466277378735,
+        "loglik": -41.69146543288642
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 4,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.987577968344006
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.04490449020414004,
+        "max_rho": 0.04490449020414004,
+        "loglik": -45.86500809775458
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 5,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.197361041909055
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.19973553130262
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 6,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.679168443931786
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0789316844739211,
+        "max_rho": 0.0789316844739211,
+        "loglik": -45.89965484511478
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 7,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -47.687582003405154
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.026963936000511467,
+        "max_rho": 0.026963936000511467,
+        "loglik": -44.576355994033264
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 8,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.37275683042725
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0014115521553186591,
+        "max_rho": 0.0014115521553186591,
+        "loglik": -36.360879013464
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 9,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.941859921635654
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.944380464971196
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 10,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -42.69291323629357
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -43.293510468229655
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.0,
+      "replicate": 11,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -42.588600852739624
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.013027572254039575,
+        "max_rho": 0.013027572254039575,
+        "loglik": -41.6021790384155
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 0,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.23989889612929
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.242089174946436
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.8602066612925
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.24821601501497495,
+        "max_rho": 0.24821601501497495,
+        "loglik": -52.8216709670647
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 2,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.080627090027726
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.081824842958405
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 3,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -41.19127092400353
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0885587060191232,
+        "max_rho": 0.0885587060191232,
+        "loglik": -49.39259994526843
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 4,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -35.54373025555287
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.8926382225968
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 5,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.9088617425339
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.10866179059375995,
+        "max_rho": 0.10866179059375995,
+        "loglik": -46.25180912851382
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 6,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.75364528178514
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.09192023078925447,
+        "max_rho": 0.09192023078925447,
+        "loglik": -49.16478851067121
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 7,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -45.71756852282102
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0011632896001535944,
+        "max_rho": 0.002316579200307189,
+        "loglik": -43.056567347759234
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 8,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -42.71564050434246
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.000998586344818253,
+        "max_rho": 0.001987172689636506,
+        "loglik": -42.7044210216193
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 9,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.353752025515725
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.06821985744845582,
+        "max_rho": 0.06821985744845582,
+        "loglik": -46.74356595614557
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 10,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -43.621533627102565
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.020255713455860087,
+        "max_rho": 0.020255713455860087,
+        "loglik": -41.98121493473275
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.1,
+      "replicate": 11,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.62879638733075
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -36.03918480368277
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 0,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.34674145728466
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.2647513241659066,
+        "max_rho": 0.2647513241659066,
+        "loglik": -49.10668929460417
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -32.645784291388715
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -32.64674131879647
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 2,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -25.531817328702353
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -25.534054452709924
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 3,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -25.023729201690358
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -25.02548708507569
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 4,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.05285749514192
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.1343326251770043,
+        "max_rho": 0.1343326251770043,
+        "loglik": -47.28906493743423
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 5,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -44.02639863039109
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.2538597025364948,
+        "max_rho": 0.2538597025364948,
+        "loglik": -55.323083139359305
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 6,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -32.45122950942542
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.07162535582764777,
+        "max_rho": 0.14324071165529553,
+        "loglik": -36.87141251049739
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 7,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.10878931689089
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.17126430842502693,
+        "max_rho": 0.17126430842502693,
+        "loglik": -53.92339269634848
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 8,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -43.40740000168777
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.10149126926730533,
+        "max_rho": 0.10149126926730533,
+        "loglik": -51.14811187286919
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 9,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.004507952723266
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.31981280388045824,
+        "max_rho": 0.31981280388045824,
+        "loglik": -53.902349133987876
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 10,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -35.20367605775847
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.22904833576362232,
+        "max_rho": 0.22904833576362232,
+        "loglik": -47.70302750898208
+      }
+    },
+    {
+      "P_true": 2,
+      "rho_gen": 0.25,
+      "replicate": 11,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.443879769837494
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.002044196329124947,
+        "max_rho": 0.004078392658249895,
+        "loglik": -37.24086569949143
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 0,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -41.615750807540095
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.04576133512492658,
+        "max_rho": 0.04576133512492658,
+        "loglik": -46.664638973829945
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 1,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.99875235358155
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.00141869512474
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 2,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.20701923721296
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.209652618635296
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 3,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.408786685506705
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.033798485269336494,
+        "max_rho": 0.033798485269336494,
+        "loglik": -44.37510888574238
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 4,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.356814013729014
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.008047647900259232,
+        "max_rho": 0.008047647900259232,
+        "loglik": -39.99236693503599
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 5,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.36095147975871
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.362870650560005
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 6,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.60009972281367
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.60280076627879
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 7,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.02483180726551
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -37.02666081660087
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 8,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.15508759542616
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.04665423158624275,
+        "max_rho": 0.04665423158624275,
+        "loglik": -45.403561617667165
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 9,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.49624276597345
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.91698145636034
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 10,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -44.936189248141645
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.02132733860436848,
+        "max_rho": 0.02132733860436848,
+        "loglik": -42.714403092747744
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.0,
+      "replicate": 11,
+      "regime": "binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -35.43644807028637
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -35.439172130891144
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 0,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.165500979426064
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.16813598312523
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -44.882505382879216
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.11460777635267314,
+        "max_rho": 0.11460777635267314,
+        "loglik": -48.319264891315896
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 2,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -42.53373334761811
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.22354974762520471,
+        "max_rho": 0.22354974762520471,
+        "loglik": -50.83092682391286
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 3,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.90876745582217
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.007464512313268518,
+        "max_rho": 0.014919024626537037,
+        "loglik": -40.41322863796552
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 4,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.726828261966105
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.0765095580593473,
+        "max_rho": 0.0765095580593473,
+        "loglik": -49.64973740450401
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 5,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.523947492884346
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -39.52606202480351
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 6,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.3165550802619
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -37.319077133988706
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 7,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -35.95204461974081
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.45149348451942
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 8,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -43.61718627381989
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.1463924786470807,
+        "max_rho": 0.1463924786470807,
+        "loglik": -52.35552250224025
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 9,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -38.675491842779905
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -38.67817230811185
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 10,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -34.00948041362081
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.01182963995832
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.1,
+      "replicate": 11,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.294993209773494
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.012586246412615961,
+        "max_rho": 0.025162492825231923,
+        "loglik": -39.27121576816481
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 0,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -30.55169461877463
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.05892764973720902,
+        "max_rho": 0.05892764973720902,
+        "loglik": -37.0109695524155
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 1,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.01699500468449
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -34.81777976273606
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 2,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -40.069350119352805
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.15459719843429962,
+        "max_rho": 0.15459719843429962,
+        "loglik": -51.62382118605639
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 3,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 3,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -37.06199347270014
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.41629060403253504,
+        "max_rho": 0.41629060403253504,
+        "loglik": -54.62509875732321
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 4,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.74596893178384
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0035632941365889644,
+        "max_rho": 0.007116588273177929,
+        "loglik": -39.598482797280205
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 5,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -27.997433442705326
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -22.099787492361052
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 6,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -20.141420868060063
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -20.859404735537378
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 7,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -39.405844573961296
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -36.340925242677606
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 8,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.62160418104573
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "mean_rho": 0.11745101162301821,
+        "max_rho": 0.11745101162301821,
+        "loglik": -42.9638056994323
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 9,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -33.21287907853778
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -33.07391838047348
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 10,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.626139191635815
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.008354989098272668,
+        "max_rho": 0.016699978196545336,
+        "loglik": -36.267061682851136
+      }
+    },
+    {
+      "P_true": 3,
+      "rho_gen": 0.25,
+      "replicate": 11,
+      "regime": "beta-binomial",
+      "binomial": {
+        "selected_P": 2,
+        "mean_rho": 0.0,
+        "max_rho": 0.0,
+        "loglik": -36.399870348021466
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "mean_rho": 1e-05,
+        "max_rho": 1e-05,
+        "loglik": -36.40254429062814
+      }
+    }
+  ]
+}

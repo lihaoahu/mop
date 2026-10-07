@@ -1,0 +1,2967 @@
+{
+  "p_max": 4,
+  "n_starts": 2,
+  "summary": {
+    "binomial": {
+      "distribution": {
+        "1": 54,
+        "2": 34,
+        "3": 2,
+        "4": 0
+      },
+      "mean_P": 1.4222222222222223,
+      "mean_rho": 0.0,
+      "median_rho": 0.0
+    },
+    "beta-binomial": {
+      "distribution": {
+        "1": 79,
+        "2": 11,
+        "3": 0,
+        "4": 0
+      },
+      "mean_P": 1.1222222222222222,
+      "mean_rho": 0.04599109864974536,
+      "median_rho": 0.002966844780246078
+    }
+  },
+  "units": [
+    {
+      "participant": 1,
+      "gamble_set": 1,
+      "variability": 0.68,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 57.7054687896338,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.46913549679456745,
+          0.5308645032054325
+        ],
+        "rankings": [
+          "e > d > c > b > a",
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 57.33202190192238,
+        "rho": [
+          0.04551197645292381
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 1,
+      "gamble_set": 2,
+      "variability": 0.5599999999999999,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 57.77566425189204,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 59.68998682212594,
+        "rho": [
+          0.006874939078632729
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 1,
+      "gamble_set": 3,
+      "variability": 0.831111111111111,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 51.99470485059598,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > e > c > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 52.966267164185005,
+        "rho": [
+          0.012117024380386685
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > e > c > d"
+        ]
+      }
+    },
+    {
+      "participant": 2,
+      "gamble_set": 1,
+      "variability": 0.9866666666666667,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 13.998036007615628,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 16.30152462826407,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 2,
+      "gamble_set": 2,
+      "variability": 0.44444444444444436,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 60.94816315904616,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > b > c > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 62.97345087394381,
+        "rho": [
+          0.007049871295423446
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > b > c > a"
+        ]
+      }
+    },
+    {
+      "participant": 2,
+      "gamble_set": 3,
+      "variability": 0.9244444444444444,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 42.80993131160709,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.614468351322048,
+          0.3855316486779521
+        ],
+        "rankings": [
+          "a > b > c > d > e",
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 46.31076829730689,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5538159380229294,
+          0.4461840619770706
+        ],
+        "rankings": [
+          "b > c > a > d > e",
+          "a > b > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 3,
+      "gamble_set": 1,
+      "variability": 0.37111111111111106,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 72.71321580208145,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 70.89130682442962,
+        "rho": [
+          0.027025962555508858
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 3,
+      "gamble_set": 2,
+      "variability": 0.7777777777777779,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 58.535913308403195,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5301870110094318,
+          0.4698129889905682
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 61.446772297818434,
+        "rho": [
+          0.04818220716548241
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 3,
+      "gamble_set": 3,
+      "variability": 0.7422222222222221,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 55.02937192491824,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5595196266975642,
+          0.4404803733024358
+        ],
+        "rankings": [
+          "a > b > d > c > e",
+          "a > b > e > d > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 60.86738676315367,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5826771681260339,
+          0.4173228318739662
+        ],
+        "rankings": [
+          "a > b > d > c > e",
+          "a > b > d > c > e"
+        ]
+      }
+    },
+    {
+      "participant": 4,
+      "gamble_set": 1,
+      "variability": 0.8577777777777778,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 34.0840220057882,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 36.386620814291,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 4,
+      "gamble_set": 2,
+      "variability": 0.768888888888889,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 42.182260627343,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 44.4856664150331,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      }
+    },
+    {
+      "participant": 4,
+      "gamble_set": 3,
+      "variability": 0.5022222222222222,
+      "binomial": {
+        "selected_P": 3,
+        "bic": 82.77417540770949,
+        "rho": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.33939371262674306,
+          0.411325712020534,
+          0.2492805753527229
+        ],
+        "rankings": [
+          "c > e > d > b > a",
+          "d > a > e > b > c",
+          "d > a > c > e > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 82.23044388758737,
+        "rho": [
+          0.24002592682753665
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "d > a > b > c > e"
+        ]
+      }
+    },
+    {
+      "participant": 5,
+      "gamble_set": 1,
+      "variability": 0.35111111111111104,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 71.46537171216487,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.44940300973106134,
+          0.5505969902689387
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > e > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 71.46116099015032,
+        "rho": [
+          0.03313510152920384
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > e > d > c"
+        ]
+      }
+    },
+    {
+      "participant": 5,
+      "gamble_set": 2,
+      "variability": 0.8044444444444444,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 52.725384124005586,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.3657008309396458,
+          0.6342991690603543
+        ],
+        "rankings": [
+          "b > a > c > e > d",
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 55.01860213017058,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.48763993902973446,
+          0.5123600609702655
+        ],
+        "rankings": [
+          "b > a > e > c > d",
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 5,
+      "gamble_set": 3,
+      "variability": 0.8799999999999999,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 28.58088978259914,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 30.88588523057586,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 6,
+      "gamble_set": 1,
+      "variability": 0.928888888888889,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 20.669473149970685,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 22.973824312755077,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 6,
+      "gamble_set": 2,
+      "variability": 0.8133333333333332,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 29.909008568448083,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 32.21380333354062,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 6,
+      "gamble_set": 3,
+      "variability": 0.6977777777777778,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 55.39466157480476,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > a > d > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 54.94102717944249,
+        "rho": [
+          0.02879381027589767
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > a > d > c > e"
+        ]
+      }
+    },
+    {
+      "participant": 7,
+      "gamble_set": 1,
+      "variability": 0.8133333333333335,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 36.76918778609701,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 39.0748398097541,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 7,
+      "gamble_set": 2,
+      "variability": 0.5511111111111111,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 61.7452158640191,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 63.13311554289469,
+        "rho": [
+          0.010665386032214482
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      }
+    },
+    {
+      "participant": 7,
+      "gamble_set": 3,
+      "variability": 0.5199999999999999,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 54.89417794742518,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "c > a > d > b > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 57.19727141161746,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "c > a > d > b > e"
+        ]
+      }
+    },
+    {
+      "participant": 8,
+      "gamble_set": 1,
+      "variability": 0.6622222222222222,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 52.67674027937254,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.4536532947693804,
+          0.5463467052306197
+        ],
+        "rankings": [
+          "e > d > c > a > b",
+          "e > d > a > c > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 55.7974301847857,
+        "rho": [
+          0.1384776494177722
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 8,
+      "gamble_set": 2,
+      "variability": 0.6622222222222222,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 47.92532973145117,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.3594115278670021,
+          0.640588472132998
+        ],
+        "rankings": [
+          "e > d > c > b > a",
+          "e > d > c > a > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 48.584420661436404,
+        "rho": [
+          0.10150013655899476
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 8,
+      "gamble_set": 3,
+      "variability": 0.8266666666666668,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 51.171551779592335,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.3466142704751201,
+          0.6533857295248799
+        ],
+        "rankings": [
+          "c > b > a > e > d",
+          "b > c > a > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 49.93315959092603,
+        "rho": [
+          0.02076153623611645
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > c > a > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 9,
+      "gamble_set": 1,
+      "variability": 0.3888888888888889,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 77.87181018963915,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5140237649058677,
+          0.4859762350941324
+        ],
+        "rankings": [
+          "c > e > a > d > b",
+          "d > a > c > e > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 81.58065978959684,
+        "rho": [
+          0.1425359899111942
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > c > d > e > b"
+        ]
+      }
+    },
+    {
+      "participant": 9,
+      "gamble_set": 2,
+      "variability": 0.45999999999999996,
+      "binomial": {
+        "selected_P": 3,
+        "bic": 87.83796963497912,
+        "rho": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.3856059828915683,
+          0.20136546619604467,
+          0.4130285509123871
+        ],
+        "rankings": [
+          "c > b > e > d > a",
+          "a > b > e > d > c",
+          "d > a > c > e > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 85.5470655452022,
+        "rho": [
+          0.20494243369798293
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > c > b > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 9,
+      "gamble_set": 3,
+      "variability": 0.6288888888888888,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 50.60348076279389,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > c > b > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 52.908309682117014,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > c > b > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 10,
+      "gamble_set": 1,
+      "variability": 0.9133333333333333,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 43.473061820315245,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.7497956471038012,
+          0.25020435289619886
+        ],
+        "rankings": [
+          "e > d > c > b > a",
+          "d > c > e > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 44.561996021938334,
+        "rho": [
+          0.00924441618628441
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 10,
+      "gamble_set": 2,
+      "variability": 0.9155555555555557,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 31.25623962003529,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 33.561566980865955,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 10,
+      "gamble_set": 3,
+      "variability": 0.4844444444444444,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 66.2898829080765,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 65.47821699393995,
+        "rho": [
+          0.02411550712202866
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 11,
+      "gamble_set": 1,
+      "variability": 0.9911111111111112,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 13.432632030015817,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 15.73609354098624,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 11,
+      "gamble_set": 2,
+      "variability": 0.9755555555555556,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 15.194995473922683,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 17.498471264572053,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 11,
+      "gamble_set": 3,
+      "variability": 0.9200000000000002,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 42.89594384268692,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 45.200995456271976,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 12,
+      "gamble_set": 1,
+      "variability": 0.9333333333333333,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 26.71183324042788,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 29.01717790806031,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 12,
+      "gamble_set": 2,
+      "variability": 0.9222222222222223,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 46.62219736497143,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 48.92627991766965,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 12,
+      "gamble_set": 3,
+      "variability": 0.7333333333333334,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 50.14257592125867,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > c > d > a > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 52.39348418166099,
+        "rho": [
+          0.0019219425176010268
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > c > d > a > e"
+        ]
+      }
+    },
+    {
+      "participant": 13,
+      "gamble_set": 1,
+      "variability": 1.0,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 9.614657699592346,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 11.74487062205638,
+        "rho": [
+          0.9
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 13,
+      "gamble_set": 2,
+      "variability": 1.0,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 9.614657699592346,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 11.74487062205638,
+        "rho": [
+          0.9
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 13,
+      "gamble_set": 3,
+      "variability": 0.6311111111111111,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 63.49116472344558,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 64.07823990432013,
+        "rho": [
+          0.015050019045558152
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 14,
+      "gamble_set": 1,
+      "variability": 0.6222222222222222,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 53.48951629567674,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 54.74043929544296,
+        "rho": [
+          0.01427773144098433
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 14,
+      "gamble_set": 2,
+      "variability": 0.6666666666666666,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 65.4280701683344,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.3331234377495261,
+          0.666876562250474
+        ],
+        "rankings": [
+          "e > d > a > c > b",
+          "e > d > b > c > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 70.03645045115107,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.33308944657309975,
+          0.6669105534269002
+        ],
+        "rankings": [
+          "e > d > a > c > b",
+          "e > d > b > c > a"
+        ]
+      }
+    },
+    {
+      "participant": 14,
+      "gamble_set": 3,
+      "variability": 0.3311111111111111,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 52.39905854997079,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 54.70504383541009,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 15,
+      "gamble_set": 1,
+      "variability": 0.4133333333333333,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 82.79240149343397,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5001208177490383,
+          0.4998791822509617
+        ],
+        "rankings": [
+          "c > e > a > b > d",
+          "a > d > e > b > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 80.67858702943732,
+        "rho": [
+          0.12499683629851867
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > e > c > b > d"
+        ]
+      }
+    },
+    {
+      "participant": 15,
+      "gamble_set": 2,
+      "variability": 0.7088888888888889,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 68.68849556187659,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.44687872560885783,
+          0.5531212743911422
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 71.4276398588755,
+        "rho": [
+          0.07816586929996354
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 15,
+      "gamble_set": 3,
+      "variability": 0.7066666666666667,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 34.389288427360654,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > c > b > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 36.69476094826421,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > c > b > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 16,
+      "gamble_set": 1,
+      "variability": 0.47111111111111115,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 63.20570424927243,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 65.00703024053195,
+        "rho": [
+          0.007864335533764099
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 16,
+      "gamble_set": 2,
+      "variability": 0.39777777777777773,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 59.86659539908436,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 62.16942126334941,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 16,
+      "gamble_set": 3,
+      "variability": 0.8844444444444445,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 47.02134320860405,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > d > b > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 48.22566196554799,
+        "rho": [
+          0.0193877671319036
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > d > b > c > e"
+        ]
+      }
+    },
+    {
+      "participant": 17,
+      "gamble_set": 1,
+      "variability": 0.8822222222222222,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 33.22611159657864,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 35.52328462183248,
+        "rho": [
+          0.0006453420442592985
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 17,
+      "gamble_set": 2,
+      "variability": 0.6711111111111111,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 62.693707487767895,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.4477993573644083,
+          0.5522006426355918
+        ],
+        "rankings": [
+          "d > e > a > c > b",
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 68.41804705024403,
+        "rho": [
+          0.1027131439823902
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      }
+    },
+    {
+      "participant": 17,
+      "gamble_set": 3,
+      "variability": 0.8866666666666667,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 28.782924762584273,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > e > c > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 31.085867422943174,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > e > c > d"
+        ]
+      }
+    },
+    {
+      "participant": 18,
+      "gamble_set": 1,
+      "variability": 0.5866666666666667,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 50.365444573603185,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > b > c > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 52.670237556875854,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > b > c > a"
+        ]
+      }
+    },
+    {
+      "participant": 18,
+      "gamble_set": 2,
+      "variability": 0.3622222222222223,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 64.94500717408317,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > a > b > d > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 66.48200438762473,
+        "rho": [
+          0.010453543039744497
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > a > b > d > c"
+        ]
+      }
+    },
+    {
+      "participant": 18,
+      "gamble_set": 3,
+      "variability": 0.37555555555555553,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 53.64295760308333,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > a > c > e > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 55.948197298062205,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "b > a > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 19,
+      "gamble_set": 1,
+      "variability": 0.36,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 56.79230396712255,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 59.096155586031436,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 19,
+      "gamble_set": 2,
+      "variability": 0.2311111111111111,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 70.60043817866921,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 70.01626526796645,
+        "rho": [
+          0.02147699476554838
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 19,
+      "gamble_set": 3,
+      "variability": 0.36444444444444446,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 54.21141351378212,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 56.51666578448674,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 20,
+      "gamble_set": 1,
+      "variability": 0.5222222222222221,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 77.65942725028434,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 71.16803085120745,
+        "rho": [
+          0.041437362690908634
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 20,
+      "gamble_set": 2,
+      "variability": 0.6866666666666666,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 68.98675317363549,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.45201730549164737,
+          0.5479826945083527
+        ],
+        "rankings": [
+          "b > c > a > e > d",
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 69.57831014628556,
+        "rho": [
+          0.041488105464049366
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 20,
+      "gamble_set": 3,
+      "variability": 0.7377777777777779,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 39.01189888358772,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 41.31752796502149,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 21,
+      "gamble_set": 1,
+      "variability": 0.8022222222222222,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 38.77819008510217,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 41.08178895696363,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 21,
+      "gamble_set": 2,
+      "variability": 0.7511111111111111,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 44.31951433151306,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.510792081120936,
+          0.489207918879064
+        ],
+        "rankings": [
+          "e > d > c > b > a",
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 44.502043019558194,
+        "rho": [
+          0.0899839925666112
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 21,
+      "gamble_set": 3,
+      "variability": 0.6822222222222223,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 59.76867947052311,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.575588279944333,
+          0.424411720055667
+        ],
+        "rankings": [
+          "e > a > b > d > c",
+          "e > b > a > d > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 64.37721647853849,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.4244698681270849,
+          0.5755301318729151
+        ],
+        "rankings": [
+          "e > b > a > d > c",
+          "e > a > b > d > c"
+        ]
+      }
+    },
+    {
+      "participant": 22,
+      "gamble_set": 1,
+      "variability": 0.3844444444444445,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 72.78067940942172,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.6621621840240954,
+          0.33783781597590457
+        ],
+        "rankings": [
+          "e > d > b > c > a",
+          "a > d > e > b > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 75.53999547646788,
+        "rho": [
+          0.06666063456265586
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      }
+    },
+    {
+      "participant": 22,
+      "gamble_set": 2,
+      "variability": 0.5866666666666667,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 75.72037333635683,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5052789294414752,
+          0.4947210705585248
+        ],
+        "rankings": [
+          "a > c > b > e > d",
+          "a > d > b > e > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 75.44216493391184,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5494083013161404,
+          0.4505916986838597
+        ],
+        "rankings": [
+          "a > c > b > e > d",
+          "a > b > d > e > c"
+        ]
+      }
+    },
+    {
+      "participant": 22,
+      "gamble_set": 3,
+      "variability": 0.8555555555555557,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 35.13436332419528,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 37.47836323392874,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 23,
+      "gamble_set": 1,
+      "variability": 0.5955555555555555,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 63.62235151487319,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5359351001647322,
+          0.4640648998352678
+        ],
+        "rankings": [
+          "e > c > d > a > b",
+          "e > d > a > c > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 66.9732319238455,
+        "rho": [
+          0.04901927393639456
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 23,
+      "gamble_set": 2,
+      "variability": 0.548888888888889,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 67.81347132806926,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.563835430924402,
+          0.436164569075598
+        ],
+        "rankings": [
+          "e > c > d > a > b",
+          "e > d > a > b > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 69.66883164511344,
+        "rho": [
+          0.0513351248679052
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > a > b"
+        ]
+      }
+    },
+    {
+      "participant": 23,
+      "gamble_set": 3,
+      "variability": 0.8866666666666665,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 62.379299325240225,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5247807152222237,
+          0.47521928477777636
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 66.98816760731796,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5246343585654627,
+          0.47536564143453736
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > c > e"
+        ]
+      }
+    },
+    {
+      "participant": 24,
+      "gamble_set": 1,
+      "variability": 0.9422222222222223,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 28.245203017941623,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 30.550037413214504,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 24,
+      "gamble_set": 2,
+      "variability": 0.9200000000000002,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 29.347413595205825,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 31.652117895738392,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 24,
+      "gamble_set": 3,
+      "variability": 0.29333333333333333,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 55.20398370808502,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > a > c > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 57.50911294793075,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > a > c > b"
+        ]
+      }
+    },
+    {
+      "participant": 25,
+      "gamble_set": 1,
+      "variability": 0.8022222222222222,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 39.766675158952154,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 41.59454663655281,
+        "rho": [
+          0.010521534472193814
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 25,
+      "gamble_set": 2,
+      "variability": 0.7044444444444445,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 53.14538694831572,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 50.39397907645614,
+        "rho": [
+          0.04094824477377554
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 25,
+      "gamble_set": 3,
+      "variability": 0.7244444444444446,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 61.45570441874182,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.6496107091854517,
+          0.3503892908145483
+        ],
+        "rankings": [
+          "a > b > e > c > d",
+          "b > a > e > c > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 63.176572322428875,
+        "rho": [
+          0.03291446773810705
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > e > c > d"
+        ]
+      }
+    },
+    {
+      "participant": 26,
+      "gamble_set": 1,
+      "variability": 0.42444444444444446,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 78.71322333030739,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5876324922186213,
+          0.4123675077813786
+        ],
+        "rankings": [
+          "a > b > d > c > e",
+          "c > b > a > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 78.57964460969,
+        "rho": [
+          0.09140460631829338
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 26,
+      "gamble_set": 2,
+      "variability": 0.7422222222222221,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 68.71376656738421,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5171074210054581,
+          0.48289257899454185
+        ],
+        "rankings": [
+          "c > b > a > e > d",
+          "a > b > d > e > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 73.32223771972753,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5170988514903608,
+          0.48290114850963917
+        ],
+        "rankings": [
+          "c > b > a > e > d",
+          "a > b > d > e > c"
+        ]
+      }
+    },
+    {
+      "participant": 26,
+      "gamble_set": 3,
+      "variability": 0.7955555555555555,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 28.767874676472,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 31.071219224793076,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 27,
+      "gamble_set": 1,
+      "variability": 0.6599999999999999,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 72.35443486657229,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5435039751504459,
+          0.45649602484955415
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 73.43639960447824,
+        "rho": [
+          0.0676132988209185
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 27,
+      "gamble_set": 2,
+      "variability": 0.8311111111111111,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 58.281505017358114,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.490178591759863,
+          0.509821408240137
+        ],
+        "rankings": [
+          "a > b > c > e > d",
+          "a > b > d > c > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 62.851237434762844,
+        "rho": [
+          0.035352695436266394
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 27,
+      "gamble_set": 3,
+      "variability": 0.9377777777777778,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 19.865093188900815,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 22.168981570595115,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 28,
+      "gamble_set": 1,
+      "variability": 0.7844444444444445,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 41.60673156002959,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 43.91189242697617,
+        "rho": [
+          1e-05
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 28,
+      "gamble_set": 2,
+      "variability": 0.6622222222222223,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 57.22806029323523,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5031927721106559,
+          0.4968072278893441
+        ],
+        "rankings": [
+          "e > d > c > b > a",
+          "e > d > c > b > a"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 57.83229810894249,
+        "rho": [
+          0.017142449654268765
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "e > d > c > b > a"
+        ]
+      }
+    },
+    {
+      "participant": 28,
+      "gamble_set": 3,
+      "variability": 0.9333333333333333,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 41.86452714679616,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 42.23216279329079,
+        "rho": [
+          0.011037890129594576
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 29,
+      "gamble_set": 1,
+      "variability": 0.48888888888888893,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 73.84777533881173,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.578591806065642,
+          0.4214081939343581
+        ],
+        "rankings": [
+          "a > c > e > b > d",
+          "a > d > b > e > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 78.45455301261067,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5785769163524981,
+          0.42142308364750186
+        ],
+        "rankings": [
+          "a > c > e > b > d",
+          "a > d > b > e > c"
+        ]
+      }
+    },
+    {
+      "participant": 29,
+      "gamble_set": 2,
+      "variability": 0.7644444444444444,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 66.19467605534106,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.486594517174607,
+          0.513405482825393
+        ],
+        "rankings": [
+          "c > b > a > e > d",
+          "a > d > b > e > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 70.80303566618146,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.48661315523069454,
+          0.5133868447693055
+        ],
+        "rankings": [
+          "c > b > a > e > d",
+          "a > d > b > e > c"
+        ]
+      }
+    },
+    {
+      "participant": 29,
+      "gamble_set": 3,
+      "variability": 0.6533333333333333,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 61.47894721337927,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5682438800216308,
+          0.43175611997836916
+        ],
+        "rankings": [
+          "c > a > b > d > e",
+          "a > d > c > b > e"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 2,
+        "bic": 66.08724871840997,
+        "rho": [
+          1e-05,
+          1e-05
+        ],
+        "pi": [
+          0.5682590799310426,
+          0.43174092006895737
+        ],
+        "rankings": [
+          "c > a > b > d > e",
+          "a > d > c > b > e"
+        ]
+      }
+    },
+    {
+      "participant": 30,
+      "gamble_set": 1,
+      "variability": 0.3333333333333333,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 77.36859059982622,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5656281911495651,
+          0.43437180885043486
+        ],
+        "rankings": [
+          "b > c > e > a > d",
+          "a > d > c > e > b"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 79.04752290895419,
+        "rho": [
+          0.08637933484175818
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > d > e"
+        ]
+      }
+    },
+    {
+      "participant": 30,
+      "gamble_set": 2,
+      "variability": 0.5844444444444444,
+      "binomial": {
+        "selected_P": 2,
+        "bic": 73.94766330740265,
+        "rho": [
+          0.0,
+          0.0
+        ],
+        "pi": [
+          0.5090841251456709,
+          0.490915874854329
+        ],
+        "rankings": [
+          "b > c > a > e > d",
+          "a > b > d > e > c"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 76.92369374942487,
+        "rho": [
+          0.10360471533667062
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      }
+    },
+    {
+      "participant": 30,
+      "gamble_set": 3,
+      "variability": 0.8422222222222222,
+      "binomial": {
+        "selected_P": 1,
+        "bic": 35.57494454588184,
+        "rho": [
+          0.0
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      },
+      "beta-binomial": {
+        "selected_P": 1,
+        "bic": 37.823593406829495,
+        "rho": [
+          0.004011747042891129
+        ],
+        "pi": [
+          1.0
+        ],
+        "rankings": [
+          "a > b > c > e > d"
+        ]
+      }
+    }
+  ]
+}

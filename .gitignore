@@ -1,0 +1,11 @@
+# Nested paper repo (independent)
+manuscript/
+
+# Shared bulk, linked from the project root
+data/
+models/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
