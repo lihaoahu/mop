@@ -148,7 +148,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     for p, sp2 in enumerate(sigma2):
         if sp2 < 1e-300:
             continue
-        alpha = (lambda_sigma[p] + 2.0) / 2.0
+        alpha = (lambda_sigma[p] - 2.0) / 2.0
         beta = lambda_sigma[p] * s2 / 2.0
         PLL += alpha * np.log(beta) - gammaln(alpha)
         PLL -= (alpha + 1.0) * np.log(sp2)
@@ -322,8 +322,8 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 #   nA_minus_1        the normalising constant of the utility
                 #                     prior, whose density carries
                 #                     phi_p^{-(nA-1)/2}
-                #   lambda_sigma + 4  = 2(alpha+1) with alpha=(lambda_sigma+2)/2,
-                #                     from the inverse-Gamma density
+                #   lambda_sigma      = 2(alpha+1) with alpha=(lambda_sigma-2)/2
+                #                     from the Gamma density on 1/phi_p
                 # The numerator carries the utility prior's quadratic term.
                 # An earlier version omitted nA_minus_1, which put this update
                 # off the stationary point; see PARAMETERISATION.md section 3.
@@ -332,7 +332,7 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 ss_prior_u = lambda_u[p] * float(np.sum((u_new[p] - u_bar[p]) ** 2))
                 sigma2_new[p] = max(
                     (lambda_sigma[p] * s2 + ss_resid + ss_prior_u)
-                    / (lambda_sigma[p] + sum_gkc[p] + nA_minus_1 + 4.0),
+                    / (lambda_sigma[p] + sum_gkc[p] + nA_minus_1),
                     1e-10
                 )
 

@@ -63,7 +63,7 @@ print("=" * 76)
 print("2. Inverse-Gamma prior on sigma^2 (penalized_log_likelihood)")
 print("=" * 76)
 for lam_s, s2bar, sp2 in [(108.0, 0.5, 0.8), (10.0, 0.2, 0.05), (200.0, 1.0, 2.5)]:
-    alpha = (lam_s + 2.0) / 2.0
+    alpha = (lam_s - 2.0) / 2.0
     beta = lam_s * s2bar / 2.0
     code = (alpha * np.log(beta) - gammaln(alpha)
             - (alpha + 1.0) * np.log(sp2) - beta / sp2)
@@ -73,7 +73,7 @@ for lam_s, s2bar, sp2 in [(108.0, 0.5, 0.8), (10.0, 0.2, 0.05), (200.0, 1.0, 2.5
     check(f"matches invgamma(shape={alpha}, scale={beta})", abs(code - ref) < 1e-9)
 
 # the same prior written as a Gamma on 1/sigma^2, WITHOUT the Jacobian, differs
-alpha, beta, sp2 = (108.0 + 2) / 2, 108.0 * 0.5 / 2, 0.8
+alpha, beta, sp2 = (108.0 - 2) / 2, 108.0 * 0.5 / 2, 0.8
 no_jacobian = alpha * np.log(beta) - gammaln(alpha) - (alpha - 1.0) * np.log(sp2) - beta / sp2
 print(f"\n   dropping the Jacobian gives {no_jacobian:.6f} vs {float(invgamma.logpdf(sp2, alpha, scale=beta)):.6f}")
 print("   -> the code uses the inverse-Gamma density (with Jacobian), consistent with")
@@ -101,12 +101,12 @@ for A, n_eff, lam_s, SS, SSU in [(2, 5401, 108.0, 100.0, 0.0),
                                  (10, 30, 0.6, 12.0, 0.4)]:
     d = A - 1
     s2bar = 0.5
-    alpha = (lam_s + 2.0) / 2.0
+    alpha = (lam_s - 2.0) / 2.0
     beta = lam_s * s2bar / 2.0
     # denominator: n_p (likelihood) + d (utility-prior normalisation)
     #              + lambda_s + 4, where 4 = 2(alpha+1) from the
     #              inverse-Gamma density stated on 1/sigma2
-    closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + d + 4.0)
+    closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + d)
 
     # each term carries one factor of phi in the posterior density
     grad = (-0.5 * (n_eff + d) / closed           # likelihood + prior norm.

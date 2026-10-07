@@ -47,7 +47,7 @@ the distinction is worth stating explicitly rather than assuming.
 alpha * log(beta) - gammaln(alpha) - (alpha + 1) * log(sigma2) - beta / sigma2
 ```
 
-with `alpha = (lambda_s + 2) / 2` and `beta = lambda_s * s2bar / 2`. That is
+with `alpha = (lambda_s - 2) / 2` and `beta = lambda_s * s2bar / 2`. That is
 exactly `scipy.stats.invgamma.logpdf(sigma2, a=alpha, scale=beta)`: the
 `(alpha + 1)` exponent comes from the change of variables `tau = 1/sigma2`, so
 the prior is stated on `1/sigma2` but the density the code evaluates lives on
@@ -61,7 +61,7 @@ informative inverse-Gamma prior" (`sections/03_empirical.tex`).
 
 ```
 sigma2 <- (SS + lambda_u * ||u - ubar||^2 + lambda_s * s2bar)
-          / (sum_k gamma_k + lambda_s + (nA - 1) + 4)
+          / (sum_k gamma_k + lambda_s + (nA - 1))
 ```
 
 with `SS = sum_k gamma_k * residual_k^2` and `nA - 1` the dimension of the
@@ -72,23 +72,35 @@ of the posterior that carries `phi_p`:
 |---|---|
 | `sum_k gamma_k` | the Gaussian likelihood, one factor per observation |
 | `nA - 1` | the normalising constant of the utility prior, whose density carries `phi_p^{-(A-1)/2}` |
-| `lambda_s + 4` | the inverse-Gamma density, where `4 = 2*(alpha + 1)` with `alpha = (lambda_s + 2)/2` |
+| `lambda_s` | the Gamma density on `1/phi_p`, where `lambda_s = 2*(alpha + 1)` with `alpha = (lambda_s - 2)/2` |
 
 The numerator carries the quadratic term of the utility prior.
 
-**Two successive corrections were needed here.**
+**This section needed three corrections, and the history is worth keeping.**
 
 The first version used `(SS + lambda_s * s2bar) / (sum_k gamma_k + lambda_s)`,
-omitting both the inverse-Gamma term and the utility prior; that update was not
-a stationary point of the density `penalized_log_likelihood` evaluates.
+omitting the prior-density term and the utility prior's quadratic term alike;
+that update was not a stationary point of the density
+`penalized_log_likelihood` evaluates.
 
-The second version restored `2*(alpha+1)` as a bare `+4` but still omitted
-`nA - 1`. The omission is invisible at large `n`: for the case study the wrong
-and right denominators differ by about 0.14%, and refitting the case-study data
-moves `pi` in the fourth decimal and leaves the ranking unchanged. It is **not**
-small where the component's effective sample size `sum_k gamma_kp` is small —
-`K = 1` fits, near-empty components, the external validation (ten observations
-per unit), and small-`A`, small-`n` simulation cells.
+The second version restored the prior-density term as a bare `+4` -- correct
+for the prior as it then stood, `Gamma((lambda_s+2)/2, ...)`, since then
+`2*(alpha+1) - lambda_s = 4` -- but still omitted `nA - 1`.
+
+The third and current version makes the denominator exactly `n_p + d + lambda_s`
+and moves the prior to `Gamma((lambda_s-2)/2, lambda_s * s2bar / 2)`, which has
+two effects. The prior mode of `phi_p` becomes exactly `sbar^2`; under the old
+shape it was `lambda_s / (lambda_s + 4)` times that, so the manuscript sentence
+"the prior mode `sbar^2` is placed on the inconsistency levels" was not true as
+written. And the `+4` disappears from the update. The shape requires
+`lambda_s > 2` to be a valid Gamma and `lambda_s > 4` for the prior mean to
+exist; the manuscript states the latter.
+
+The omission of `nA - 1` is invisible at large `n`: for the case study the two
+denominators differ by about 0.15%, and refitting moves `pi` in the fourth
+decimal. Where a component's effective sample size is small -- `K = 1` fits,
+near-empty components, the external validation with ten observations per unit,
+small-`A` simulation cells -- it is not.
 
 `tests/audit_parameterisation.py` checks the update against a numerical
 maximiser, and now sweeps `A` across the test cases. It is worth recording why
