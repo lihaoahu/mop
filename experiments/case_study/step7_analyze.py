@@ -64,7 +64,12 @@ def warm_init(prev, X, y, nA):
     return u_new, s_new, m_new
 
 
-def run_mop(pairs):
+def run_mop(pairs, trace=None):
+    """MoP 拟合，K 从 1 搜到 9。
+
+    trace: 可选 dict；给了就写入 trace["bic_vals"]（每个 K 的 pBIC）和
+    trace["models"]（每个 K 的完整结果），供画图和审计使用。
+    """
     nJ = len(pairs)
     name_to_id = {t: i + 1 for i, t in enumerate(T)}
     pcvector = [pairwise_comparison.PairwiseComparison(
@@ -99,6 +104,9 @@ def run_mop(pairs):
     best = models[str(best_k)]
     weighted = expected_utility(best["mixture"]["priorities"],
                                 best["mixture"]["pis"])
+    if trace is not None:
+        trace["bic_vals"] = dict(bic_vals)
+        trace["models"] = models
     return best_k, best, weighted, nJ
 
 

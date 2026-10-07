@@ -142,6 +142,32 @@ def table_years(years):
     return "\n".join(lines)
 
 
+def table_pair_distribution(min_count=150):
+    """Distribution of judgments by ordered energy-type pair."""
+    import collections
+    agg = collections.defaultdict(list)
+    for p in load_pairs():
+        agg[(p["ft"], p["lt"])].append(p["score"])
+    rows = [(k, len(v), sum(v) / len(v))
+            for k, v in agg.items() if len(v) > min_count]
+    rows.sort(key=lambda x: -x[1])
+
+    lines = [
+        "\\begin{table}[ht]",
+        "\t\\centering",
+        (f"\t\\caption{{Distribution of pairwise comparison judgments by "
+         f"energy type pair. Only pairs with count $>{min_count}$ are listed.}}"),
+        "\t\\label{tab:pair_distribution}",
+        "\t\\begin{tabular}{lcc}",
+        "\t\t\\hline",
+        "\t\tComparison Pair & Count & Mean $P(\\text{Former} \\succ \\text{Latter})$ \\\\ \\hline",
+    ]
+    for (ft, lt), n, m in rows:
+        lines.append(f"\t\t{ABBREV[ft]} vs {ABBREV[lt]} & {thousands(n)} & {m:.3f} \\\\")
+    lines += ["\t\t\\hline", "\t\\end{tabular}", "\\end{table}"]
+    return "\n".join(lines), [(ABBREV[a], ABBREV[b], n, m) for (a, b), n, m in rows]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json", help="also write the raw numbers here")
@@ -150,6 +176,14 @@ def main():
     out = {}
 
     banner = lambda s: print("%" + "=" * 74 + f"\n%% {s}\n" + "%" + "=" * 74)  # noqa: E731
+
+    banner("tab:pair_distribution")
+    txt, rows = table_pair_distribution()
+    out["pair_distribution"] = [
+        {"former": a, "latter": b, "n": n, "mean_p": m} for a, b, n, m in rows
+    ]
+    print(txt)
+    print()
 
     banner("tab:mop_overall")
     overall = fit_block(load_pairs())
