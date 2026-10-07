@@ -49,6 +49,19 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import digamma, expit, gammaln, logsumexp
 
+try:
+    from .initialization import (
+        binomial_deviance_residuals,
+        binomial_family,
+        kridge,
+    )
+except ImportError:  # pragma: no cover
+    from initialization import (
+        binomial_deviance_residuals,
+        binomial_family,
+        kridge,
+    )
+
 __all__ = [
     "BinomialMoP",
     "beta_binomial_logpmf",
@@ -279,13 +292,18 @@ def _em_once(X, m, n, n_components, phi_mode, lambda_u, lambda_pi, rho_init,
              max_iter, tol, rng, u_bar):
     K, A1 = X.shape
 
-    # Component 1 starts from the pooled logistic fit; the remaining components
-    # are perturbed copies. Multi-start at the outer level makes this adequate;
-    # a count-based analogue of K-Ridge would be a refinement.
-    u_global, _ = _m_step_component(X, m, n, np.ones(K), np.zeros(A1), 0.0,
-                                    lambda_u, u_bar, "binomial")
-    U = np.array([u_global + rng.normal(0.0, 0.5 * (1 + p), A1)
-                  for p in range(n_components)])
+    # K-Ridge on the count scale: the same seeding the transformed-Gaussian
+    # member uses, with the binomial variance function, trial counts as weights,
+    # and deviance residuals in place of squared ones. Passing the proportion
+    # back together with the weights recovers the counts the deviance needs.
+    proportion = m / np.maximum(n, 1.0)
+    U, _, _ = kridge(
+        X, proportion, n_components, lambda_reg=1e-10,
+        family=binomial_family(), weights=n,
+        deviance=lambda r, mu, w: binomial_deviance_residuals(r * w, w, mu),
+    )
+    # the outer multi-start still perturbs the seed it is given
+    U = U + rng.normal(0.0, 0.05, U.shape)
     rho = np.full(n_components, rho_init if phi_mode != "binomial" else 0.0)
     pi = np.full(n_components, 1.0 / n_components)
 

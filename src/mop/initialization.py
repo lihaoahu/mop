@@ -112,6 +112,48 @@ def _pearson_dispersion(r, mu, family, weights, n_params):
     return num / den
 
 
+def binomial_deviance_residuals(m, n, mu):
+    """Signed deviance residuals for counts.
+
+    ``m`` successes out of ``n`` trials at fitted probability ``mu``. Terms with
+    a zero count contribute nothing, which is the usual convention 0 log 0 = 0.
+    """
+    m = np.asarray(m, dtype=np.float64)
+    n = np.asarray(n, dtype=np.float64)
+    mu = np.clip(np.asarray(mu, dtype=np.float64), 1e-12, 1.0 - 1e-12)
+    nm = n - m
+    t1 = np.where(m > 0, m * np.log(np.maximum(m, 1e-300) / (n * mu)), 0.0)
+    t2 = np.where(nm > 0, nm * np.log(np.maximum(nm, 1e-300) / (n * (1.0 - mu))), 0.0)
+    dev = 2.0 * (t1 + t2)
+    return np.sign(m - n * mu) * np.sqrt(np.maximum(dev, 0.0))
+
+
+def _logistic(eta: np.ndarray) -> np.ndarray:
+    """Numerically stable logistic; exp(-eta) overflows for large eta."""
+    eta = np.asarray(eta, dtype=np.float64)
+    out = np.empty_like(eta)
+    pos = eta >= 0
+    out[pos] = 1.0 / (1.0 + np.exp(-eta[pos]))
+    ex = np.exp(eta[~pos])
+    out[~pos] = ex / (1.0 + ex)
+    return out
+
+
+def binomial_family() -> Family:
+    """The logistic model for counts, in the language the initialiser expects.
+
+    ``loglik`` is a placeholder: for counts the deviance cannot be written from
+    the proportion alone, so ``kridge`` is given ``binomial_deviance_residuals``
+    explicitly through its ``deviance`` argument.
+    """
+    return Family(
+        h=_logistic,
+        h_prime=lambda eta: _logistic(eta) * (1.0 - _logistic(eta)),
+        V=lambda mu: mu * (1.0 - mu),
+        loglik=lambda y, mu: np.zeros_like(np.asarray(y, dtype=np.float64)),
+    )
+
+
 def kridge(
     X: np.ndarray,
     y: np.ndarray,
@@ -119,6 +161,7 @@ def kridge(
     lambda_reg: float = 1e-10,
     family: Optional[Family] = None,
     weights: Optional[np.ndarray] = None,
+    deviance: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray]] = None,
 ):
     """Seed ``nP`` mixture components.
 
@@ -131,6 +174,10 @@ def kridge(
             transformed and the routine behaves as it always has.
         weights: per-observation weights (e.g. binomial trial counts). Ones if
             not given.
+        deviance: ``deviance(y, mu, weights)`` returning signed deviance
+            residuals. Needed when the response is a count, since the deviance
+            of m successes out of n cannot be recovered from the proportion;
+            otherwise it is read off the family's log-likelihood.
 
     Returns:
         u: ``(nP, nA-1)`` utility vectors
@@ -164,10 +211,12 @@ def kridge(
 
     def residual(idx, u_p):
         """What 'large residual' means on this scale."""
-        mu = X[idx] @ u_p if family is None else family.h(X[idx] @ u_p)
+        eta = X[idx] @ u_p
         if family is None:
-            return (r[idx] - mu) ** 2
-        return _deviance_residuals(r[idx], mu, family) ** 2
+            return (r[idx] - eta) ** 2
+        if deviance is not None:
+            return deviance(r[idx], family.h(eta), w_all[idx]) ** 2
+        return _deviance_residuals(r[idx], family.h(eta), family) ** 2
 
     u = np.zeros((nP, nA_minus_1))
     all_idx = np.arange(nJ)
