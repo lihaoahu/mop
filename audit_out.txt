@@ -91,5 +91,23 @@
 [PASS] score 0.5 clips safely (no inf)
 
 ============================================================================
+9. analytic gradients of the beta-binomial M-step
+============================================================================
+   The appendix says the gradients were checked against finite
+   differences; this is that check. A central difference carries O(eps^2)
+   truncation error, so the error should fall about 100-fold per decade of
+   eps until roundoff takes over. A gradient that is wrong does not show
+   that scaling.
+   binomial, rho=0.0        eps=1e-3 8.12e-07   eps=1e-4 8.17e-09   eps=1e-5 8.22e-10
+[PASS] gradient of binomial, rho=0.0 matches at eps=1e-5   (rel err 8.22e-10)
+[PASS] gradient error of binomial, rho=0.0 falls as eps^2 over 1e-3 to 1e-4   (ratio 99)
+   beta-binomial, rho=0.2   eps=1e-3 9.54e-06   eps=1e-4 9.55e-08   eps=1e-5 1.92e-09
+[PASS] gradient of beta-binomial, rho=0.2 matches at eps=1e-5   (rel err 1.92e-09)
+[PASS] gradient error of beta-binomial, rho=0.2 falls as eps^2 over 1e-3 to 1e-4   (ratio 100)
+   beta-binomial, rho=0.7   eps=1e-3 3.39e-06   eps=1e-4 3.39e-08   eps=1e-5 2.95e-09
+[PASS] gradient of beta-binomial, rho=0.7 matches at eps=1e-5   (rel err 2.95e-09)
+[PASS] gradient error of beta-binomial, rho=0.7 falls as eps^2 over 1e-3 to 1e-4   (ratio 100)
+
+============================================================================
 ALL CONVENTIONS VERIFIED
 ============================================================================

@@ -54,7 +54,7 @@
       }
     ],
     "p1_ranking": "增程 > 插混 > 纯电 > 燃油",
-    "weighted_ranking": "增程 > 插混 > 纯电 > 燃油"
+    "expected_utility_ranking": "增程 > 插混 > 纯电 > 燃油"
   },
   "cost": {
     "n": 1570,
@@ -89,7 +89,7 @@
       }
     ],
     "p1_ranking": "纯电 > 插混 > 增程 > 燃油",
-    "weighted_ranking": "纯电 > 插混 > 燃油 > 增程"
+    "expected_utility_ranking": "纯电 > 插混 > 增程 > 燃油"
   },
   "driving_experience": {
     "n": 753,
@@ -113,7 +113,7 @@
       }
     ],
     "p1_ranking": "纯电 > 增程 > 插混 > 燃油",
-    "weighted_ranking": "纯电 > 增程 > 插混 > 燃油"
+    "expected_utility_ranking": "纯电 > 增程 > 插混 > 燃油"
   },
   "range": {
     "n": 835,
@@ -148,7 +148,7 @@
       }
     ],
     "p1_ranking": "增程 > 插混 > 燃油 > 纯电",
-    "weighted_ranking": "增程 > 燃油 > 插混 > 纯电"
+    "expected_utility_ranking": "增程 > 燃油 > 插混 > 纯电"
   },
   "refueling_convenience": {
     "n": 617,
@@ -194,7 +194,7 @@
       }
     ],
     "p1_ranking": "燃油 > 增程 > 插混 > 纯电",
-    "weighted_ranking": "燃油 > 增程 > 插混 > 纯电"
+    "expected_utility_ranking": "燃油 > 增程 > 插混 > 纯电"
   },
   "reliability": {
     "n": 384,
@@ -229,7 +229,7 @@
       }
     ],
     "p1_ranking": "燃油 > 增程 > 纯电 > 插混",
-    "weighted_ranking": "燃油 > 增程 > 纯电 > 插混"
+    "expected_utility_ranking": "燃油 > 增程 > 纯电 > 插混"
   },
   "policy": {
     "n": 281,
@@ -264,7 +264,7 @@
       }
     ],
     "p1_ranking": "增程 > 纯电 > 插混 > 燃油",
-    "weighted_ranking": "增程 > 纯电 > 插混 > 燃油"
+    "expected_utility_ranking": "增程 > 纯电 > 插混 > 燃油"
   },
   "other": {
     "n": 798,
@@ -299,6 +299,6 @@
       }
     ],
     "p1_ranking": "纯电 > 增程 > 插混 > 燃油",
-    "weighted_ranking": "纯电 > 增程 > 插混 > 燃油"
+    "expected_utility_ranking": "纯电 > 增程 > 插混 > 燃油"
   }
 }

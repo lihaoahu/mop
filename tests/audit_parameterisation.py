@@ -19,6 +19,7 @@ Checklist
   6  transforms: logit/log are natural, expit <-> logit
   7  synthetic data: noise added on the log-odds scale
   8  ties encoded as score 0.5 -> logit 0
+  9  analytic M-step gradients vs central finite differences
 """
 
 import math
@@ -248,6 +249,65 @@ print("8. ties encoded as 0.5 -> logit 0")
 print("=" * 76)
 check("logit(0.5) == 0", abs(logit(0.5)) < 1e-15)
 check("score 0.5 clips safely (no inf)", np.isfinite(logit(np.clip(0.5, 1e-10, 1 - 1e-10))))
+
+print()
+print("=" * 76)
+print("9. analytic gradients of the beta-binomial M-step")
+print("=" * 76)
+print("   The appendix says the gradients were checked against finite")
+print("   differences; this is that check. A central difference carries O(eps^2)")
+print("   truncation error, so the error should fall about 100-fold per decade of")
+print("   eps until roundoff takes over. A gradient that is wrong does not show")
+print("   that scaling.")
+
+_rng = np.random.default_rng(5)
+_A, _A1, _K = 4, 3, 30
+_Xg = np.zeros((_K, _A1))
+for _k in range(_K):
+    _i, _j = _rng.choice(_A, 2, replace=False)
+    if _i < _A1:
+        _Xg[_k, _i] += 1.0
+    if _j < _A1:
+        _Xg[_k, _j] -= 1.0
+_ng = _rng.integers(10, 50, _K).astype(float)
+_mg = _rng.binomial(_ng.astype(int), 0.5).astype(float)
+_wg = _rng.uniform(0.2, 1.0, _K)
+_wg /= _wg.sum()
+_ug = _rng.normal(0, 0.4, _A1)
+_lam = 1e-3
+_ubar = np.zeros(_A1)
+
+
+def _numeric_grad(mode, rho, eps):
+    g = np.zeros(_A1 + 1)
+    for i in range(_A1):
+        up, um = _ug.copy(), _ug.copy()
+        up[i] += eps
+        um[i] -= eps
+        g[i] = (ib._component_objective(_Xg, _mg, _ng, _wg, up, rho, _lam, _ubar, mode)
+                - ib._component_objective(_Xg, _mg, _ng, _wg, um, rho, _lam, _ubar, mode)) / (2 * eps)
+    g[_A1] = (ib._component_objective(_Xg, _mg, _ng, _wg, _ug, rho + eps, _lam, _ubar, mode)
+              - ib._component_objective(_Xg, _mg, _ng, _wg, _ug, rho - eps, _lam, _ubar, mode)) / (2 * eps)
+    return g
+
+
+def _rel_err(mode, rho, eps):
+    gu, gr = ib._component_grad(_Xg, _mg, _ng, _wg, _ug, rho, _lam, _ubar, mode)
+    ana = np.concatenate([np.asarray(gu).ravel(), [gr]])
+    num = _numeric_grad(mode, rho, eps)
+    return float(np.max(np.abs(ana - num) / np.maximum(np.abs(num), 1e-10)))
+
+
+for _mode, _rho in (("binomial", 0.0), ("beta-binomial", 0.2), ("beta-binomial", 0.7)):
+    _e3, _e4, _e5 = _rel_err(_mode, _rho, 1e-3), _rel_err(_mode, _rho, 1e-4), _rel_err(_mode, _rho, 1e-5)
+    _tag = f"{_mode}, rho={_rho}"
+    print(f"   {_tag:<24} eps=1e-3 {_e3:.2e}   eps=1e-4 {_e4:.2e}   eps=1e-5 {_e5:.2e}")
+    check(f"gradient of {_tag} matches at eps=1e-5", _e5 < 1e-7, f"(rel err {_e5:.2e})")
+    # only the first decade is reliably in the quadratic regime; at 1e-5 the
+    # central difference is already meeting the roundoff floor, so the ratio
+    # there says nothing about the analytic gradient
+    check(f"gradient error of {_tag} falls as eps^2 over 1e-3 to 1e-4",
+          _e4 < _e3 / 20.0, f"(ratio {_e3 / _e4:.0f})")
 
 print()
 print("=" * 76)
