@@ -14,7 +14,7 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from sklearn.model_selection import StratifiedKFold
 
-from _common import CFG, V2_DIR, HOLDOUT_RESULTS, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
+from _common import CFG, SIM_DIR, HOLDOUT_RESULTS, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
 from _baselines import fit_single_k1, predict_single_k1
 from step1_simulation import fit_mop
 

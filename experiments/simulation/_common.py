@@ -6,17 +6,17 @@ from pathlib import Path
 from scipy.special import logit
 from scipy.stats import kendalltau, spearmanr, pearsonr
 
-V2_DIR = Path(__file__).resolve().parent
-PROJECT = V2_DIR.parent.parent
+SIM_DIR = Path(__file__).resolve().parent
+PROJECT = SIM_DIR.parent.parent
 
-with open(V2_DIR / "config.json", encoding="utf-8") as f:
+with open(SIM_DIR / "config.json", encoding="utf-8") as f:
     CFG = json.load(f)
 
 # ── Paths ──────────────────────────────────────────────────────────
-ENERGY_PAIRS = PROJECT / "experiments" / "v1" / "energy_pairs.jsonl"
-SIM_RESULTS = V2_DIR / "simulation_results.json"
-HOLDOUT_RESULTS = V2_DIR / "holdout_results.json"
-REPORT_DIR = V2_DIR / "report"
+ENERGY_PAIRS = PROJECT / "experiments" / "case_study" / "energy_pairs.jsonl"
+SIM_RESULTS = SIM_DIR / "simulation_results.json"
+HOLDOUT_RESULTS = SIM_DIR / "holdout_results.json"
+REPORT_DIR = SIM_DIR / "report"
 TABLES_DIR = PROJECT / "manuscript" / "tables"
 FIGURES_DIR = PROJECT / "manuscript" / "figures"
 
@@ -223,10 +223,10 @@ def generate_noise_pairs(u_logratios, sigma2, n_comparisons, noise_fraction, rng
     return pairs, w_gt
 
 
-# ── v1 TYPE_MAP for holdout ───────────────────────────────────────
+# ── case-study TYPE_MAP for holdout ───────────────────────────────
 
-# Import TYPE_MAP from v1 config
-_V1_CFG_PATH = V2_DIR.parent / "v1" / "config.json"
-with open(_V1_CFG_PATH, encoding="utf-8") as f:
-    _V1_CFG = json.load(f)
-TYPE_MAP = _V1_CFG["energy_type_mapping"]
+# Import TYPE_MAP from the case-study config
+_CASE_CFG_PATH = SIM_DIR.parent / "case_study" / "config.json"
+with open(_CASE_CFG_PATH, encoding="utf-8") as f:
+    _CASE_CFG = json.load(f)
+TYPE_MAP = _CASE_CFG["energy_type_mapping"]

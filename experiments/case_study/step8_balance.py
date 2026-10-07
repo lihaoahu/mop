@@ -3,42 +3,19 @@
 原始整体 MoP 中 Cost 占 1,570/5,238 ≈ 30%，Policy 仅 281/5,238 ≈ 5%。
 这里将各维度（除 Other）bootstrap 到相同样本量后合并，重新拟合 MoP，
 比较平衡前后整体偏好结构的差异。
+
+聚合排序用期望效用（_common.expected_utility），与 step7_analyze 一致。
 """
 
-import json, math, argparse
+import json, argparse
 import numpy as np
-from scipy.special import logit, erf
+from scipy.special import logit
 
 from mop import inference, pairwise_comparison
 from mop.inference import comparisons2regression
 
-from _common import T, DIMS, ENERGY_PAIRS, TYPE_MAP
+from _common import T, DIMS, ENERGY_PAIRS, TYPE_MAP, expected_utility
 from step7_analyze import load_pairs
-
-
-def phi(x):
-    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
-
-
-def vote_scores(weights_list, pi_list, sigma2_list):
-    nA = len(weights_list[0])
-    S = [0.0] * nA
-    for w, pi, sigma2 in zip(weights_list, pi_list, sigma2_list):
-        sigma = math.sqrt(max(sigma2, 1e-10))
-        for i in range(nA):
-            s_i = 0.0
-            for j in range(nA):
-                if i == j: continue
-                wi, wj = w[i], w[j]
-                if wi <= 0 or wj <= 0:
-                    if wi > 0 and wj == 0: s_i += 1.0
-                    elif wi == 0 and wj > 0: s_i += 0.0
-                    else: s_i += 0.5
-                else:
-                    s_i += phi(math.log(wi / wj) / sigma)
-            S[i] += pi * s_i
-    norm = 2.0 / (nA * (nA - 1))
-    return [norm * s for s in S]
 
 
 def fit_mop(pairs, fixed_k=None):
@@ -127,19 +104,18 @@ def main():
 
     print("\n拟合原始整体 MoP...")
     mop_orig, k_orig, bic_orig = fit_mop(all_pairs)
-    vs_orig = vote_scores(
+    eu_orig = expected_utility(
         [p.priority_vector for p in mop_orig.priorities],
         mop_orig.mixture_probabilities,
-        [p.inconsistency_level for p in mop_orig.priorities],
     )
     print(f"  K={k_orig}  pBIC={bic_orig:.1f}")
     for i, t in enumerate(T):
-        print(f"    {t}: {vs_orig[i]:.4f}")
+        print(f"    {t}: {eu_orig[i]:.4f}")
 
     # Bootstrap: 每维度重抽样 → 合并 → MoP
     print(f"\nBootstrap ({args.n_bootstrap} 次)...")
     rng = np.random.RandomState(42)
-    vs_all = []
+    eu_all = []
     k_all = []
 
     for b in range(args.n_bootstrap):
@@ -150,30 +126,29 @@ def main():
             balanced_pairs.extend([dp[i] for i in idx])
         try:
             mop_b, k_b, bic_b = fit_mop(balanced_pairs, fixed_k=k_orig)
-            vs_b = vote_scores(
+            eu_b = expected_utility(
                 [p.priority_vector for p in mop_b.priorities],
                 mop_b.mixture_probabilities,
-                [p.inconsistency_level for p in mop_b.priorities],
             )
-            vs_all.append(vs_b)
+            eu_all.append(eu_b)
             k_all.append(k_b)
         except Exception:
             pass
         if (b + 1) % 10 == 0:
             print(f"  {b+1}/{args.n_bootstrap}...")
 
-    if vs_all:
-        vs_arr = np.array(vs_all)
-        print(f"\n  成功: {len(vs_all)}/{args.n_bootstrap}")
+    if eu_all:
+        eu_arr = np.array(eu_all)
+        print(f"\n  成功: {len(eu_all)}/{args.n_bootstrap}")
         k_mode = int(np.argmax(np.bincount(k_all)))
         print(f"  K 众数: {k_mode}")
         for i, t in enumerate(T):
-            print(f"  {t}: {vs_arr[:, i].mean():.4f} ± {vs_arr[:, i].std():.4f}")
+            print(f"  {t}: {eu_arr[:, i].mean():.4f} ± {eu_arr[:, i].std():.4f}")
 
         # 排名对比
         print("\n  === 排名对比 ===")
-        r_orig = sorted(zip(T, vs_orig), key=lambda x: -x[1])
-        r_bal = sorted(zip(T, vs_arr.mean(axis=0)), key=lambda x: -x[1])
+        r_orig = sorted(zip(T, eu_orig), key=lambda x: -x[1])
+        r_bal = sorted(zip(T, eu_arr.mean(axis=0)), key=lambda x: -x[1])
         print(f"  原始:  {' > '.join(f'{t}({v:.3f})' for t, v in r_orig)}")
         print(f"  平衡:  {' > '.join(f'{t}({v:.3f})' for t, v in r_bal)}")
 
@@ -183,12 +158,12 @@ def main():
             "n_dims": len(dims),
             "n_bootstrap": args.n_bootstrap,
             "orig": {"k": k_orig, "bic": bic_orig,
-                     "vote_scores": [float(x) for x in vs_orig]},
+                     "expected_utility": [float(x) for x in eu_orig]},
             "balanced": {
-                "mean": vs_arr.mean(axis=0).tolist(),
-                "sd": vs_arr.std(axis=0).tolist(),
+                "mean": eu_arr.mean(axis=0).tolist(),
+                "sd": eu_arr.std(axis=0).tolist(),
                 "k_mode": k_mode,
-                "n_success": len(vs_all),
+                "n_success": len(eu_all),
             },
         }
         out_path = ENERGY_PAIRS.parent / "balance_pooled_results.json"

@@ -11,7 +11,8 @@ from scipy.special import logit
 from mop import inference, pairwise_comparison
 from mop.inference import comparisons2regression
 
-from _common import CFG, ENERGY_PAIRS, MOP_RESULTS, TYPE_MAP, T, DIMS, DIM_LABELS
+from _common import (CFG, ENERGY_PAIRS, MOP_RESULTS, TYPE_MAP, T, DIMS,
+                     DIM_LABELS, expected_utility)
 
 
 
@@ -96,10 +97,8 @@ def run_mop(pairs):
 
     best_k = min(bic_vals, key=bic_vals.get)
     best = models[str(best_k)]
-    weighted = np.zeros(4)
-    for pi, pri in zip(best["mixture"]["pis"],
-                       best["mixture"]["priorities"]):
-        weighted += np.array(pri) * pi
+    weighted = expected_utility(best["mixture"]["priorities"],
+                                best["mixture"]["pis"])
     return best_k, best, weighted, nJ
 
 
@@ -116,7 +115,7 @@ def main():
     bk, best, w, nJ = run_mop(load_pairs())
     ranked = sorted(zip(T, w), key=lambda x: -x[1])
     print(f"[整体] n={nJ}  K={bk}  pBIC={best['bic']:.1f}")
-    print(f"  加权: {' > '.join(f'{t}({v:.3f})' for t, v in ranked)}")
+    print(f"  期望效用: {' > '.join(f'{t}({v:.3f})' for t, v in ranked)}")
     for pi, pri in zip(best["mixture"]["pis"],
                        best["mixture"]["priorities"]):
         r = sorted(zip(T, pri), key=lambda x: -x[1])

@@ -220,7 +220,7 @@ print()
 print("=" * 76)
 print("7. synthetic data: noise variance lives on the log-odds scale")
 print("=" * 76)
-sys.path.insert(0, str(ROOT / "experiments" / "v2"))
+sys.path.insert(0, str(ROOT / "experiments" / "simulation"))
 from _common import generate_synthetic_pairs, priority_vector_from_logratios  # noqa: E402
 
 u_true = np.array([[2.0, 1.0, 0.5]])

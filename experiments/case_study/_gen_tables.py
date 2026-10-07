@@ -1,151 +1,186 @@
-"""生成论文所需全部 LaTeX 表格"""
-import sys, json, math
+"""Emit the LaTeX tables of section 3.2 (case study).
+
+Every number comes from ``step7_analyze.run_mop``, so the tables and the
+running text quote the same fits and the same hyperparameters. The aggregate
+row is the expected utility defined in section 2 of the manuscript
+(``_common.expected_utility``), not a vote score.
+
+Usage:
+    uv run python _gen_tables.py                   # print the LaTeX
+    uv run python _gen_tables.py --json out.json   # also dump the raw numbers
+
+The three tables written are tab:mop_overall, tab:dimension_mop and
+tab:year_overall.
+"""
+
+import argparse, json
 import numpy as np
-from scipy.special import logit
-from mop import inference, pairwise_comparison
-from mop.inference import comparisons2regression
-from _common import ENERGY_PAIRS, TYPE_MAP, T, DIMS, DIM_LABELS
 
-D = 100; EPS = 1e-10; TYPES = T
+from _common import T, DIMS, expected_utility  # noqa: F401
+from step7_analyze import load_pairs, run_mop
 
-def load_pairs(dim_name=None, year=None):
-    pairs = []
-    with open(ENERGY_PAIRS, encoding="utf-8") as f:
-        for line in f:
-            r = json.loads(line)
-            if year and r.get("publish_time", "")[:4] != str(year):
-                continue
-            for p in r.get("comparison_pairs", []):
-                if dim_name and p.get("dimension") != dim_name:
-                    continue
-                ft = TYPE_MAP.get(p.get("former_type", ""), "")
-                lt = TYPE_MAP.get(p.get("latter_type", ""), "")
-                if ft in T and lt in T and ft != lt:
-                    pairs.append({"ft": ft, "lt": lt, "score": p.get("score", 0.5)})
-    return pairs
+ABBREV = {"纯电": "BEV", "插混": "PHEV", "增程": "REEV", "燃油": "ICEV"}
+LABELS = [ABBREV[t] for t in T]
 
-def run_one(pairs):
-    nJ = len(pairs)
-    name_to_id = {t: i+1 for i,t in enumerate(TYPES)}
-    pcvector = [pairwise_comparison.PairwiseComparison(
-        former_id=name_to_id[p["ft"]], latter_id=name_to_id[p["lt"]],
-        agent_id=1, judgment=p["score"]) for p in pairs]
-    link_functions = [lambda s, _eps=EPS: logit(np.clip(s, _eps, 1-_eps))]
-    X, y, _ = comparisons2regression(pcvector, link_functions)
-    nA = X.shape[1]; lu = lpi = ls = max(nJ / D, 1.0)
-    u_pool = np.linalg.solve(X.T @ X + 1e-10*np.eye(nA), X.T @ y)
-    s2_bar = max(np.sum((X @ u_pool - y)**2) / max(nJ - nA + 1, 1), 1e-10)
-    prev = None
-    best_k, best_bic, best_result = None, np.inf, None
-    for k in range(1, 7):
-        kw = {}
-        if prev is not None:
-            pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
-            ps = np.array([p.inconsistency_level for p in prev.priorities])
-            ok = len(pu); nk = ok+1
-            u_new = np.zeros((nk, nA)); u_new[:ok]=pu
-            min_rse = np.full(X.shape[0], np.inf)
-            for p in range(ok):
-                min_rse = np.minimum(min_rse, (X @ pu[p] - y)**2)
-            n_edge = min(nA+1, X.shape[0])
-            idx = min_rse >= np.sort(min_rse)[-n_edge]
-            if np.sum(idx)>0:
-                Xe,ye=X[idx],y[idx]
-                u_new[ok]=np.linalg.solve(Xe.T@Xe+1e-10*np.eye(nA), Xe.T@ye)
-            else:
-                u_new[ok]=np.random.randn(nA)*0.1
-            s_new=np.ones(nk); s_new[:ok]=ps; s_new[ok]=np.mean(ps)
-            pm=np.array(prev.mixture_probabilities)
-            m_new=np.zeros(nk); m_new[:ok]=pm*(ok/nk); m_new[ok]=1.0/nk
-            floor=1.0/(nk*20); m_new=np.maximum(m_new,floor); m_new/=np.sum(m_new)
-            kw={"u_init":u_new,"sigma2_init":s_new,"mp_init":m_new}
-        result = inference.mop(pcvector, link_functions, k,
-                               lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
-        val = inference.pbic(pcvector, result, link_functions,
-                             lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi, s2=s2_bar)
-        if val < best_bic:
-            best_bic=val; best_k=k; best_result=result
-        prev=result
-    return nJ, best_k, best_bic, best_result
+# a thousands separator that does not trip LaTeX's math-mode comma spacing
+def thousands(n):
+    """5,401 -> 5{,}401 (int) or 18345.8 -> 18{,}345.8 (float, one decimal)."""
+    s = f"{n:,.1f}" if isinstance(n, float) else f"{n:,}"
+    return s.replace(",", "{,}")
 
-ABBREV = {"纯电":"BEV","插混":"PHEV","增程":"REEV","燃油":"ICEV"}
-TYPE_LABELS = [ABBREV[t] for t in TYPES]
 
-def latex_table(result, best_k, caption, label, nJ, best_bic):
-    """生成 LaTeX 表格字符串"""
-    mp = result.mixture_probabilities
-    nT = len(TYPES)
-    
-    rows = []
-    for p in range(best_k):
-        w = result[p].priority_vector
-        s2 = result[p].inconsistency_level
-        rows.append((f"C{p+1}", list(w), mp[p], s2))
-    weighted = np.zeros(nT)
-    for row in rows:
-        weighted += np.array(row[1]) * row[2]
-    rows.append(("Weighted", list(weighted), 1.0, None))
-    
-    cols = "l" + "c" * (nT + 2)
-    header = " & ".join(["Component"] + TYPE_LABELS + ["$\\pi_p$", "$\\sigma_p^2$"]) + " \\\\"
-    
-    lines = []
-    lines.append("\\begin{table}[ht]")
-    lines.append("\t\\centering")
-    lines.append(f"\t\\caption{{{caption}}}")
-    lines.append(f"\t\\label{{{label}}}")
-    lines.append(f"\t\\begin{{tabular}}{{{cols}}}")
-    lines.append("\t\t\\toprule")
-    lines.append(f"\t\t{header}")
-    lines.append("\t\t\\midrule")
-    for name, w, pi, s2 in rows:
-        w_str = " & ".join(f"{v:.3f}" for v in w)
-        pi_str = f"{pi:.4f}"
-        s2_str = f"{s2:.4f}" if s2 is not None else "---"
-        style = "\\bfseries " if name == "Weighted" else ""
-        lines.append(f"\t\t{style}{name} & {w_str} & {pi_str} & {s2_str} \\\\")
-    lines.append("\t\t\\bottomrule")
-    lines.append("\t\\end{tabular}")
-    lines.append("\\end{table}")
+def fit_block(pairs):
+    """Fit one dataset and return everything the tables need."""
+    best_k, best, u_bar, nJ = run_mop(pairs)
+    mix = best["mixture"]
+    return {
+        "n": int(nJ),
+        "k": int(best_k),
+        "pbic": float(best["bic"]),
+        "components": [
+            {"weights": [float(x) for x in pri],
+             "pi": float(pi),
+             "phi": float(phi)}
+            for pri, pi, phi in zip(mix["priorities"], mix["pis"],
+                                    mix["inconsistencies"])
+        ],
+        "expected_utility": [float(x) for x in u_bar],
+    }
+
+
+def _cells(values, bold_top):
+    top = int(np.argmax(values)) if bold_top else -1
+    out = []
+    for i, v in enumerate(values):
+        s = f"{v:.3f}"
+        out.append(f"\\textbf{{{s}}}" if i == top else s)
+    return " & ".join(out)
+
+
+def component_row(name, c, bold_top=True):
+    return (f"{name} & {_cells(c['weights'], bold_top)} & "
+            f"{c['pi']:.4f} & {c['phi']:.4f} \\\\")
+
+
+def eu_row(u_bar):
+    return (f"\\textbf{{Expected Utility}} & {_cells(u_bar, True)} & "
+            f"--- & --- \\\\")
+
+
+HEADER = "Component & BEV & PHEV & REEV & ICEV & $\\pi_p$ & $\\phi_p$ \\\\"
+
+
+def table_overall(blk):
+    lines = [
+        "\\begin{table}[ht]",
+        "\t\\centering",
+        (f"\t\\caption{{Four-component mixture of preferences for the overall "
+         f"dataset ($n={thousands(blk['n'])}$, pBIC$={thousands(blk['pbic'])}$, "
+         f"$\\lambda_u{{=}}10^{{-6}}$, $\\lambda_\\pi{{=}}1$, "
+         f"$\\lambda_\\sigma{{=}}n/50{{\\approx}}{blk['n'] // 50}$).}}"
+         f"\\label{{tab:mop_overall}}"),
+        "\t\\begin{tabular}{lcccccc}\\toprule",
+        "\t\t" + HEADER,
+        "\t\t\\midrule",
+    ]
+    for i, c in enumerate(blk["components"], start=1):
+        lines.append(component_row(f"C{i}", c))
+    lines.append("\\midrule")
+    lines.append(eu_row(blk["expected_utility"]))
+    lines += ["\\bottomrule", "\t\\end{tabular}", "\\end{table}"]
     return "\n".join(lines)
 
-if __name__ == "__main__":
-    # 整体
-    pairs = load_pairs()
-    nJ, best_k, best_bic, result = run_one(pairs)
-    print(latex_table(result, best_k,
-        f"Mixture of preferences for the overall dataset ($n={nJ}$, $\\mathcal{{P}}={best_k}$, pBIC$={best_bic:.1f}$).",
-        "tab:mop_overall", nJ, best_bic))
+
+def table_dimensions(blocks):
+    lines = [
+        "\\begin{table}[ht]",
+        "\t\\centering",
+        ("\t\\caption{Dimensional decomposition of the MoP model "
+         "($\\lambda_u{=}10^{-6}$, $\\lambda_\\pi{=}1$, $\\lambda_\\sigma{=}n/50$).}"
+         "\\label{tab:dimension_mop}\\small"),
+        "\t\\begin{tabular}{lcccccc}\\toprule",
+        "\t\t" + HEADER,
+        "\t\t\\midrule",
+    ]
+    for j, (dim, blk) in enumerate(blocks):
+        title = dim.replace("_", " ").title()
+        lines.append(
+            f"\t\t\\multicolumn{{7}}{{l}}{{\\textbf{{{title}}}  "
+            f"($n{{=}}{thousands(blk['n'])}$, $\\mathcal{{P}}^*{{=}}{blk['k']}$, "
+            f"pBIC${{=}}{thousands(blk['pbic'])}$)}} \\\\")
+        for i, c in enumerate(blk["components"], start=1):
+            lines.append(component_row(f"C{i}", c))
+        lines.append(eu_row(blk["expected_utility"]))
+        if j < len(blocks) - 1:
+            lines.append("\\midrule")
+    lines += ["\\bottomrule", "\t\\end{tabular}", "\\end{table}"]
+    return "\n".join(lines)
+
+
+def table_years(years):
+    lines = [
+        "\\begin{table}[ht]",
+        "\t\\centering",
+        "\t\\caption{MoP for 2025 and 2026: overall component-level results.}",
+        "\t\\label{tab:year_overall}",
+        "\t\\begin{tabular}{lcccccc}",
+        "\t\t\\toprule",
+        "\t\t" + HEADER,
+        "\t\t\\midrule",
+    ]
+    for j, (year, blk) in enumerate(years):
+        lines.append(
+            f"\t\t\\multicolumn{{7}}{{l}}{{\\textbf{{{year}}}  "
+            f"($n={thousands(blk['n'])}$, $\\mathcal{{P}}^*={blk['k']}$, "
+            f"pBIC$={thousands(blk['pbic'])}$)}} \\\\")
+        for i, c in enumerate(blk["components"], start=1):
+            lines.append(component_row(f"C{i}        ", c))
+        lines.append(eu_row(blk["expected_utility"]))
+        if j < len(years) - 1:
+            lines.append("\t\t\\midrule")
+    lines += ["\t\t\\bottomrule", "\t\\end{tabular}", "\\end{table}"]
+    return "\n".join(lines)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--json", help="also write the raw numbers here")
+    args = ap.parse_args()
+
+    out = {}
+
+    banner = lambda s: print("%" + "=" * 74 + f"\n%% {s}\n" + "%" + "=" * 74)  # noqa: E731
+
+    banner("tab:mop_overall")
+    overall = fit_block(load_pairs())
+    out["overall"] = overall
+    print(table_overall(overall))
     print()
-    
-    # 分维度
+
+    banner("tab:dimension_mop")
+    blocks = []
     for dim in DIMS:
         pairs = load_pairs(dim_name=dim)
-        if len(pairs) < 30: continue
-        nJ, best_k, best_bic, result = run_one(pairs)
-        dim_en = dim.replace("_"," ").title()
-        print(latex_table(result, best_k,
-            f"MoP for {dim_en} dimension ($n={nJ}$, $\\mathcal{{P}}={best_k}$, pBIC$={best_bic:.1f}$).",
-            f"tab:dim_{dim}", nJ, best_bic))
-        print()
+        if len(pairs) < 30:
+            continue
+        blocks.append((dim, fit_block(pairs)))
+    out["dimensions"] = {d: b for d, b in blocks}
+    print(table_dimensions(blocks))
+    print()
 
-    # 分年份整体
-    for year in [2025, 2026]:
+    banner("tab:year_overall")
+    years = []
+    for year in ["2025", "2026"]:
         pairs = load_pairs(year=year)
-        nJ, best_k, best_bic, result = run_one(pairs)
-        print(latex_table(result, best_k,
-            f"MoP for {year} ($n={nJ}$, $\\mathcal{{P}}={best_k}$, pBIC$={best_bic:.1f}$).",
-            f"tab:year_{year}", nJ, best_bic))
-        print()
-    
-    # 分年份×维度
-    for year in [2025, 2026]:
-        for dim in DIMS:
-            pairs = load_pairs(dim_name=dim, year=year)
-            if len(pairs) < 30: continue
-            nJ, best_k, best_bic, result = run_one(pairs)
-            dim_en = dim.replace("_"," ").title()
-            print(latex_table(result, best_k,
-                f"MoP for {dim_en} dimension, {year} ($n={nJ}$, $\\mathcal{{P}}={best_k}$, pBIC$={best_bic:.1f}$).",
-                f"tab:year{year}_{dim}", nJ, best_bic))
-            print()
+        years.append((year, fit_block(pairs)))
+    out["years"] = {y: b for y, b in years}
+    print(table_years(years))
+
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=2)
+        print(f"\n% raw numbers -> {args.json}", flush=True)
+
+
+if __name__ == "__main__":
+    main()

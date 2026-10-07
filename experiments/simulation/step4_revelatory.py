@@ -12,7 +12,7 @@ from pathlib import Path
 from mop import inference
 from mop.pairwise_comparison import PairwiseComparison, comparisons2regression
 
-from _common import V2_DIR, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
+from _common import SIM_DIR, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
 
 EPS = 1e-10
 T = CANONICAL_TYPES
@@ -233,7 +233,7 @@ def main():
             results[dim] = r
 
     # Save
-    out_path = V2_DIR / "revelatory_results.json"
+    out_path = SIM_DIR / "revelatory_results.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
     print(f"\nSaved to {out_path}")

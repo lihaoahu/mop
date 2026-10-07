@@ -9,7 +9,7 @@ import numpy as np
 from pathlib import Path
 
 from _common import (
-    V2_DIR, SIM_RESULTS, HOLDOUT_RESULTS, REPORT_DIR,
+    SIM_DIR, SIM_RESULTS, HOLDOUT_RESULTS, REPORT_DIR,
     priority_vector_from_logratios,
     generate_cancellation, generate_noise_ground_truth,
 )

@@ -41,13 +41,13 @@ from sklearn.model_selection import StratifiedKFold
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from _common import CANONICAL_TYPES, V2_DIR  # noqa: E402
+from _common import CANONICAL_TYPES, SIM_DIR  # noqa: E402
 from _baselines import fit_single_k1, predict_single_k1  # noqa: E402
 from step1_simulation import fit_mop  # noqa: E402
 from step2_holdout import DIM_LABELS, load_real_pairs, predict_mop_per_component  # noqa: E402
 
 EPS = 1e-10
-OUT = V2_DIR / "holdout_marginal_results.json"
+OUT = SIM_DIR / "holdout_marginal_results.json"
 
 
 def design(pairs, n_a):
