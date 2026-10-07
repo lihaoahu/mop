@@ -144,7 +144,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
         PLL -= (lambda_u[p] / (2.0 * sp2)) * np.sum(diff ** 2)
         PLL -= (nA_minus_1 / 2.0) * np.log(2.0 * np.pi * sp2 / lambda_u[p])
 
-    # 2. σ² 的先验: 1/σ²_p ~ Gamma((λ_{σ,p}+2)/2, λ_{σ,p} s̄²/2) — Eq.(5)
+    # 2. σ² 的先验: 1/σ²_p ~ Gamma((λ_{σ,p}-2)/2, λ_{σ,p} s̄²/2) — Eq.(5)
     for p, sp2 in enumerate(sigma2):
         if sp2 < 1e-300:
             continue
