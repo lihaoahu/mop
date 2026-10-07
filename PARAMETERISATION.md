@@ -18,8 +18,8 @@ It must print `ALL CONVENTIONS VERIFIED` and exit with status 0.
 |---|---|---|---|
 | Judgment transform | `logit(score)`, natural log | `scipy.special.logit` | |
 | Structural inconsistency | `sigma2` is a **variance** on the log-odds scale | `norm.logpdf(x, scale=)` takes a **standard deviation** | `scale = sqrt(sigma2)` |
-| Vote score | `Phi((u_i - u_j) / sigma_p)`, denominator is the **standard deviation** | `norm.cdf` | reproduces manuscript Table 3 |
-| Variance prior | `1/sigma2 ~ Gamma((lambda_s+2)/2, lambda_s*s2bar/2)` | `invgamma.logpdf(sigma2, a=(lambda_s+2)/2, scale=lambda_s*s2bar/2)` | Inverse-Gamma density, **Jacobian included** |
+| Aggregate ranking | `sum_p pi_p * log(w_pi / w_pA)` | – | expected utility; utilities are the logs of the normalised priority vector, taken against the benchmark alternative |
+| Variance prior | `1/sigma2 ~ Gamma((lambda_s-2)/2, lambda_s*s2bar/2)` | `invgamma.logpdf(sigma2, a=(lambda_s-2)/2, scale=lambda_s*s2bar/2)` | Inverse-Gamma density, **Jacobian included** |
 | Utility prior | `u_p \| sigma2_p ~ N(ubar, lambda_u^-1 sigma2_p I)` | `norm.logpdf(u, loc=ubar, scale=sqrt(sigma2/lambda_u))` | |
 | Mixture prior | `pi ~ Dirichlet(lambda_pi, ..., lambda_pi)` | `numpy.random.dirichlet` | concentration |
 | Repeated binary judgment | `m_k ~ BetaBinomial(n_k, mu_kp, rho_p)` | `betabinom.logpmf(k, n_k, a, b)` | `a = mu*(1-rho)/rho`, `b = (1-mu)*(1-rho)/rho` |
@@ -135,18 +135,52 @@ Consequences:
   rises from −896 to a flat −516.7 within 50 iterations), so this is a weak
   direction of the objective rather than oscillation.
 
-### 5. Vote score
+### 5. Aggregate ranking is an expected utility, not a vote score
 
-Manuscript `eq:vote` writes `Phi((u_pi - u_pj) / sigma_p)` with
-`epsilon_p ~ N(0, sigma_p^2)`, so the denominator is a standard deviation, and
-`u_pi - u_pj = log(w_pi / w_pj)` because `w` is the normalised exponential of
-`u`. Recomputing the vote scores from the published component parameters of
-Table 3 gives 0.2116 / 0.2618 / 0.3125 / 0.2140 against the printed
-0.212 / 0.262 / 0.313 / 0.214 — a maximum deviation of 0.0005, i.e. rounding.
-Using `sigma_p^2` in the denominator instead would miss those values, so the
-convention is confirmed rather than assumed.
+The manuscript used to aggregate with a vote score,
+`Phi((u_pi - u_pj) / sigma_p)` averaged over pairs and components. That
+expression exists only for the transformed-Gaussian member, where the
+probability that one alternative beats another has a closed form, so it
+contradicted the claim that the observation model is exchangeable across
+protocols. It is replaced by the expected utility
 
-### 6. Beta-binomial
+```
+u_bar_i = sum_p pi_p * log(w_pi / w_pA)
+```
+
+which needs no distributional assumption. The implementation places the
+benchmark alternative last in every priority vector and sets its utility to
+zero, so the components share an origin and their utilities can be averaged;
+averaging the raw weights instead would not be comparable across components.
+`expected_utility` lives in `src/mop/mixture_of_priorities.py` and is called by
+both the case-study and the simulation scripts.
+
+A weight can sit at the edge of the simplex, so the log is taken against a
+floor of `1e-300`. The near-degenerate component in the case study has weights
+down to `1e-11`, which is finite but large enough in ratio terms to contribute
+about a fifth of one alternative's aggregate; the paper says so rather than
+suppressing it.
+
+### 6. The noninformative limit keeps one term
+
+`tests/` and the appendix both used to state that MAP reduces to maximum
+likelihood as the priors flatten. That holds for the utility vectors and the
+mixture weights but not for the variance. The normalising constant
+`|lambda_u^-1 phi_p I|^{-1/2}` of the conditional utility prior carries
+`phi_p^{-(A-1)/2}` at any `lambda_u`, so the denominator of the variance update
+keeps its `A - 1`:
+
+```
+phi_p* = SS / (sum_k gamma_kp + (A - 1))
+```
+
+A numerical check confirms it: with `lambda_u = lambda_s = 1e-8`, `A = 4` and
+`K = 80`, the maximum of `penalized_log_likelihood` sits at `SS / (n + A - 1)`
+to a relative error of 1e-10, and differs from `SS / n` by 3.6%. The `A - 1`
+would vanish only if the utility vector were integrated out first, which is the
+marginal posterior rather than the joint one the EM iteration targets.
+
+### 7. Beta-binomial
 
 `src/mop/inference_binomial.py` uses the mean-dispersion parameterisation
 `(n, mu, rho)`, which does not exist in scipy. It was validated against
@@ -165,7 +199,7 @@ Two further points about `rho`:
 - the gradient uses a floored `digamma` (`_digamma_safe`) because
   `digamma(a)` diverges as `a -> 0`.
 
-### 7. Transforms and ties
+### 8. Transforms and ties
 
 All transforms are natural-log based; nothing in `src/mop` uses base 10. A tie
 is encoded as the score `0.5`, which maps to `logit = 0` — the same point as a
