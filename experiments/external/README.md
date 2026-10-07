@@ -1,4 +1,4 @@
-# v3 — Generalization to a published choice-under-uncertainty dataset
+# External validation on a published choice-under-uncertainty dataset
 
 This directory holds the external validation required after the referee report:
 the model is applied to a published experiment on repeated choice under
@@ -28,9 +28,10 @@ indifference.
 
 | File | Purpose |
 |---|---|
-| `step1_regenwetter.py` | Fits each participant × set unit as a repeated binary comparison under both the binomial and the beta-binomial likelihood, selecting the number of mixture components by BIC, and writes `regenwetter_results.json`. |
+| `step1_regenwetter.py` | Fits each participant × set unit as a repeated binary comparison under both the binomial and the beta-binomial likelihood, selecting the number of mixture components by BIC, and writes `regenwetter_results.json`. Considers up to four components with two initialisations per fit, which is its default and the setting behind the published table. |
 | `step2_separability.py` | Simulated separability check: generates data with and without within-state overdispersion and fits both likelihoods, testing whether a locked `rho` inflates the selected number of components. Writes `separability_results.json`. |
 | `step3_scaling.py` | Population-level scaling: D decision makers share one set of components, so the observation count grows without adding alternatives. Asks whether more data repairs the confounding or whether the likelihood has to change. Writes `scaling_results.json`. |
+| `step4_regenwetter_pooled.py` | Pools the 30 participants of a gamble set into a single mixture, matching the design of the case study, and fits both likelihoods. Writes `regenwetter_pooled_results.json`. |
 | `step5_scalability.py` | Fits a distribution over the $\mathcal{A}!$ transitive orders and the four-component mixture of preferences to the *same* simulated pairwise data, across $\mathcal{A}=4..8$, comparing free parameters and wall-clock cost. Writes `scalability_results.json`. |
 
 ```bash
@@ -56,7 +57,7 @@ data.
 Note on unanimous units: when every pair of a unit is decided 45–0, `rho` is not
 identified — the likelihood is monotone in `rho` and reaches its maximum at the
 boundary. Report `rho` only for units with at least one split decision; the
-fitted ranking is unaffected either way. See `PARAMETERISATION.md` §6.
+fitted ranking is unaffected either way. See `PARAMETERISATION.md` §7.
 
 ## Separability check (`step2_separability.py`)
 
