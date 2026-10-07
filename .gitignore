@@ -9,3 +9,9 @@ models/
 __pycache__/
 *.pyc
 .venv/
+
+# Console output from a run, and ad-hoc scratch
+*.log
+*_rerun.txt
+*_out.txt
+*.backup.json

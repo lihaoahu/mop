@@ -121,9 +121,21 @@ def evaluate_one(method, pairs, n_alternatives, ground_truth):
         k_est = 1
     t_elapsed = time.perf_counter() - t0
     w_true = priority_vector_from_logratios(ground_truth["u_logratios"])
+    if method == "MoP":
+        s2 = [float(x) for x in state["sigma2"]]
+    else:
+        s2 = [float(p.inconsistency_level) for p in state["mop_result"]]
     return {
         "k_est": k_est,
         "k_true": ground_truth.get("k_true", len(ground_truth["pi_true"])),
+        # the fitted state of this replicate, so the illustrative row of the
+        # paper's recovery table can be regenerated rather than transcribed
+        "fit": {
+            "k": int(k_est),
+            "weights": [[float(x) for x in row] for row in w_est],
+            "pis": [float(x) for x in pi_est],
+            "sigma2": s2,
+        },
         "cosine_sim": cosine_similarity(w_true, w_est),
         "kl_pi": kl_divergence(ground_truth["pi_true"], pi_est),
         "kendall_tau": kendall_tau(ground_truth["w_true_avg"], w_avg_est),
@@ -156,7 +168,7 @@ def run_cancellation(trials):
         }
         for method in METHODS:
             trial_results[method].append(evaluate_one(method, pairs, nA, gt))
-    agg = _aggregate(trial_results)
+    agg = _aggregate(trial_results, replicate_1_seed=1000)
     agg.update(n_trials=trials, sigma2=sigma2, n_comparisons=n_comp)
     _print_agg(key, agg)
     return {key: agg}
@@ -189,7 +201,7 @@ def run_general(trials):
             }
             for method in METHODS:
                 trial_results[method].append(evaluate_one(method, pairs, nA, gt))
-        agg = _aggregate(trial_results)
+        agg = _aggregate(trial_results, replicate_1_seed=3000 + K * 1000)
         agg.update(n_trials=trials, sigma2=sigma2, n_comparisons=n_comp, K_true=K)
         all_results[key] = agg
         _print_agg(key, agg)
@@ -226,7 +238,7 @@ def run_noise(trials):
             trial_results[method].append(result)
             if method == "MoP":
                 mop_k_vals.append(result["k_est"])
-    agg = _aggregate(trial_results)
+    agg = _aggregate(trial_results, replicate_1_seed=4000)
     for m in METHODS:
         agg[m].pop("k_accuracy", None)
     agg.update(n_trials=trials, sigma2=sigma2, noise_fraction=noise_f, n_comparisons=n_comp)
@@ -241,7 +253,7 @@ def run_noise(trials):
 # Helpers
 # ═══════════════════════════════════════════════════════════════════
 
-def _aggregate(trial_results):
+def _aggregate(trial_results, replicate_1_seed=None):
     metrics = ["cosine_sim", "kl_pi", "kendall_tau", "time_s"]
     agg = {}
     for method in METHODS:
@@ -254,6 +266,10 @@ def _aggregate(trial_results):
         k_true = trial_results[method][0]["k_true"]
         agg[method]["k_accuracy"] = float(np.mean([1.0 if k == k_true else 0.0 for k in k_vals]))
         agg[method]["k_mean"] = float(np.mean(k_vals))
+    # the first replicate of each method, the row the paper's recovery table
+    # illustrates; kept so the table can be regenerated rather than transcribed
+    agg["replicate_1"] = {m: trial_results[m][0]["fit"] for m in METHODS}
+    agg["replicate_1_seed"] = replicate_1_seed
     return agg
 
 
