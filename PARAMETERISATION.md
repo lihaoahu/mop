@@ -60,30 +60,44 @@ informative inverse-Gamma prior" (`sections/03_empirical.tex`).
 `inference.py` updates the variance as
 
 ```
-sigma2 <- (SS + lambda_u * ||u - ubar||^2 + lambda_s * s2bar) / (sum_k gamma_k + lambda_s + 4)
+sigma2 <- (SS + lambda_u * ||u - ubar||^2 + lambda_s * s2bar)
+          / (sum_k gamma_k + lambda_s + (nA - 1) + 4)
 ```
 
-with `SS = sum_k gamma_k * residual_k^2`. The `+4` is `2*(alpha + 1)` with
-`alpha = (lambda_s + 2) / 2`: it comes from the inverse-Gamma exponent, because
-the prior is stated on `1/sigma2` while the update is computed for `sigma2`. The
-`lambda_u` term is the contribution of the `N(ubar, lambda_u^-1 sigma2 I)` prior
-on `u`.
+with `SS = sum_k gamma_k * residual_k^2` and `nA - 1` the dimension of the
+utility vector. Each term of the denominator is the contribution of one factor
+of the posterior that carries `phi_p`:
 
-Earlier versions of this code omitted both, using
-`(SS + lambda_s * s2bar) / (sum_k gamma_k + lambda_s)`. That update did not
-maximize the same posterior density that `penalized_log_likelihood` evaluates
-and that pBIC reports, so the monotonicity of the EM iteration was not
-guaranteed. The gap scales as `4/(n + lambda_s)`, and because the relevant `n`
-is the *component's* effective sample size `sum_k gamma_kp`, it reached 3.5% for
-a near-empty component (`pi = 0.0005`) while staying near 0.5% for components
-with real mass.
+| term | source |
+|---|---|
+| `sum_k gamma_k` | the Gaussian likelihood, one factor per observation |
+| `nA - 1` | the normalising constant of the utility prior, whose density carries `phi_p^{-(A-1)/2}` |
+| `lambda_s + 4` | the inverse-Gamma density, where `4 = 2*(alpha + 1)` with `alpha = (lambda_s + 2)/2` |
 
-The fix moves the fitted values slightly: on the case-study data the variance
-estimates shift by 0.4–0.9% for the substantive components and 3.5% for the
-near-empty one, while the mixture weights move by less than 5e-4 and the
-priority vectors by less than 2e-3. `tests/audit_parameterisation.py` verifies
-that the update now equals the closed-form maximizer of the penalized
-log-posterior, checked against a numerical optimizer.
+The numerator carries the quadratic term of the utility prior.
+
+**Two successive corrections were needed here.**
+
+The first version used `(SS + lambda_s * s2bar) / (sum_k gamma_k + lambda_s)`,
+omitting both the inverse-Gamma term and the utility prior; that update was not
+a stationary point of the density `penalized_log_likelihood` evaluates.
+
+The second version restored `2*(alpha+1)` as a bare `+4` but still omitted
+`nA - 1`. The omission is invisible at large `n`: for the case study the wrong
+and right denominators differ by about 0.14%, and refitting the case-study data
+moves `pi` in the fourth decimal and leaves the ranking unchanged. It is **not**
+small where the component's effective sample size `sum_k gamma_kp` is small —
+`K = 1` fits, near-empty components, the external validation (ten observations
+per unit), and small-`A`, small-`n` simulation cells.
+
+`tests/audit_parameterisation.py` checks the update against a numerical
+maximiser, and now sweeps `A` across the test cases. It is worth recording why
+that sweep matters: the first two versions of this audit passed while the code
+was wrong, because the audit built its own objective function and reproduced
+the same omission. An audit that restates the implementation's assumption
+cannot test it. The section now varies `A`, which is the only parameter that
+exposes a missing `nA - 1`, and its `closed form` line is the implementation's
+formula rather than a restatement of it.
 
 ### 4. sigma^2 is weakly identified, so its reported precision is limited
 

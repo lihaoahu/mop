@@ -313,19 +313,26 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 except np.linalg.LinAlgError:
                     u_new[p, :] = np.linalg.lstsq(XtWX, Xty_w, rcond=None)[0]
 
-                # M-step for the inconsistency variance: the exact MAP of the
-                # inverse-Gamma prior in Eq. (5). The +4 in the denominator is
-                # 2*(alpha+1) with alpha=(lambda_sigma+2)/2, the exponent of the
-                # inverse-Gamma density; the lambda_u term carries the utility
-                # prior. Omitting them (as an earlier version did) leaves this
-                # update inconsistent with the penalized likelihood that pBIC
-                # evaluates. See PARAMETERISATION.md section 3.
+                # M-step for the inconsistency variance: the exact maximiser of
+                # the penalized log-posterior that penalized_log_likelihood
+                # evaluates, so that the iteration stays monotone. The
+                # denominator collects one contribution per factor carrying
+                # phi_p:
+                #   sum_gkc[p]        the Gaussian likelihood, n_p observations
+                #   nA_minus_1        the normalising constant of the utility
+                #                     prior, whose density carries
+                #                     phi_p^{-(nA-1)/2}
+                #   lambda_sigma + 4  = 2(alpha+1) with alpha=(lambda_sigma+2)/2,
+                #                     from the inverse-Gamma density
+                # The numerator carries the utility prior's quadratic term.
+                # An earlier version omitted nA_minus_1, which put this update
+                # off the stationary point; see PARAMETERISATION.md section 3.
                 residuals = y - X @ u_new[p, :]
                 ss_resid = float(np.sum(gkc_p * residuals ** 2))
                 ss_prior_u = lambda_u[p] * float(np.sum((u_new[p] - u_bar[p]) ** 2))
                 sigma2_new[p] = max(
                     (lambda_sigma[p] * s2 + ss_resid + ss_prior_u)
-                    / (lambda_sigma[p] + sum_gkc[p] + 4.0),
+                    / (lambda_sigma[p] + sum_gkc[p] + nA_minus_1 + 4.0),
                     1e-10
                 )
 

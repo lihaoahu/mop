@@ -87,23 +87,37 @@ print("3. M-step sigma^2 update equals the closed-form MAP of that prior")
 print("=" * 76)
 from scipy.optimize import minimize_scalar  # noqa: E402
 
-print(f"   {'n':>7} {'lambda_s':>9} {'closed form':>13} {'|grad|/scale':>13} "
-      f"{'numeric argmax':>15} {'rel. err':>10}")
-for n_eff, lam_s, SS, SSU in [(5401, 108.0, 100.0, 0.0), (500, 10.0, 60.0, 1.5),
-                              (450, 9.0, 54.0, 0.0), (30, 0.6, 12.0, 0.4)]:
+print(f"   {'A':>3} {'n':>7} {'lambda_s':>9} {'closed form':>13} "
+      f"{'|grad|/scale':>13} {'numeric argmax':>15} {'rel. err':>10}")
+# A is swept on purpose. The normalising constant of the utility prior carries
+# a factor phi^{-(A-1)/2}, so the denominator must contain d = A - 1; a single
+# A would not expose its absence, which is how an earlier version of this audit
+# passed while the code was wrong.
+for A, n_eff, lam_s, SS, SSU in [(2, 5401, 108.0, 100.0, 0.0),
+                                 (4, 5401, 108.0, 100.0, 0.0),
+                                 (4, 500, 10.0, 60.0, 1.5),
+                                 (8, 500, 10.0, 60.0, 1.5),
+                                 (4, 30, 0.6, 12.0, 0.4),
+                                 (10, 30, 0.6, 12.0, 0.4)]:
+    d = A - 1
     s2bar = 0.5
     alpha = (lam_s + 2.0) / 2.0
     beta = lam_s * s2bar / 2.0
-    closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + 4.0)
+    # denominator: n_p (likelihood) + d (utility-prior normalisation)
+    #              + lambda_s + 4, where 4 = 2(alpha+1) from the
+    #              inverse-Gamma density stated on 1/sigma2
+    closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + d + 4.0)
 
-    # the closed form must be a stationary point of the penalised log-posterior
-    grad = (-0.5 * n_eff / closed + (SS + SSU) / (2.0 * closed ** 2)
-            - (alpha + 1.0) / closed + beta / closed ** 2)
-    scale = max(0.5 * n_eff / closed, (SS + SSU) / (2.0 * closed ** 2), 1.0)
+    # each term carries one factor of phi in the posterior density
+    grad = (-0.5 * (n_eff + d) / closed           # likelihood + prior norm.
+            + (SS + SSU) / (2.0 * closed ** 2)    # their quadratic terms
+            - (alpha + 1.0) / closed              # inverse-Gamma density
+            + beta / closed ** 2)
+    scale = max(0.5 * (n_eff + d) / closed, (SS + SSU) / (2.0 * closed ** 2), 1.0)
     stationary = abs(grad) / scale
 
     def neg_logpost(s2):
-        return -(-0.5 * n_eff * np.log(s2) - (SS + SSU) / (2.0 * s2)
+        return -(-0.5 * (n_eff + d) * np.log(s2) - (SS + SSU) / (2.0 * s2)
                  + alpha * np.log(beta) - gammaln(alpha)
                  - (alpha + 1.0) * np.log(s2) - beta / s2)
 
@@ -111,7 +125,7 @@ for n_eff, lam_s, SS, SSU in [(5401, 108.0, 100.0, 0.0), (500, 10.0, 60.0, 1.5),
                           method="bounded", options={"xatol": 1e-14})
     rel_num = abs(res.x - closed) / closed
 
-    print(f"   {n_eff:>7} {lam_s:>9.1f} {closed:>13.6f} {stationary:>13.2e} "
+    print(f"   {A:>3} {n_eff:>7} {lam_s:>9.1f} {closed:>13.6f} {stationary:>13.2e} "
           f"{res.x:>15.6f} {rel_num:>9.2e}")
     check("closed form is a stationary point", stationary < 1e-12)
     check("numeric maximiser agrees", rel_num < 1e-4)
