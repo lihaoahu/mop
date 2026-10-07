@@ -13,6 +13,7 @@ from mop import inference
 from mop.pairwise_comparison import PairwiseComparison, comparisons2regression
 
 from _common import SIM_DIR, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
+from mop import expected_utility
 
 EPS = 1e-10
 T = CANONICAL_TYPES
@@ -191,11 +192,9 @@ def analyze(label, pairs, nA=4):
     print(f"  Components:")
     for i in range(best_k):
         print(f"    C{i+1}: π={pis[i]:.4f}  σ²={sigmas[i]:.4f}  {rank_str(ws[i])}")
-    # Weighted
-    w_avg = np.zeros(nA)
-    for pi, w in zip(pis, ws):
-        w_avg += pi * w
-    print(f"    Weighted: {rank_str(w_avg)}")
+    # Expected utility, the aggregate the manuscript reports
+    u_bar = expected_utility(ws, pis)
+    print(f"    Expected utility: {rank_str(u_bar)}")
     print(f"  P=1: π=1.0000  σ²={models[1]['sigma2'][0]:.4f}  {rank_str(models[1]['ws'][0])}")
 
     return {
@@ -210,7 +209,7 @@ def analyze(label, pairs, nA=4):
                          "ranking": rank_str(ws[i])}
                         for i in range(best_k)],
         "p1_ranking": rank_str(models[1]["ws"][0]),
-        "weighted_ranking": rank_str(w_avg),
+        "expected_utility_ranking": rank_str(u_bar),
     }
 
 

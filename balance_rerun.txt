@@ -1,0 +1,43 @@
+﻿  cost: 1570 pairs
+  driving_experience: 753 pairs
+  range: 835 pairs
+  refueling_convenience: 617 pairs
+  reliability: 384 pairs
+  policy: 281 pairs
+
+每维度目标样本量: 1570
+平衡后总样本量: 9420
+
+原始整体: 4440 pairs (各维度混合，未平衡权重)
+
+拟合原始整体 MoP...
+  K=4  pBIC=15104.8
+    纯电: -0.0425
+    插混: 0.2611
+    增程: 0.4547
+    燃油: 0.0000
+
+Bootstrap (100 次)...
+  10/100...
+  20/100...
+  30/100...
+  40/100...
+  50/100...
+  60/100...
+  70/100...
+  80/100...
+  90/100...
+  100/100...
+
+  成功: 100/100
+  K 众数: 4
+  纯电: 0.0438 ± 0.0282
+  插混: 0.3574 ± 0.0272
+  增程: 0.5760 ± 0.0216
+  燃油: 0.0000 ± 0.0000
+
+  === 排名对比 ===
+  原始:  增程(0.455) > 插混(0.261) > 燃油(0.000) > 纯电(-0.043)
+  平衡:  增程(0.576) > 插混(0.357) > 纯电(0.044) > 燃油(0.000)
+
+结果已保存: C:\Users\Hao\Desktop\Projects\Mixture_of_preferences\revised\experiments\case_study\balance_pooled_results.json
