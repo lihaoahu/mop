@@ -4,10 +4,10 @@ Usage:
     uv run python experiments/simulation/step4_revelatory.py
 """
 
-import json, time
+import json
+
 import numpy as np
 from scipy.special import logit
-from pathlib import Path
 
 from mop import inference
 from mop.pairwise_comparison import PairwiseComparison, comparisons2regression

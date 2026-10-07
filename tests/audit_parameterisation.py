@@ -12,9 +12,9 @@ It exits non-zero if any convention fails to reproduce.
 Checklist
   1  Gaussian likelihood: is the scale argument sqrt(sigma^2) (std) or sigma^2?
   2  Inverse-Gamma prior on sigma^2: does the code's log-density match
-     scipy.stats.invgamma with shape=(lambda_s+2)/2, scale=lambda_s*s2bar/2?
+     scipy.stats.invgamma with shape=(lambda_s-2)/2, scale=lambda_s*s2bar/2?
   3  M-step update for sigma^2 vs the strict MAP implied by that prior
-  4  vote score: Phi(diff / sigma) vs Phi(diff / sigma^2)
+  4  aggregate ranking: expected utility, and the benchmark's zero origin
   5  beta-binomial: (n, mu, rho) vs scipy (n, a, b); rho <-> (a, b)
   6  transforms: logit/log are natural, expit <-> logit
   7  synthetic data: noise added on the log-odds scale
@@ -32,6 +32,7 @@ from scipy.stats import betabinom, invgamma, norm
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 from mop import inference_binomial as ib  # noqa: E402
+from mop.mixture_of_priorities import expected_utility  # noqa: E402
 
 ok = True
 
@@ -134,44 +135,45 @@ print("      penalized_log_likelihood evaluates, so EM monotonicity holds.")
 
 print()
 print("=" * 76)
-print("4. vote score convention: Phi(diff/sigma) vs Phi(diff/sigma^2)")
+print("4. aggregate ranking: expected utility, not a vote score")
 print("=" * 76)
 LAB = ["BEV", "PHEV", "REEV", "ICEV"]
-W = np.array([[0.485, 0.254, 0.170, 0.091],
-              [1.000, 0.000, 0.000, 0.000],
-              [0.090, 0.392, 0.414, 0.104],
-              [0.101, 0.137, 0.330, 0.432]])
-PI = np.array([0.3729, 0.0005, 0.2510, 0.3756])
-S2 = np.array([0.8120, 1.8524, 0.8287, 0.5652])
-PRINTED = np.array([0.212, 0.262, 0.313, 0.214])
+# the fitted overall mixture of the case study, to full precision
+W = np.array([
+    [0.48530012815378776, 0.2543372677951154, 0.16926740665935452, 0.09109519739174243],
+    [0.9999999998478429, 4.147685794006449e-11, 1.0677907793234627e-11, 1.0000230260408398e-10],
+    [0.08964249751608318, 0.3911496950821047, 0.41540518687229233, 0.10380262052951977],
+    [0.10142686319478791, 0.1366147177974498, 0.3294297952774048, 0.4325286237303575],
+])
+PI = np.array([0.372628940638662, 0.0005225906356056135,
+               0.25102135571570233, 0.3758271130100301])
+PRINTED = np.array([0.054, 0.282, 0.475, 0.000])
 
+u_bar = expected_utility(W, PI)
+hand = np.zeros(W.shape[1])
+for p in range(W.shape[0]):
+    hand += PI[p] * np.log(W[p] / W[p][-1])
 
-def vote(mode):
-    n_p, n_a = W.shape
-    S = np.zeros(n_a)
-    for p in range(n_p):
-        den = math.sqrt(S2[p]) if mode == "std" else S2[p]
-        for i in range(n_a):
-            acc = 0.0
-            for j in range(n_a):
-                if i == j:
-                    continue
-                wi, wj = W[p, i], W[p, j]
-                if wi <= 0 or wj <= 0:
-                    acc += 1.0 if (wi > 0 and wj == 0) else (0.0 if (wi == 0 and wj > 0) else 0.5)
-                else:
-                    acc += norm.cdf(math.log(wi / wj) / den)
-            S[i] += PI[p] * acc
-    return 2.0 / (n_a * (n_a - 1)) * S
-
-
-s_std, s_var = vote("std"), vote("var")
-print(f"   Phi(diff/sigma)   : " + "  ".join(f"{l}={v:.4f}" for l, v in zip(LAB, s_std)))
-print(f"   Phi(diff/sigma^2) : " + "  ".join(f"{l}={v:.4f}" for l, v in zip(LAB, s_var)))
-print(f"   manuscript Table 3: " + "  ".join(f"{l}={v:.3f}" for l, v in zip(LAB, PRINTED)))
-check("std convention reproduces the manuscript (max dev < 0.001)",
-      np.max(np.abs(s_std - PRINTED)) < 0.001,
-      f"(max dev {np.max(np.abs(s_std - PRINTED)):.4f})")
+print("   package  : " + "  ".join(f"{lab}={v:.4f}" for lab, v in zip(LAB, u_bar)))
+print("   hand     : " + "  ".join(f"{lab}={v:.4f}" for lab, v in zip(LAB, hand)))
+print("   Table 3  : " + "  ".join(f"{lab}={v:.3f}" for lab, v in zip(LAB, PRINTED)))
+check("package agrees with an independent computation",
+      np.allclose(u_bar, hand),
+      f"(max dev {np.max(np.abs(u_bar - hand)):.2e})")
+check("the benchmark alternative sits at exactly zero",
+      u_bar[-1] == 0.0,
+      f"(got {u_bar[-1]!r})")
+order = [LAB[i] for i in np.argsort(-u_bar)]
+check("ranking matches the manuscript, REEV > PHEV > BEV > ICEV",
+      order == ["REEV", "PHEV", "BEV", "ICEV"],
+      f"(got {' > '.join(order)})")
+check("reproduces the values of Table 3 (max dev < 0.001)",
+      np.max(np.abs(u_bar - PRINTED)) < 0.001,
+      f"(max dev {np.max(np.abs(u_bar - PRINTED)):.4f})")
+print("   Utilities are logs of the ratio to the benchmark, so they are on the")
+print("   log-odds scale the model is parameterised on. A vote score built from")
+print("   Phi((u_i - u_j)/sigma_p) would need the normal observation model and")
+print("   has no counterpart for a binary or count response.")
 
 print()
 print("=" * 76)
