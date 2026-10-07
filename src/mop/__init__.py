@@ -2,7 +2,7 @@
 
 from .pairwise_comparison import PairwiseComparison, comparisons2regression
 from .inference import mop, bic, pbic, e_gamma, e_gamma_from_pc, log_likelihood, penalized_log_likelihood
-from .initialization import kridge
+from .initialization import kridge, ridge_init, seed_component, warm_init
 from .mixture_of_priorities import (
     MixtureOfPriorities,
     Priority,

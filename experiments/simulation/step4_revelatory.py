@@ -14,6 +14,7 @@ from mop.pairwise_comparison import PairwiseComparison, comparisons2regression
 
 from _common import SIM_DIR, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
 from mop import expected_utility
+from mop.initialization import warm_init
 
 EPS = 1e-10
 T = CANONICAL_TYPES
@@ -58,25 +59,12 @@ def fit_mop(pairs, nA, max_K=8):
     for k in range(1, max_K+1):
         kw = {}
         if prev is not None:
-            pu = np.array([pr.priority_vector[:-1] for pr in prev.priorities])
-            ps = np.array([pr.inconsistency_level for pr in prev.priorities])
-            ok = len(pu); nk = ok+1
-            u_new = np.zeros((nk, nA_m1)); u_new[:ok] = pu
-            min_rse = np.full(X.shape[0], np.inf)
-            for p in range(ok):
-                min_rse = np.minimum(min_rse, (X@pu[p]-y)**2)
-            n_edge = min(nA_m1+1, X.shape[0])
-            idx = min_rse >= np.sort(min_rse)[-n_edge]
-            if np.sum(idx) > 0:
-                Xe, ye = X[idx], y[idx]
-                u_new[ok] = np.linalg.solve(Xe.T@Xe+1e-10*np.eye(nA_m1), Xe.T@ye)
-            else:
-                u_new[ok] = np.random.randn(nA_m1)*0.1
-            s_new = np.ones(nk); s_new[:ok]=ps; s_new[ok]=np.mean(ps)
+            pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
+            ps = np.array([p.inconsistency_level for p in prev.priorities])
             pm = np.array(prev.mixture_probabilities)
-            m_new = np.zeros(nk); m_new[:ok]=pm*(ok/nk); m_new[ok]=1.0/nk
-            m_new = np.maximum(m_new, 1.0/(nk*20)); m_new /= np.sum(m_new)
-            kw = {"u_init":u_new, "sigma2_init":s_new, "mp_init":m_new}
+            u_init, sigma2_init, mp_init = warm_init(
+                X, y, pu, ps, pm, min_weight_share=0.05)
+            kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
 
         result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
         bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi, s2=s2_bar)

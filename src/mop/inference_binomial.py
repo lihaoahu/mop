@@ -76,11 +76,32 @@ __all__ = [
 # Beta concentration 1/rho grows large. _RHO_MAX is kept below 1 because the
 # Beta shapes a, b -> 0 as rho -> 1; on perfectly separated data (every pair
 # decided unanimously) the likelihood is then maximised at the boundary, which
-# is a degenerate limit rather than a usable dispersion estimate.
+# is a degenerate limit rather than a usable dispersion estimate. The interval
+# between them is the support of the prior below.
 _RHO_MIN = 1.0e-5
 _RHO_MAX = 0.9
 _BINOMIAL_SWITCH = 1.0e-6
 _EPS_SHAPE = 1.0e-10
+
+
+def _rho_log_prior(rho):
+    """Log density of the prior on the beta-binomial overdispersion.
+
+    Uniform on (_RHO_MIN, _RHO_MAX), so it is flat where the M-step searches
+    and contributes nothing to the gradient there. What it buys is that the
+    M-step maximises a posterior rather than a likelihood, which is what the
+    manuscript's general M-step is written as. No informative prior is needed
+    for this parameter: a beta-binomial overdispersion is bounded and its
+    likelihood does not diverge. It is the dispersions of the Gaussian
+    variants, unbounded above and bounded below only by zero, that need one.
+
+    The endpoints of the interval are accepted, because the bound the M-step
+    passes to the optimiser is closed and the optimiser may sit on it. Only a
+    point genuinely outside the support has zero density.
+    """
+    if not np.isfinite(rho) or rho < _RHO_MIN or rho > _RHO_MAX:
+        return -np.inf
+    return 0.0
 
 
 def _digamma_safe(x):
@@ -182,7 +203,10 @@ def _extract(counts):
 # ----------------------------------------------------------------------------
 
 def _component_grad(X, m, n, w, u, rho, lambda_u, u_bar, phi_mode):
-    """Gradient of  -(sum_k w_k log p(m_k)) + lambda_u/2 ||u - u_bar||^2  wrt (u, rho)."""
+    """Gradient of the negated penalised posterior of one component, wrt (u, rho).
+
+    The prior on rho is flat on its support, so it contributes nothing here.
+    """
     mu = expit(X @ u)
     if phi_mode == "binomial" or rho <= _BINOMIAL_SWITCH:
         d_eta = m - n * mu
@@ -203,16 +227,19 @@ def _component_grad(X, m, n, w, u, rho, lambda_u, u_bar, phi_mode):
 
 
 def _component_objective(X, m, n, w, u, rho, lambda_u, u_bar, phi_mode):
+    """Negated penalised posterior of one component, for minimisation."""
     mu = expit(X @ u)
     if phi_mode == "binomial":
         ll = float(np.sum(w * binomial_logpmf(m, n, mu)))
+        log_prior = 0.0
     else:
         ll = float(np.sum(w * beta_binomial_logpmf(m, n, mu, rho)))
-    return -ll + 0.5 * lambda_u * float(np.sum((u - u_bar) ** 2))
+        log_prior = _rho_log_prior(rho)
+    return -ll + 0.5 * lambda_u * float(np.sum((u - u_bar) ** 2)) - log_prior
 
 
 def _m_step_component(X, m, n, w, u0, rho0, lambda_u, u_bar, phi_mode, maxiter=100):
-    """Maximise the weighted (penalised) log-likelihood of one component."""
+    """Maximise the penalised posterior of one component."""
     if phi_mode == "binomial":
         res = minimize(
             lambda u: _component_objective(X, m, n, w, u, 0.0, lambda_u, u_bar, phi_mode),

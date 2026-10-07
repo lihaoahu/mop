@@ -13,6 +13,7 @@ from scipy.special import logit
 
 from mop import inference, pairwise_comparison
 from mop.inference import comparisons2regression
+from mop.initialization import warm_init
 
 from _common import T, DIMS, ENERGY_PAIRS, TYPE_MAP, expected_utility
 from step7_analyze import load_pairs
@@ -49,23 +50,9 @@ def fit_mop(pairs, fixed_k=None):
             pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
             ps = np.array([p.inconsistency_level for p in prev.priorities])
             pm = np.array(prev.mixture_probabilities)
-            ok = len(pu); nk = ok + 1
-            u_new = np.zeros((nk, nA)); u_new[:ok] = pu
-            min_rse = np.full(X.shape[0], np.inf)
-            for p in range(ok):
-                min_rse = np.minimum(min_rse, (X @ pu[p] - y) ** 2)
-            n_edge = min(nA + 1, X.shape[0])
-            idx = min_rse >= np.sort(min_rse)[-n_edge]
-            if np.sum(idx) > 0:
-                u_new[ok] = np.linalg.solve(
-                    X[idx].T @ X[idx] + 1e-10 * np.eye(nA), X[idx].T @ y[idx])
-            else:
-                u_new[ok] = np.random.randn(nA) * 0.1
-            s_new = np.ones(nk); s_new[:ok] = ps; s_new[ok] = np.mean(ps)
-            m_new = np.zeros(nk); m_new[:ok] = pm * (ok / nk); m_new[ok] = 1.0 / nk
-            floor = 1.0 / (nk * 20)
-            m_new = np.maximum(m_new, floor); m_new /= np.sum(m_new)
-            kw = {"u_init": u_new, "sigma2_init": s_new, "mp_init": m_new}
+            u_init, sigma2_init, mp_init = warm_init(
+                X, y, pu, ps, pm, min_weight_share=0.05)
+            kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
         result = inference.mop(pcvector, link_functions, k,
                                lambda_u=lu, lambda_pi=lpi,
                                lambda_sigma=ls, **kw)

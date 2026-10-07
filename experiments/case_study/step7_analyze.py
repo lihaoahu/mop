@@ -9,6 +9,7 @@ import argparse, json
 import numpy as np
 from scipy.special import logit
 from mop import inference, pairwise_comparison
+from mop.initialization import warm_init as _lib_warm_init
 from mop.inference import comparisons2regression
 
 from _common import (CFG, ENERGY_PAIRS, MOP_RESULTS, TYPE_MAP, T, DIMS,
@@ -36,32 +37,16 @@ def load_pairs(dim_name=None, year=None):
 
 
 def warm_init(prev, X, y, nA):
+    """Carry the converged fit with k-1 components over to k.
+
+    The library routine does the work; the mixture weights are floored at
+    1/20 of a share so that a component does not start the next round at a
+    weight the M-step will not move.
+    """
     pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
     ps = np.array([p.inconsistency_level for p in prev.priorities])
-    ok = len(pu); nk = ok + 1
-    u_new = np.zeros((nk, nA)); u_new[:ok] = pu
-    min_rse = np.full(X.shape[0], np.inf)
-    for p in range(ok):
-        min_rse = np.minimum(min_rse, (X @ pu[p] - y) ** 2)
-    n_edge = min(nA + 1, X.shape[0])
-    idx = min_rse >= np.sort(min_rse)[-n_edge]
-    if np.sum(idx) > 0:
-        Xe, ye = X[idx], y[idx]
-        u_new[ok] = np.linalg.solve(
-            Xe.T @ Xe + 1e-10 * np.eye(nA), Xe.T @ ye)
-    else:
-        u_new[ok] = np.random.randn(nA) * 0.1
-    s_new = np.ones(nk); s_new[:ok] = ps; s_new[ok] = np.mean(ps)
     pm = np.array(prev.mixture_probabilities)
-    for p in range(ok):
-        if pm[p] < 0.01:
-            u_new[p] = np.random.randn(nA) * 0.1
-            s_new[p] = np.mean(ps)
-    m_new = np.zeros(nk)
-    m_new[:ok] = pm * (ok / nk); m_new[ok] = 1.0 / nk
-    floor = 1.0 / (nk * 20)
-    m_new = np.maximum(m_new, floor); m_new /= np.sum(m_new)
-    return u_new, s_new, m_new
+    return _lib_warm_init(X, y, pu, ps, pm, min_weight_share=0.05)
 
 
 def run_mop(pairs, trace=None):

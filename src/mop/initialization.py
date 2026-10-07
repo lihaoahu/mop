@@ -1,7 +1,16 @@
 """
 Initialisation for the EM algorithm.
 
-``kridge`` seeds the mixture components. Two regimes are supported:
+The scheme is recursive in the number of components. ``ridge_init`` supplies
+the starting value for ``P = 1``, a single weighted ridge regression over every
+judgment. ``seed_component`` is the K-Ridge step: given the components already
+present, it places one further component where they explain least, by ridge
+regression on the judgments with the largest residual. ``warm_init`` combines
+the two, carrying a converged fit with ``P - 1`` components over to ``P`` and
+seeding the one component that is new. ``kridge`` is the from-scratch case,
+which uses ``ridge_init`` and then calls ``seed_component`` repeatedly.
+
+Two response scales are supported:
 
 * ``family=None`` -- the response ``y`` is already on the transformed scale
   (``y = g(r)``). The Gaussian family then applies to that response, which
@@ -22,12 +31,6 @@ from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
 
 import numpy as np
-
-try:  # pragma: no cover - optional accelerator
-    from cython_initialization import kridge_cython
-    USE_CYTHON = True
-except ImportError:
-    USE_CYTHON = False
 
 try:
     from .pairwise_comparison import comparisons2regression
@@ -155,6 +158,112 @@ def binomial_family() -> Family:
     )
 
 
+def _component_fit(X, r, weights, family, lambda_reg):
+    """Return ``fit(idx, w)``: the weighted fit of a single component."""
+    nA_minus_1 = X.shape[1]
+
+    def fit(idx, w):
+        if family is None:
+            XtX = X[idx].T @ (X[idx] * w[:, None]) + lambda_reg * np.eye(nA_minus_1)
+            Xty = X[idx].T @ (w * r[idx])
+            try:
+                return np.linalg.solve(XtX, Xty)
+            except np.linalg.LinAlgError:
+                return np.linalg.lstsq(XtX, Xty, rcond=None)[0]
+        return _irls(X[idx], r[idx], family, w, lambda_reg)
+
+    return fit
+
+
+def _component_residual(X, r, weights, family, deviance):
+    """Return ``residual(idx, u)``: what 'large residual' means on this scale."""
+    def residual(idx, u_p):
+        eta = X[idx] @ u_p
+        if family is None:
+            return (r[idx] - eta) ** 2
+        if deviance is not None:
+            return deviance(r[idx], family.h(eta), weights[idx]) ** 2
+        return _deviance_residuals(r[idx], family.h(eta), family) ** 2
+
+    return residual
+
+
+def ridge_init(X, y, family=None, weights=None, lambda_reg=1e-10):
+    """The ``P = 1`` initialisation: one weighted ridge regression, all judgments.
+
+    With a ``family`` the ridge regression is replaced by its iteratively
+    reweighted least squares counterpart, which is the same fit on the response
+    scale.
+    """
+    nJ = X.shape[0]
+    r = np.asarray(y, dtype=np.float64)
+    w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
+    return _component_fit(X, r, w_all, family, lambda_reg)(np.arange(nJ), w_all)
+
+
+def seed_component(X, y, u_prev, family=None, weights=None, lambda_reg=1e-10,
+                   deviance=None):
+    """The K-Ridge step: one further component, where the fit is worst.
+
+    ``u_prev`` holds the utilities of the components already present, one per
+    row. The ``min(A, K)`` judgments with the largest residual under those
+    components are fitted by ridge regression, so the new component starts
+    where the current mixture explains least.
+    """
+    nJ, nA_minus_1 = X.shape
+    r = np.asarray(y, dtype=np.float64)
+    w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
+    residual = _component_residual(X, r, w_all, family, deviance)
+    all_idx = np.arange(nJ)
+
+    prev = np.atleast_2d(np.asarray(u_prev, dtype=np.float64))
+    # A judgment is badly explained when the component nearest to it is still
+    # far, so the residual is the smallest over the components already present.
+    worst = np.min(np.column_stack([residual(all_idx, u) for u in prev]), axis=1)
+    n_edge = min(nA_minus_1 + 1, nJ)
+    idx = np.where(worst >= np.sort(worst)[-n_edge])[0]
+    if idx.size == 0:
+        return np.zeros(nA_minus_1)
+    return _component_fit(X, r, w_all, family, lambda_reg)(idx, w_all[idx])
+
+
+def warm_init(X, y, u_prev, phi_prev, pi_prev, family=None, weights=None,
+              lambda_reg=1e-10, deviance=None, min_weight_share=0.0):
+    """Carry a converged fit with ``P - 1`` components over to ``P``.
+
+    The components already present are kept unchanged, one further component is
+    seeded by :func:`seed_component`, its dispersion is set to the mean of the
+    existing ones, and the mixture probabilities are rescaled so that the
+    components carried over share ``1 - 1/P`` of the mass between them.
+
+    ``min_weight_share`` raises any weight below ``min_weight_share / P`` to
+    that level before the rescaling, so that a component cannot start the next
+    round at a weight the following M-step will not move. The default of zero
+    is the rescaling as the manuscript states it.
+    """
+    u_prev = np.atleast_2d(np.asarray(u_prev, dtype=np.float64))
+    phi_prev = np.atleast_1d(np.asarray(phi_prev, dtype=np.float64))
+    pi_prev = np.atleast_1d(np.asarray(pi_prev, dtype=np.float64))
+    n_old = u_prev.shape[0]
+    n_new = n_old + 1
+
+    u = np.zeros((n_new, X.shape[1]))
+    u[:n_old] = u_prev
+    u[n_old] = seed_component(X, y, u_prev, family=family, weights=weights,
+                              lambda_reg=lambda_reg, deviance=deviance)
+
+    phi = np.ones(n_new) * float(np.mean(phi_prev))
+    phi[:n_old] = phi_prev
+
+    pi = np.zeros(n_new)
+    pi[:n_old] = pi_prev * (n_old / n_new)
+    pi[n_old] = 1.0 / n_new
+    if min_weight_share > 0.0:
+        pi = np.maximum(pi, min_weight_share / n_new)
+        pi = pi / np.sum(pi)
+    return u, phi, pi
+
+
 def kridge(
     X: np.ndarray,
     y: np.ndarray,
@@ -164,7 +273,14 @@ def kridge(
     weights: Optional[np.ndarray] = None,
     deviance: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray]] = None,
 ):
-    """Seed ``nP`` mixture components.
+    """Seed ``nP`` components from scratch, then refine them by hard assignment.
+
+    This is the from-scratch initialiser, for a fit that has no smaller fit to
+    carry over. The components are seeded from the judgments farthest from the
+    component set, and the assignments are then refined by alternating
+    assignment and re-estimation. A grid search over ``P`` does not use it: that
+    carries each fit over from the one before it with :func:`warm_init`, whose
+    seeding step is :func:`seed_component`.
 
     Args:
         X: design matrix, ``(nJ, nA-1)``
@@ -172,68 +288,35 @@ def kridge(
         nP: number of components
         lambda_reg: ridge penalty
         family: an observation model; None means the response is already
-            transformed and the routine behaves as it always has.
+            transformed.
         weights: per-observation weights (e.g. binomial trial counts). Ones if
             not given.
         deviance: ``deviance(y, mu, weights)`` returning signed deviance
-            residuals. Needed when the response is a count, since the deviance
-            of m successes out of n cannot be recovered from the proportion;
-            otherwise it is read off the family's log-likelihood.
+            residuals, needed when the response is a count.
 
     Returns:
         u: ``(nP, nA-1)`` utility vectors
-        phi: ``(nP,)`` dispersion levels, on the transformed scale when
-            ``family`` is None and on the response scale otherwise
+        phi: ``(nP,)`` dispersion levels
         mp: ``(nP,)`` mixture weights
     """
-    if family is None and USE_CYTHON:
-        X_float = np.asarray(X, dtype=np.float64)
-        y_float = np.asarray(y, dtype=np.float64)
-        return kridge_cython(X_float, y_float, nP, lambda_reg)
-
     nJ, nA_minus_1 = X.shape
-    nA = nA_minus_1 + 1
     r = np.asarray(y, dtype=np.float64)
-    if weights is None:
-        weights = np.ones(nJ)
-    w_all = np.asarray(weights, dtype=np.float64)
-
-    def fit(idx, w):
-        """One component: IRLS when a family is given, ridge regression otherwise."""
-        if family is None:
-            XtX = X[idx].T @ (X[idx] * w[:, None]) + lambda_reg * np.eye(nA_minus_1)
-            Xty = X[idx].T @ (w * r[idx])
-        else:
-            return _irls(X[idx], r[idx], family, w, lambda_reg)
-        try:
-            return np.linalg.solve(XtX, Xty)
-        except np.linalg.LinAlgError:
-            return np.linalg.lstsq(XtX, Xty, rcond=None)[0]
-
-    def residual(idx, u_p):
-        """What 'large residual' means on this scale."""
-        eta = X[idx] @ u_p
-        if family is None:
-            return (r[idx] - eta) ** 2
-        if deviance is not None:
-            return deviance(r[idx], family.h(eta), w_all[idx]) ** 2
-        return _deviance_residuals(r[idx], family.h(eta), family) ** 2
-
-    u = np.zeros((nP, nA_minus_1))
+    w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
+    fit = _component_fit(X, r, w_all, family, lambda_reg)
+    residual = _component_residual(X, r, w_all, family, deviance)
     all_idx = np.arange(nJ)
 
-    # first component: everything
+    u = np.zeros((nP, nA_minus_1))
     u[0, :] = fit(all_idx, w_all)
 
-    # later components: the observations least explained so far
     for p in range(nP - 1):
         res = np.column_stack([residual(all_idx, u[q, :]) for q in range(p + 1)])
         worst = np.max(res, axis=1)
-        n_edge = min(nA, nJ)
+        n_edge = min(nA_minus_1 + 1, nJ)
         threshold = np.sort(worst)[-n_edge] if n_edge > 0 else np.max(worst)
-        idx = worst >= threshold
-        if np.sum(idx) > 0:
-            u[p + 1, :] = fit(np.where(idx)[0], w_all[idx])
+        idx = np.where(worst >= threshold)[0]
+        if idx.size > 0:
+            u[p + 1, :] = fit(idx, w_all[idx])
 
     # alternate between assigning and refitting
     for _ in range(100):
@@ -244,7 +327,8 @@ def kridge(
             if np.sum(mask) > 0:
                 u[p, :] = fit(all_idx[mask], w_all[mask])
 
-    # dispersion: residual mean square on the transformed scale, Pearson on the response scale
+    # dispersion: residual mean square on the transformed scale, Pearson on the
+    # response scale
     if family is None:
         phi0 = float(np.sum(w_all * (X @ u[0, :] - r) ** 2) / max(np.sum(w_all), 1.0))
     else:
