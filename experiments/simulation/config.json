@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "v2",
+        "name": "simulation",
         "description": "MoP validation — three scenarios: cancellation / general / noise"
     },
 

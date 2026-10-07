@@ -1,4 +1,4 @@
-"""experiments/v2 shared utilities — metrics, data generation, result helpers."""
+"""experiments/simulation shared utilities — metrics, data generation, result helpers."""
 
 import json
 import numpy as np

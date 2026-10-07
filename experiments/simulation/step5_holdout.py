@@ -26,7 +26,7 @@ alone:
                    is expected to be near-identical across models.
 
 Usage:
-    uv run python experiments/v2/step5_holdout.py
+    uv run python experiments/simulation/step5_holdout.py
 """
 
 import json

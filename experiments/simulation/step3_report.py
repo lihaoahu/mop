@@ -1,7 +1,7 @@
 """Step 3: Report — text + LaTeX from simulation (A/C/D) + holdout.
 
 Usage:
-    uv run python experiments/v2/step3_report.py
+    uv run python experiments/simulation/step3_report.py
 """
 
 import json

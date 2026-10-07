@@ -65,25 +65,25 @@ uv sync
 ### Case study (Section 3)
 
 ```bash
-uv run python experiments/v1/step7_analyze.py      # MoP fitting
-uv run python experiments/v1/step8_balance.py      # Balance analysis
-uv run python experiments/v1/_gen_tables.py        # Generate LaTeX tables
+uv run python experiments/case_study/step7_analyze.py      # MoP fitting
+uv run python experiments/case_study/step8_balance.py      # Balance analysis
+uv run python experiments/case_study/_gen_tables.py        # Generate LaTeX tables
 ```
 
 ### Validation experiments (Section 3.x)
 
 ```bash
-uv run python experiments/v2/step1_simulation.py   # Simulation
-uv run python experiments/v2/step2_holdout.py      # Holdout CV (best-match, historical)
-uv run python experiments/v2/step5_holdout.py      # Holdout CV (marginal, as reported)
-uv run python experiments/v2/step4_revelatory.py   # Revelatory metrics
-uv run python experiments/v2/step3_report.py       # Report
+uv run python experiments/simulation/step1_simulation.py   # Simulation
+uv run python experiments/simulation/step2_holdout.py      # Holdout CV (best-match, historical)
+uv run python experiments/simulation/step5_holdout.py      # Holdout CV (marginal, as reported)
+uv run python experiments/simulation/step4_revelatory.py   # Revelatory metrics
+uv run python experiments/simulation/step3_report.py       # Report
 ```
 
 ### External validation (v3)
 
 ```bash
-uv run python experiments/v3/step1_regenwetter.py  # binomial vs beta-binomial
+uv run python experiments/external/step1_regenwetter.py  # binomial vs beta-binomial
 ```
 
 ### Self-checks

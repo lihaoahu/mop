@@ -22,8 +22,8 @@ Grid: P_true in {1,2,3} x rho_gen in {0, 0.10, 0.25}, N_REP replicates each.
 Each replicate uses A = 5 alternatives (10 pairs), 45 repetitions per pair.
 
 Usage:
-    uv run python experiments/v3/step2_separability.py
-    uv run python experiments/v3/step2_separability.py --n-rep 5 --p-max 3
+    uv run python experiments/external/step2_separability.py
+    uv run python experiments/external/step2_separability.py --n-rep 5 --p-max 3
 """
 
 import argparse

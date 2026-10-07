@@ -1,8 +1,8 @@
 """Step 7: MoP 分析（整体 + 七维度 + 年份对比）。
 
 用法:
-    uv run python experiments/v1/step7_analyze.py              # 全部分析
-    uv run python experiments/v1/step7_analyze.py --dim cost   # 单维度
+    uv run python experiments/case_study/step7_analyze.py              # 全部分析
+    uv run python experiments/case_study/step7_analyze.py --dim cost   # 单维度
 """
 
 import argparse, json

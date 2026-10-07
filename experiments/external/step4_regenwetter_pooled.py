@@ -13,7 +13,7 @@ extra components, while a free rho absorbs it. This script checks that
 prediction on the real data.
 
 Usage:
-    uv run python experiments/v3/step4_regenwetter_pooled.py
+    uv run python experiments/external/step4_regenwetter_pooled.py
 """
 
 import argparse

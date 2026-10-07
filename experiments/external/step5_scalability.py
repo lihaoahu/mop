@@ -18,7 +18,7 @@ not a claim about which model is more correct -- they encode different
 assumptions -- but about which one can be estimated at a given A.
 
 Usage:
-    uv run python experiments/v3/step5_scalability.py
+    uv run python experiments/external/step5_scalability.py
 """
 
 import argparse

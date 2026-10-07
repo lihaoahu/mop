@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "v1",
+        "name": "case_study",
         "description": "Chinese consumer vehicle energy type preference — two-stage LLM pipeline + MoP"
     },
 
@@ -121,12 +121,12 @@
         "article_ids": "data/article_ids.jsonl",
         "article_details": "data/article_details.jsonl",
         "transcripts": "data/transcript/",
-        "all_articles": "experiments/v1/all_articles.jsonl",
-        "energy_pairs": "experiments/v1/energy_pairs.jsonl",
-        "mop_results": "experiments/v1/mop_results.json",
-        "training_data": "experiments/v1/training_data.jsonl",
-        "train": "experiments/v1/train.jsonl",
-        "val": "experiments/v1/val.jsonl",
-        "test": "experiments/v1/test.jsonl"
+        "all_articles": "experiments/case_study/all_articles.jsonl",
+        "energy_pairs": "experiments/case_study/energy_pairs.jsonl",
+        "mop_results": "experiments/case_study/mop_results.json",
+        "training_data": "experiments/case_study/training_data.jsonl",
+        "train": "experiments/case_study/train.jsonl",
+        "val": "experiments/case_study/val.jsonl",
+        "test": "experiments/case_study/test.jsonl"
     }
 }

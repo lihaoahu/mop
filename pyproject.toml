@@ -1,11 +1,17 @@
 [project]
 name = "mop"
 version = "0.1.0"
-description = "Mixture of Preferences — model, inference, and case study"
+description = "Mixture of Preferences - model, inference, and case study"
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
+]
+
+[project.optional-dependencies]
+# Needed only to crawl the platform and extract judgments again. The analysis
+# scripts never import these, so they are out of the default environment.
+collection = [
     "article-crawler",
     "pairwise-comparison-filter",
     "pairwise-comparisons",
@@ -13,9 +19,9 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-article-crawler = { path = "../ArticleCrawler" }
-pairwise-comparison-filter = { path = "../PairwiseComparisonExtractor" }
-pairwise-comparisons = { path = "../PairwiseComparisons" }
+article-crawler = { path = "../../ArticleCrawler" }
+pairwise-comparison-filter = { path = "../../PairwiseComparisonExtractor" }
+pairwise-comparisons = { path = "../../PairwiseComparisons" }
 
 [build-system]
 requires = ["hatchling"]

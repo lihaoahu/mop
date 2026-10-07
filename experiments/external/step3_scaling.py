@@ -23,8 +23,8 @@ Prediction under test:
 If that is what happens, the repair is the likelihood, not the sample size.
 
 Usage:
-    uv run python experiments/v3/step3_scaling.py
-    uv run python experiments/v3/step3_scaling.py --n-rep 4 --p-max 3
+    uv run python experiments/external/step3_scaling.py
+    uv run python experiments/external/step3_scaling.py --n-rep 4 --p-max 3
 """
 
 import argparse

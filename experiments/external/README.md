@@ -34,8 +34,8 @@ indifference.
 | `step5_scalability.py` | Fits a distribution over the $\mathcal{A}!$ transitive orders and the four-component mixture of preferences to the *same* simulated pairwise data, across $\mathcal{A}=4..8$, comparing free parameters and wall-clock cost. Writes `scalability_results.json`. |
 
 ```bash
-uv run python experiments/v3/step1_regenwetter.py
-uv run python experiments/v3/step1_regenwetter.py --p-max 3 --n-starts 1   # faster
+uv run python experiments/external/step1_regenwetter.py
+uv run python experiments/external/step1_regenwetter.py --p-max 3 --n-starts 1   # faster
 ```
 
 ## What to look for

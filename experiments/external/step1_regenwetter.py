@@ -29,8 +29,8 @@ Ties are scored as half a success, m_k = n_{a>b} + 0.5 * n_{a=b}, with
 n_k = 45.
 
 Usage:
-    uv run python experiments/v3/step1_regenwetter.py
-    uv run python experiments/v3/step1_regenwetter.py --p-max 3 --out results.json
+    uv run python experiments/external/step1_regenwetter.py
+    uv run python experiments/external/step1_regenwetter.py --p-max 3 --out results.json
 """
 
 import argparse

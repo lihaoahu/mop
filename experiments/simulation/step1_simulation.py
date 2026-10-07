@@ -5,9 +5,9 @@
   noise       — random raters, MoP isolates noise component
 
 Usage:
-    uv run python experiments/v2/step1_simulation.py
-    uv run python experiments/v2/step1_simulation.py --scenario noise
-    uv run python experiments/v2/step1_simulation.py --trials 5
+    uv run python experiments/simulation/step1_simulation.py
+    uv run python experiments/simulation/step1_simulation.py --scenario noise
+    uv run python experiments/simulation/step1_simulation.py --trials 5
 """
 
 import argparse, json, time

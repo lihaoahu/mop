@@ -1,7 +1,7 @@
 """Compute revelatory metrics: what MoP discovers that P=1 cannot.
 
 Usage:
-    uv run python experiments/v2/step4_revelatory.py
+    uv run python experiments/simulation/step4_revelatory.py
 """
 
 import json, time

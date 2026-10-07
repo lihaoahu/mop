@@ -5,8 +5,8 @@ component whose prediction is closest to the true score. P=1 predicts a
 single score.
 
 Usage:
-    uv run python experiments/v2/step2_holdout.py
-    uv run python experiments/v2/step2_holdout.py --min-pairs 200
+    uv run python experiments/simulation/step2_holdout.py
+    uv run python experiments/simulation/step2_holdout.py --min-pairs 200
 """
 
 import argparse, json, time
