@@ -4,8 +4,8 @@ Initialisation for the EM algorithm.
 ``kridge`` seeds the mixture components. Two regimes are supported:
 
 * ``family=None`` -- the response ``y`` is already on the transformed scale
-  (``y = g(r)``). This is the transformed-Gaussian member, and the routine
-  behaves exactly as it always has.
+  (``y = g(r)``). The Gaussian family then applies to that response, which
+  is the logit-normal variant of the manuscript when ``g`` is the logit.
 
 * ``family=Family(...)`` -- ``y`` is the response ``r`` on its own scale, and
   the same construction is carried out by iteratively reweighted least squares
@@ -53,7 +53,7 @@ class Family:
 
 @dataclass
 class GaussianFamily(Family):
-    """The transformed-Gaussian member, written in the same language."""
+    """The Gaussian family for an already-transformed response."""
 
     h: Callable = staticmethod(lambda eta: eta)
     h_prime: Callable = staticmethod(lambda eta: np.ones_like(eta))

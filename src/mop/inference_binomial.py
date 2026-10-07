@@ -292,7 +292,7 @@ def _em_once(X, m, n, n_components, phi_mode, lambda_u, lambda_pi, rho_init,
              max_iter, tol, rng, u_bar):
     K, A1 = X.shape
 
-    # K-Ridge on the count scale: the same seeding the transformed-Gaussian
+    # K-Ridge on the count scale: the same seeding the transformed-response
     # member uses, with the binomial variance function, trial counts as weights,
     # and deviance residuals in place of squared ones. Passing the proportion
     # back together with the weights recovers the counts the deviance needs.

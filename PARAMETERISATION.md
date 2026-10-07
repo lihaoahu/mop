@@ -141,7 +141,7 @@ Consequences:
 
 The manuscript used to aggregate with a vote score,
 `Phi((u_pi - u_pj) / sigma_p)` averaged over pairs and components. That
-expression exists only for the transformed-Gaussian member, where the
+expression exists only for the logit-normal variant, where the
 probability that one alternative beats another has a closed form, so it
 contradicted the claim that the observation model is exchangeable across
 protocols. It is replaced by the expected utility
