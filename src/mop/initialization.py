@@ -5,7 +5,8 @@ Initialisation for the EM algorithm.
 
 * ``family=None`` -- the response ``y`` is already on the transformed scale
   (``y = g(r)``). The Gaussian family then applies to that response, which
-  is the logit-normal variant of the manuscript when ``g`` is the logit.
+  gives the Gaussian variants of the manuscript when ``g`` is the logit or the
+  logarithm.
 
 * ``family=Family(...)`` -- ``y`` is the response ``r`` on its own scale, and
   the same construction is carried out by iteratively reweighted least squares
