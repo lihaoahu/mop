@@ -11,7 +11,6 @@ src/mop/                      # Core library
     inference.py              # EM algorithm, pBIC model selection
     pairwise_comparison.py    # Data representation, design matrix
     initialization.py         # K-Ridge seeding, and the GLM/IRLS variant
-    inference_binomial.py     # Binomial / beta-binomial likelihoods
     decision.py               # Decision-theoretic ranking extraction
     visualization.py          # Ternary plot, priority bar charts
 
@@ -33,14 +32,6 @@ experiments/
         step3_report.py       # text summary of the above
         step4_revelatory.py   # log-likelihood gain, component count
         step5_holdout.py      # 5-fold CV, marginal log-likelihood (as reported)
-
-    external/                 # Section 3.1.2: Regenwetter & Davis-Stober (2012)
-        data/regenwetter2012.csv     # 30 participants x 3 gamble sets
-        step1_regenwetter.py  # per-unit fit, binomial vs beta-binomial
-        step2_separability.py # simulated separability check
-        step3_scaling.py      # population-level scaling
-        step4_regenwetter_pooled.py  # pooled fit within a gamble set
-        step5_scalability.py  # order distribution vs mixture, A = 4..8
 
 tests/
     audit_parameterisation.py # verifies every distribution convention in use
@@ -95,20 +86,6 @@ uv run python experiments/simulation/step3_report.py
 The 500-trial simulation runs for roughly 75 minutes. `step2_holdout.py`
 reports point-prediction metrics and is not the source of the holdout table,
 which comes from `step5_holdout.py`.
-
-### External validation (Section 3.1.2)
-
-```bash
-uv run python experiments/external/step1_regenwetter.py
-uv run python experiments/external/step2_separability.py
-uv run python experiments/external/step3_scaling.py
-uv run python experiments/external/step4_regenwetter_pooled.py
-uv run python experiments/external/step5_scalability.py
-```
-
-`step1_regenwetter.py` considers up to four components with two initialisations
-per fit, which is its default and the setting behind the published table. It
-takes about fifteen minutes.
 
 ### Self-checks
 

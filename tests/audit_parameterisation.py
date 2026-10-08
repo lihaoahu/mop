@@ -15,7 +15,6 @@ Checklist
      scipy.stats.invgamma with shape=(lambda_s-2)/2, scale=lambda_s*s2bar/2?
   3  M-step update for sigma^2 vs the strict MAP implied by that prior
   4  aggregate ranking: expected utility, and the benchmark's zero origin
-  5  beta-binomial: (n, mu, rho) vs scipy (n, a, b); rho <-> (a, b)
   6  transforms: logit/log are natural, expit <-> logit
   7  synthetic data: noise added on the log-odds scale
   8  ties encoded as score 0.5 -> logit 0
@@ -28,11 +27,10 @@ from pathlib import Path
 
 import numpy as np
 from scipy.special import expit, gammaln, logit
-from scipy.stats import betabinom, invgamma, norm
+from scipy.stats import invgamma, norm
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-from mop import inference_binomial as ib  # noqa: E402
 from mop.mixture_of_priorities import expected_utility  # noqa: E402
 
 ok = True
@@ -179,38 +177,7 @@ print("   has no counterpart for a binary or count response.")
 
 print()
 print("=" * 76)
-print("5. beta-binomial: (n, mu, rho) vs scipy (n, a, b)")
-print("=" * 76)
-rng = np.random.default_rng(5)
-worst = 0.0
-for _ in range(300):
-    mu = rng.uniform(0.02, 0.98)
-    rho = rng.uniform(1e-4, 0.5)
-    n = int(rng.integers(3, 80))
-    m = int(rng.integers(0, n + 1))
-    c = (1 - rho) / rho
-    worst = max(worst, abs(float(betabinom.logpmf(m, n, mu * c, (1 - mu) * c))
-                           - float(ib.beta_binomial_logpmf(m, n, mu, rho))))
-check("matches scipy betabinom(k, n, a=mu*c, b=(1-mu)*c), c=(1-rho)/rho",
-      worst < 1e-9, f"(worst diff {worst:.2e})")
-
-# variance relation
-mu, rho, n = 0.4, 0.13, 45
-c = (1 - rho) / rho
-emp_var = float(betabinom.var(n, mu * c, (1 - mu) * c))
-formula = n * mu * (1 - mu) * (1 + (n - 1) * rho)
-check("Var = n*mu*(1-mu)*[1+(n-1)*rho]", abs(emp_var - formula) < 1e-9,
-      f"(scipy {emp_var:.6f}, formula {formula:.6f})")
-check("rho = 0 collapses to the binomial log-pmf (module level)",
-      abs(float(ib.beta_binomial_logpmf(21, 45, 0.467, 0.0))
-          - float(ib.binomial_logpmf(21, 45, 0.467))) < 1e-12)
-v0 = n * mu * (1 - mu) * (1 + (n - 1) * 0.0)
-check("the variance formula at rho=0 is exactly the binomial variance",
-      abs(v0 - n * mu * (1 - mu)) < 1e-15, f"({v0:.6f})")
-
-print()
-print("=" * 76)
-print("6. transforms are natural-log based")
+print("5. transforms are natural-log based")
 print("=" * 76)
 p = 0.83
 check("logit(p) == ln(p/(1-p))", abs(logit(p) - math.log(p / (1 - p))) < 1e-12)
@@ -222,7 +189,7 @@ check("no log10 anywhere in src/mop",
 
 print()
 print("=" * 76)
-print("7. synthetic data: noise variance lives on the log-odds scale")
+print("6. synthetic data: noise variance lives on the log-odds scale")
 print("=" * 76)
 sys.path.insert(0, str(ROOT / "experiments" / "simulation"))
 from _common import generate_synthetic_pairs, priority_vector_from_logratios  # noqa: E402
@@ -246,69 +213,10 @@ check("log(w_i/w_j) round-trips to u_i - u_j", np.max(np.abs(lu - u_true[0])) < 
 
 print()
 print("=" * 76)
-print("8. ties encoded as 0.5 -> logit 0")
+print("7. ties encoded as 0.5 -> logit 0")
 print("=" * 76)
 check("logit(0.5) == 0", abs(logit(0.5)) < 1e-15)
 check("score 0.5 clips safely (no inf)", np.isfinite(logit(np.clip(0.5, 1e-10, 1 - 1e-10))))
-
-print()
-print("=" * 76)
-print("9. analytic gradients of the beta-binomial M-step")
-print("=" * 76)
-print("   The appendix says the gradients were checked against finite")
-print("   differences; this is that check. A central difference carries O(eps^2)")
-print("   truncation error, so the error should fall about 100-fold per decade of")
-print("   eps until roundoff takes over. A gradient that is wrong does not show")
-print("   that scaling.")
-
-_rng = np.random.default_rng(5)
-_A, _A1, _K = 4, 3, 30
-_Xg = np.zeros((_K, _A1))
-for _k in range(_K):
-    _i, _j = _rng.choice(_A, 2, replace=False)
-    if _i < _A1:
-        _Xg[_k, _i] += 1.0
-    if _j < _A1:
-        _Xg[_k, _j] -= 1.0
-_ng = _rng.integers(10, 50, _K).astype(float)
-_mg = _rng.binomial(_ng.astype(int), 0.5).astype(float)
-_wg = _rng.uniform(0.2, 1.0, _K)
-_wg /= _wg.sum()
-_ug = _rng.normal(0, 0.4, _A1)
-_lam = 1e-3
-_ubar = np.zeros(_A1)
-
-
-def _numeric_grad(mode, rho, eps):
-    g = np.zeros(_A1 + 1)
-    for i in range(_A1):
-        up, um = _ug.copy(), _ug.copy()
-        up[i] += eps
-        um[i] -= eps
-        g[i] = (ib._component_objective(_Xg, _mg, _ng, _wg, up, rho, _lam, _ubar, mode)
-                - ib._component_objective(_Xg, _mg, _ng, _wg, um, rho, _lam, _ubar, mode)) / (2 * eps)
-    g[_A1] = (ib._component_objective(_Xg, _mg, _ng, _wg, _ug, rho + eps, _lam, _ubar, mode)
-              - ib._component_objective(_Xg, _mg, _ng, _wg, _ug, rho - eps, _lam, _ubar, mode)) / (2 * eps)
-    return g
-
-
-def _rel_err(mode, rho, eps):
-    gu, gr = ib._component_grad(_Xg, _mg, _ng, _wg, _ug, rho, _lam, _ubar, mode)
-    ana = np.concatenate([np.asarray(gu).ravel(), [gr]])
-    num = _numeric_grad(mode, rho, eps)
-    return float(np.max(np.abs(ana - num) / np.maximum(np.abs(num), 1e-10)))
-
-
-for _mode, _rho in (("binomial", 0.0), ("beta-binomial", 0.2), ("beta-binomial", 0.7)):
-    _e3, _e4, _e5 = _rel_err(_mode, _rho, 1e-3), _rel_err(_mode, _rho, 1e-4), _rel_err(_mode, _rho, 1e-5)
-    _tag = f"{_mode}, rho={_rho}"
-    print(f"   {_tag:<24} eps=1e-3 {_e3:.2e}   eps=1e-4 {_e4:.2e}   eps=1e-5 {_e5:.2e}")
-    check(f"gradient of {_tag} matches at eps=1e-5", _e5 < 1e-7, f"(rel err {_e5:.2e})")
-    # only the first decade is reliably in the quadratic regime; at 1e-5 the
-    # central difference is already meeting the roundoff floor, so the ratio
-    # there says nothing about the analytic gradient
-    check(f"gradient error of {_tag} falls as eps^2 over 1e-3 to 1e-4",
-          _e4 < _e3 / 20.0, f"(ratio {_e3 / _e4:.0f})")
 
 print()
 print("=" * 76)

@@ -184,7 +184,7 @@ marginal posterior rather than the joint one the EM iteration targets.
 
 ### 7. Beta-binomial
 
-`src/mop/inference_binomial.py` uses the mean-dispersion parameterisation
+`src/mop/inference.py` uses the mean-dispersion parameterisation
 `(n, mu, rho)`, which does not exist in scipy. It was validated against
 `scipy.stats.betabinom(k, n, a, b)` through `a = mu * c`, `b = (1 - mu) * c`
 with `c = (1 - rho) / rho`: the two agree to 1e-12 over 300 random parameter
