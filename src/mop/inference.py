@@ -272,14 +272,17 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
     X = np.nan_to_num(X, nan=0.0, posinf=1e10, neginf=-1e10)
     y = np.nan_to_num(y, nan=0.0, posinf=1e10, neginf=-1e10)
 
-    # 默认参数 — 仅对未指定的参数设默认值
+    # 默认参数 — 仅对未指定的参数设默认值。默认值与论文 §2.5 用的那组一致：
+    # λ_u 小到不影响效用、λ_σ = K/50 是论文的经验设置、λ_π = 1 是单纯形上的均匀先验。
+    # λ_σ > 4 是先验众数存在的条件（形状 (λ_σ-2)/2 要大于 1）；K/50 在 K > 200 时满足，
+    # 而旧的默认值 0.1 使形状为负，密度根本不可归一，却会静默跑完。
     if s2 is None:
         # 先验众数 φ₀ —— 与 pbic 用的是同一个定义，见 prior_mode_phi0
         s2 = prior_mode_phi0(X, y)
     if lambda_u is None:
-        lambda_u = 1e-10
+        lambda_u = 1e-6
     if lambda_sigma is None:
-        lambda_sigma = 0.1
+        lambda_sigma = X.shape[0] / 50.0
     if lambda_pi is None:
         lambda_pi = 1
 
