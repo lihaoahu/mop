@@ -144,12 +144,16 @@ def generate_simulation_tables(sim_data):
             for method in ["MoP", "P=1", "BTL"]:
                 if method in agg and "cosine_sim" in agg[method]:
                     m = agg[method]
+                    # Same rule as the text report: the noise scenario has no
+                    # single true K, so step1_simulation.py drops k_accuracy and
+                    # defaulting it to zero would print the opposite of the data.
+                    ka = f"{m['k_accuracy']:.3f}" if "k_accuracy" in m else "---"
                     rows.append([
                         cond if method == "MoP" else "", method,
                         f"{m['cosine_sim']['mean']:.4f}",
                         f"{m['kl_pi']['mean']:.4f}",
                         f"{m['kendall_tau']['mean']:.4f}",
-                        f"{m.get('k_accuracy',0):.3f}",
+                        ka,
                         f"{m.get('k_mean',0):.2f}",
                     ])
             cap = f"{label}, {cond}."
