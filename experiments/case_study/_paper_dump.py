@@ -66,6 +66,14 @@ def run_mop_full(pairs, label=""):
             best_bic = val; best_k = k; best_result = result
         prev = result
 
+        # A candidate whose fit comes back with fewer components than it asked
+        # for had one removed for falling below minprior. Raising the candidate
+        # further can only reproduce that mixture, so the search stops here.
+        # The candidate itself still counts, since its solution is the one the
+        # removal produced.
+        if len(result) < k:
+            break
+
     # Compute credibility via posterior sampling
     nP = best_k
     u_mat = np.zeros((nP, nA))

@@ -63,6 +63,14 @@ def fit_mop(pairs, fixed_k=None):
         bic_vals[k] = bic_val
         prev = result
 
+        # A candidate whose fit comes back with fewer components than it asked
+        # for had one removed for falling below minprior. Raising the candidate
+        # further can only reproduce that mixture, so the search stops here.
+        # The candidate itself still counts, since its solution is the one the
+        # removal produced.
+        if len(result) < k:
+            break
+
     best_k = min(bic_vals, key=bic_vals.get)
     return prev, best_k, bic_vals[best_k]
 

@@ -79,6 +79,14 @@ def fit_mop(pairs, nA, max_K=8):
             best_bic = bic_val; best_k = k; best_result = result; best_ll = ll
         prev = result
 
+        # A candidate whose fit comes back with fewer components than it asked
+        # for had one removed for falling below minprior. Raising the candidate
+        # further can only reproduce that mixture, so the search stops here.
+        # The candidate itself still counts, since its solution is the one the
+        # removal produced.
+        if len(result) < k:
+            break
+
     return best_k, models
 
 
@@ -174,12 +182,14 @@ def analyze(label, pairs, nA=4):
         return " > ".join([T[i] for i in idx])
 
     print(f"\n{'='*65}")
-    print(f"  {label}  (n={n},  P={best_k})")
+    print(f"  {label}  (n={n},  candidate P={best_k}, fitted {len(pis)})")
     print(f"{'='*65}")
     print(f"  P=1 LL: {models[1]['ll']:.1f}    MoP LL: {models[best_k]['ll']:.1f}    Δℓ: {ll_gain:.1f}")
     print(f"  Component divergence: {div:.4f}")
     print(f"  Components:")
-    for i in range(best_k):
+    # the fitted mixture can be smaller than the candidate P, since components
+    # whose weight falls below minprior are removed during the fit
+    for i in range(len(pis)):
         print(f"    C{i+1}: π={pis[i]:.4f}  σ²={sigmas[i]:.4f}  {rank_str(ws[i])}")
     # Expected utility, the aggregate the manuscript reports
     u_bar = expected_utility(ws, pis)
@@ -196,7 +206,7 @@ def analyze(label, pairs, nA=4):
         "components": [{"pi": float(pis[i]), "sigma2": float(sigmas[i]),
                          "priority": ws[i].tolist(),
                          "ranking": rank_str(ws[i])}
-                        for i in range(best_k)],
+                        for i in range(len(pis))],
         "p1_ranking": rank_str(models[1]["ws"][0]),
         "expected_utility_ranking": rank_str(u_bar),
     }

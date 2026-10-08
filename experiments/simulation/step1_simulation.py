@@ -75,6 +75,14 @@ def fit_mop(pairs, n_alternatives, max_K=None):
             best_bic = bic_val; best_k = k; best_result = result
         prev = result
 
+        # A candidate whose fit comes back with fewer components than it asked
+        # for had one removed for falling below minprior. Raising the candidate
+        # further can only reproduce that mixture, so the search stops here.
+        # The candidate itself still counts, since its solution is the one the
+        # removal produced.
+        if len(result) < k:
+            break
+
     w_avg = np.zeros(n_alternatives)
     for pi, pr in zip(best_result.mixture_probabilities, best_result.priorities):
         w_avg += np.array(pr.priority_vector) * pi
