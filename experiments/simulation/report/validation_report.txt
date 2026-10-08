@@ -5,17 +5,17 @@ MoP Validation — Summary
 ## Cancellation — opposite preferences cancel
   (sigma2=0.05_n=500)
   MoP            CosSim=1.0000  KL(pi)=0.0009  Kendall=0.6667  K_acc=1.000  k_mean=2.00
-  P=1            CosSim=0.8115  KL(pi)=10.8198  Kendall=0.6740  K_acc=0.000  k_mean=1.00
+  P=1            CosSim=0.8313  KL(pi)=  ---  Kendall=0.6740  K_acc=0.000  k_mean=1.00
 
 ## General recovery — MoP never worse
   (K=2_sigma2=0.05_n=500)
-  MoP            CosSim=0.9996  KL(pi)=0.7953  Kendall=0.9680  K_acc=0.920  k_mean=2.01
-  P=1            CosSim=0.9108  KL(pi)=10.7383  Kendall=0.8660  K_acc=0.000  k_mean=1.00
+  MoP            CosSim=0.9998  KL(pi)=0.0015  Kendall=0.9680  K_acc=0.920  k_mean=2.01
+  P=1            CosSim=0.9706  KL(pi)=  ---  Kendall=0.8660  K_acc=0.000  k_mean=1.00
 
 ## Noise — MoP isolates random raters
   (sigma2=0.05_noise=0.2_n=500)
-  MoP            CosSim=0.9999  KL(pi)=0.2329  Kendall=0.9993  K_acc=  ---  k_mean=2.10
-  P=1            CosSim=0.9958  KL(pi)=0.0000  Kendall=1.0000  K_acc=  ---  k_mean=1.00
+  MoP            CosSim=0.9999  KL(pi)=  ---  Kendall=0.9993  K_acc=  ---  k_mean=2.10
+  P=1            CosSim=0.9958  KL(pi)=  ---  Kendall=1.0000  K_acc=  ---  k_mean=1.00
 
 ## Holdout (5401 pairs)
   SUPERSEDED by step5_holdout.py. step2's rule picks the component
