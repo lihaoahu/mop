@@ -1,11 +1,14 @@
 \begin{table}[ht]
   \centering
-  \caption{Holdout prediction ($n=?$, 5-fold CV). Mean $\pm$ std.}
+  \caption{Holdout prediction ($n=5401$, 5-fold CV). Mean $\pm$ std.}
   \label{tab:holdout}
   \begin{tabular}{lccccc}
     \toprule
     Method & MSE↓ & MAE↓ & Pearson r↑ & Spearman ρ↑ & Time (s) \\
     \midrule
+    MoP & 0.0099 ± 0.0042 & 0.0764 ± 0.0155 & 0.9324 ± 0.0299 & 0.8804 ± 0.0458 & 1.3339 ± 0.2165 \\
+    P=1 & 0.0733 ± 0.0006 & 0.2456 ± 0.0012 & 0.1780 ± 0.0228 & 0.1791 ± 0.0276 & 0.1327 ± 0.0147 \\
+    $\Delta$ (MoP $-$ P=1) & -0.0634 \checkmark & -0.1691 \checkmark & +0.7544 \checkmark & +0.7013 \checkmark & --- \\
     \bottomrule
   \end{tabular}
 \end{table}

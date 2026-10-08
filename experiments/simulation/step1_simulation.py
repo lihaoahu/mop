@@ -7,7 +7,7 @@
 Usage:
     uv run python experiments/simulation/step1_simulation.py
     uv run python experiments/simulation/step1_simulation.py --scenario noise
-    uv run python experiments/simulation/step1_simulation.py --trials 5
+    uv run python experiments/simulation/step1_simulation.py --trials 500
 """
 
 import argparse, json, time
@@ -50,7 +50,7 @@ def fit_mop(pairs, n_alternatives, max_K=None):
 
     link_fns = [lambda s, _eps=EPS: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcv, link_fns)
-    nJ, nA = len(pcv), X.shape[1]
+    nJ = len(pcv)
     lu = 1e-6; lpi = 1; ls = nJ / 50
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 

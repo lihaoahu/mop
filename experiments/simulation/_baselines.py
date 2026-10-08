@@ -10,7 +10,7 @@ EPS = 1e-10
 
 
 def fit_single_k1(pairs, n_alternatives):
-    pcv, X, y = _pairs_to_pcvector(pairs, link="logit")
+    pcv, _, _ = _pairs_to_pcvector(pairs, link="logit")
     nJ = len(pcv)
     lu = 1e-6; lpi = 1; ls = nJ / 50
     # φ₀ comes from inference.prior_mode_phi0, which the fit applies itself;

@@ -87,9 +87,9 @@ def generate_text_report(sim_data, holdout_data):
                     f"K_acc={m.get('k_accuracy',0):.3f}  k_mean={m.get('k_mean',0):.2f}"
                 )
 
-    if "results" in holdout_data:
-        hr = holdout_data["results"]
-        n_pairs = holdout_data.get("n_pairs", "?")
+    if "results" in holdout_data or "overall" in holdout_data:
+        hr = holdout_data.get("overall", holdout_data.get("results", {}))
+        n_pairs = holdout_data.get("n_pairs_total", holdout_data.get("n_pairs", "?"))
         lines.append(f"\n## Holdout ({n_pairs} pairs)")
         for method in ["MoP", "P=1", "BTL"]:
             if method in hr and "mse" in hr[method]:
@@ -164,9 +164,12 @@ def _scenario_table(name, w, pi):
 
 
 def generate_holdout_table(holdout_data):
-    results = holdout_data.get("results", {})
+    # step2_holdout.py writes {"n_folds", "n_pairs_total", "overall",
+    # "per_dimension"}, not "results"/"n_pairs": reading the old names produced
+    # a table with a header, an empty body and "$n=?$" in the caption.
+    results = holdout_data.get("overall", holdout_data.get("results", {}))
     n_folds = holdout_data.get("n_folds", "?")
-    n_pairs = holdout_data.get("n_pairs", "?")
+    n_pairs = holdout_data.get("n_pairs_total", holdout_data.get("n_pairs", "?"))
     header = ["Method", "MSE↓", "MAE↓", "Pearson r↑", "Spearman ρ↑", "Time (s)"]
     rows = []
     for method in ["MoP", "P=1", "BTL"]:

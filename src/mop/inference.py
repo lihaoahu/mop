@@ -185,7 +185,9 @@ def prior_mode_phi0(X, y):
     ``SS / (K - p)`` with ``p = A - 1`` free utilities. Defined once, here,
     because the fit and the pBIC criterion both need it: an earlier version
     computed it in the scripts as ``SS / (K - p + 1)`` and in the fit as
-    ``SS / K``, so one run used three different prior modes.
+    ``SS / K``, so a single run used two different prior modes, neither of
+    them this one. The correct denominator was a third candidate that nothing
+    called.
     """
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
@@ -274,8 +276,9 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
 
     # 默认参数 — 仅对未指定的参数设默认值。默认值与论文 §2.5 用的那组一致：
     # λ_u 小到不影响效用、λ_σ = K/50 是论文的经验设置、λ_π = 1 是单纯形上的均匀先验。
-    # λ_σ > 4 是先验众数存在的条件（形状 (λ_σ-2)/2 要大于 1）；K/50 在 K > 200 时满足，
-    # 而旧的默认值 0.1 使形状为负，密度根本不可归一，却会静默跑完。
+    # λ_σ > 2 是先验众数存在的条件：InvGamma(α=(λ_σ-2)/2, β=λ_σφ₀/2) 的众数是
+    # β/(α+1) = φ₀，只要 α > 0；λ_σ > 4 是均值 β/(α-1) 存在的条件，比众数更强。
+    # 旧的默认值 0.1 使 α = -0.95 < 0，密度根本不可归一，却会静默跑完。
     if s2 is None:
         # 先验众数 φ₀ —— 与 pbic 用的是同一个定义，见 prior_mode_phi0
         s2 = prior_mode_phi0(X, y)

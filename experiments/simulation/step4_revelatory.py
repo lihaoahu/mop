@@ -47,7 +47,7 @@ def fit_mop(pairs, nA, max_K=8):
                                agent_id=1, judgment=p["score"]) for p in pairs]
     link_fns = [lambda s: logit(np.clip(s, EPS, 1-EPS))]
     X, y, _ = comparisons2regression(pcv, link_fns)
-    nJ, nA_m1 = len(pcv), X.shape[1]
+    nJ = len(pcv)
     lu = 1e-6; lpi = 1; ls = nJ / 50
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 

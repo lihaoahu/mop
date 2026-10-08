@@ -140,13 +140,13 @@ print("=" * 76)
 LAB = ["BEV", "PHEV", "REEV", "ICEV"]
 # the fitted overall mixture of the case study, to full precision
 W = np.array([
-    [0.48530012815378776, 0.2543372677951154, 0.16926740665935452, 0.09109519739174243],
-    [0.9999999998478429, 4.147685794006449e-11, 1.0677907793234627e-11, 1.0000230260408398e-10],
-    [0.08964249751608318, 0.3911496950821047, 0.41540518687229233, 0.10380262052951977],
-    [0.10142686319478791, 0.1366147177974498, 0.3294297952774048, 0.4325286237303575],
+    [0.4873485184590911, 0.24785860575773244, 0.17345053406765415, 0.09134234171552226],
+    [0.9999999998480964, 4.139519556101162e-11, 1.0506031612582586e-11, 1.0000230260410934e-10],
+    [0.09086025461190401, 0.4074870027660522, 0.39698678206075183, 0.10466596056129206],
+    [0.10053462225970854, 0.13627269214855534, 0.3316377366205375, 0.43155494897119856],
 ])
-PI = np.array([0.372628940638662, 0.0005225906356056135,
-               0.25102135571570233, 0.3758271130100301])
+PI = np.array([0.37237417147496743, 0.000539782896867043,
+               0.25234737997290985, 0.37473866565525576])
 PRINTED = np.array([0.054, 0.282, 0.475, 0.000])
 
 u_bar = expected_utility(W, PI)
@@ -156,7 +156,7 @@ for p in range(W.shape[0]):
 
 print("   package  : " + "  ".join(f"{lab}={v:.4f}" for lab, v in zip(LAB, u_bar)))
 print("   hand     : " + "  ".join(f"{lab}={v:.4f}" for lab, v in zip(LAB, hand)))
-print("   Table 3  : " + "  ".join(f"{lab}={v:.3f}" for lab, v in zip(LAB, PRINTED)))
+print("   Table 5  : " + "  ".join(f"{lab}={v:.3f}" for lab, v in zip(LAB, PRINTED)))
 check("package agrees with an independent computation",
       np.allclose(u_bar, hand),
       f"(max dev {np.max(np.abs(u_bar - hand)):.2e})")
@@ -167,7 +167,7 @@ order = [LAB[i] for i in np.argsort(-u_bar)]
 check("ranking matches the manuscript, REEV > PHEV > BEV > ICEV",
       order == ["REEV", "PHEV", "BEV", "ICEV"],
       f"(got {' > '.join(order)})")
-check("reproduces the values of Table 3 (max dev < 0.001)",
+check("reproduces the values of Table 5 (max dev < 0.001)",
       np.max(np.abs(u_bar - PRINTED)) < 0.001,
       f"(max dev {np.max(np.abs(u_bar - PRINTED)):.4f})")
 print("   Utilities are logs of the ratio to the benchmark, so they are on the")
