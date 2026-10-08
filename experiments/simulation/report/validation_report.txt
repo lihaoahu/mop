@@ -14,8 +14,8 @@ MoP Validation — Summary
 
 ## Noise — MoP isolates random raters
   (sigma2=0.05_noise=0.2_n=500)
-  MoP            CosSim=0.9999  KL(pi)=0.2329  Kendall=0.9993  K_acc=0.000  k_mean=2.10
-  P=1            CosSim=0.9958  KL(pi)=0.0000  Kendall=1.0000  K_acc=0.000  k_mean=1.00
+  MoP            CosSim=0.9999  KL(pi)=0.2329  Kendall=0.9993  K_acc=  ---  k_mean=2.10
+  P=1            CosSim=0.9958  KL(pi)=0.0000  Kendall=1.0000  K_acc=  ---  k_mean=1.00
 
 ## Holdout (5401 pairs)
   MoP            MSE=0.00989±0.00419  MAE=0.07645  r=0.9324  ρ=0.8804

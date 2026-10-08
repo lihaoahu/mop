@@ -17,11 +17,12 @@ ENERGY_PAIRS = PROJECT / "experiments" / "case_study" / "energy_pairs.jsonl"
 SIM_RESULTS = SIM_DIR / "simulation_results.json"
 HOLDOUT_RESULTS = SIM_DIR / "holdout_results.json"
 REPORT_DIR = SIM_DIR / "report"
-TABLES_DIR = PROJECT / "manuscript" / "tables"
 FIGURES_DIR = PROJECT / "manuscript" / "figures"
 
-for d in [REPORT_DIR, TABLES_DIR]:
-    d.mkdir(parents=True, exist_ok=True)
+# Only the report directory is created here. TABLES_DIR used to be made as well,
+# which meant importing any simulation script silently added an empty
+# manuscript/tables/ to the manuscript tree; nothing ever wrote there.
+REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 CANONICAL_TYPES = ["纯电", "插混", "增程", "燃油"]
 TYPE_MAP_FULL = None  # lazy-loaded below

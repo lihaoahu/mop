@@ -80,11 +80,16 @@ def generate_text_report(sim_data, holdout_data):
         for method in ["MoP", "P=1", "BTL"]:
             if method in agg and "cosine_sim" in agg[method]:
                 m = agg[method]
+                # The noise scenario has no single true K, so step1_simulation.py
+                # drops k_accuracy for it. Defaulting that to 0 printed
+                # "K_acc=0.000" in every replicate, which reads as the opposite
+                # of what the scenario shows.
+                ka = f"{m['k_accuracy']:.3f}" if "k_accuracy" in m else "  ---"
                 lines.append(
                     f"  {method:<14} CosSim={m['cosine_sim']['mean']:.4f}  "
                     f"KL(pi)={m['kl_pi']['mean']:.4f}  "
                     f"Kendall={m['kendall_tau']['mean']:.4f}  "
-                    f"K_acc={m.get('k_accuracy',0):.3f}  k_mean={m.get('k_mean',0):.2f}"
+                    f"K_acc={ka}  k_mean={m.get('k_mean',0):.2f}"
                 )
 
     if "results" in holdout_data or "overall" in holdout_data:
