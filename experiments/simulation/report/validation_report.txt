@@ -18,6 +18,10 @@ MoP Validation — Summary
   P=1            CosSim=0.9958  KL(pi)=0.0000  Kendall=1.0000  K_acc=  ---  k_mean=1.00
 
 ## Holdout (5401 pairs)
+  SUPERSEDED by step5_holdout.py. step2's rule picks the component
+  whose prediction is closest to the observed value, so it reads the
+  label it predicts and its MoP column is an oracle selection, not a
+  forecast. The paper reports step5's marginal-likelihood numbers.
   MoP            MSE=0.00989±0.00419  MAE=0.07645  r=0.9324  ρ=0.8804
   P=1            MSE=0.07332±0.00063  MAE=0.24557  r=0.1780  ρ=0.1791
 

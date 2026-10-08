@@ -49,7 +49,7 @@ values, which is why the file is marked rather than merely unused.
 Two other files here are kept for the record and are read by nothing:
 `balance_results.json`, superseded by `balance_pooled_results.json`, and
 `regenwetter_newinit.txt` at the repository root, the log of an external
-validation removed in 7ff570e.
+validation removed in 73466ff.
 
 ## Parameterisation
 

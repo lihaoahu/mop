@@ -96,6 +96,10 @@ def generate_text_report(sim_data, holdout_data):
         hr = holdout_data.get("overall", holdout_data.get("results", {}))
         n_pairs = holdout_data.get("n_pairs_total", holdout_data.get("n_pairs", "?"))
         lines.append(f"\n## Holdout ({n_pairs} pairs)")
+        lines.append("  SUPERSEDED by step5_holdout.py. step2's rule picks the component")
+        lines.append("  whose prediction is closest to the observed value, so it reads the")
+        lines.append("  label it predicts and its MoP column is an oracle selection, not a")
+        lines.append("  forecast. The paper reports step5's marginal-likelihood numbers.")
         for method in ["MoP", "P=1", "BTL"]:
             if method in hr and "mse" in hr[method]:
                 m = hr[method]
@@ -175,14 +179,16 @@ def generate_holdout_table(holdout_data):
     results = holdout_data.get("overall", holdout_data.get("results", {}))
     n_folds = holdout_data.get("n_folds", "?")
     n_pairs = holdout_data.get("n_pairs_total", holdout_data.get("n_pairs", "?"))
-    header = ["Method", "MSE↓", "MAE↓", "Pearson r↑", "Spearman ρ↑", "Time (s)"]
+    # The wall-clock column is deliberately not printed: it differs on every run,
+    # which made the committed table the one artefact a re-run could never
+    # reproduce. The timings stay in holdout_results.json.
+    header = ["Method", "MSE↓", "MAE↓", "Pearson r↑", "Spearman ρ↑"]
     rows = []
     for method in ["MoP", "P=1", "BTL"]:
         if method in results:
             m = results[method]
             rows.append([method, _mean_std_str(m, "mse"), _mean_std_str(m, "mae"),
-                         _mean_std_str(m, "pearson_r"), _mean_std_str(m, "spearman_rho"),
-                         _mean_std_str(m, "time_s")])
+                         _mean_std_str(m, "pearson_r"), _mean_std_str(m, "spearman_rho")])
     if "MoP" in results and "P=1" in results:
         mop, p1 = results["MoP"], results["P=1"]
         rows.append([
@@ -191,9 +197,11 @@ def generate_holdout_table(holdout_data):
             _format_delta(_val(mop, "mae"), _val(p1, "mae"), lower_is_better=True),
             _format_delta(_val(mop, "pearson_r"), _val(p1, "pearson_r")),
             _format_delta(_val(mop, "spearman_rho"), _val(p1, "spearman_rho")),
-            "---",
         ])
-    cap = f"Holdout prediction ($n={n_pairs}$, {n_folds}-fold CV). Mean $\\pm$ std."
+    cap = (f"Holdout prediction ($n={n_pairs}$, {n_folds}-fold CV). Mean $\\pm$ std. "
+           "Selected by the oracle rule of \\texttt{step2\\_holdout.py}, which reads the "
+           "label it predicts: these are not the figures Section~3.2 reports, which come "
+           "from \\texttt{step5\\_holdout.py}.")
     return _latex_table(cap, "tab:holdout", header, rows)
 
 

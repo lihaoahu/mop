@@ -106,7 +106,7 @@ def table_dimensions(blocks):
         title = dim.replace("_", " ").title()
         lines.append(
             f"\t\t\\multicolumn{{7}}{{l}}{{\\textbf{{{title}}}  "
-            f"($n{{=}}{thousands(blk['n'])}$, $\\mathcal{{P}}^*{{=}}{blk['k']}$, "
+            f"($n{{=}}{thousands(blk['n'])}$, $\\widehat{{\\mathcal{{P}}}}{{=}}{blk['k']}$, "
             f"pBIC${{=}}{thousands(blk['pbic'])}$)}} \\\\")
         for i, c in enumerate(blk["components"], start=1):
             lines.append(component_row(f"C{i}", c))
@@ -131,7 +131,7 @@ def table_years(years):
     for j, (year, blk) in enumerate(years):
         lines.append(
             f"\t\t\\multicolumn{{7}}{{l}}{{\\textbf{{{year}}}  "
-            f"($n={thousands(blk['n'])}$, $\\mathcal{{P}}^*={blk['k']}$, "
+            f"($n={thousands(blk['n'])}$, $\\widehat{{\\mathcal{{P}}}}={blk['k']}$, "
             f"pBIC$={thousands(blk['pbic'])}$)}} \\\\")
         for i, c in enumerate(blk["components"], start=1):
             lines.append(component_row(f"C{i}        ", c))

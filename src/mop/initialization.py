@@ -80,7 +80,13 @@ def _irls(X, r, family, weights, lambda_reg, max_iter=25, tol=1e-10):
     for _ in range(max_iter):
         eta = X @ u
         mu = family.h(eta)
-        irw = 1.0 / np.maximum(family.V(mu), 1e-12)
+        # The IRLS weight is 1 / (V(mu) * [g'(mu)]^2), which is h'(eta)^2 / V(mu)
+        # because h' = dmu/deta = 1/g'. Under the logit that is mu(1-mu); taking
+        # 1/V(mu) alone would give 1/(mu(1-mu)) instead, a different fixed point
+        # that does not solve the score equations. The two agree only where
+        # h' = 1, i.e. in the Gaussian variants, which is the only path the
+        # paper's fits take.
+        irw = family.h_prime(eta) ** 2 / np.maximum(family.V(mu), 1e-12)
         w = prior_w * irw
         z = eta + (r - mu) / np.maximum(np.abs(family.h_prime(eta)), 1e-12) * np.sign(
             family.h_prime(eta)
@@ -320,7 +326,12 @@ def kridge(
 
     for p in range(nP - 1):
         res = np.column_stack([residual(all_idx, u[q, :]) for q in range(p + 1)])
-        worst = np.max(res, axis=1)
+        # A judgment is badly explained when the component nearest to it is still
+        # far, so this is the smallest residual over the components present --
+        # the rule Algorithm 2 of the manuscript states. This used max, which
+        # selects the judgment farthest from its *worst* component instead, and
+        # disagreed with seed_component below.
+        worst = np.min(res, axis=1)
         n_edge = min(nA_minus_1 + 1, nJ)
         threshold = np.sort(worst)[-n_edge] if n_edge > 0 else np.max(worst)
         idx = np.where(worst >= threshold)[0]

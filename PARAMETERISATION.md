@@ -82,7 +82,7 @@ of the posterior that carries `phi_p`:
 |---|---|
 | `sum_k gamma_k` | the Gaussian likelihood, one factor per observation |
 | `nA - 1` | the normalising constant of the utility prior, whose density carries `phi_p^{-(A-1)/2}` |
-| `lambda_s` | the inverse-Gamma shape parameter, through `alpha = (lambda_s - 2)/2`; equivalently the Gamma shape on `1/phi_p`, `alpha + 1` |
+| `lambda_s` | the inverse-Gamma scale parameter, `beta = lambda_s * phi_0 / 2`; the shape is `alpha = (lambda_s - 2)/2`, which is why `lambda_s = 2(alpha + 1)` |
 
 The numerator carries the quadratic term of the utility prior.
 
@@ -154,7 +154,7 @@ Consequences:
 ### 4b. The prior mode of the dispersion has one definition
 
 `inference.prior_mode_phi0(X, y)` returns `SS / (K - p)` with `p = A - 1` free
-utilities, which is `eq:general gci` of the manuscript: the unbiased residual
+utilities, which is `eq:prior_mode` of the manuscript: the unbiased residual
 variance of the single-preference fit. It is called by `mop`, for the fit, and
 by `pbic`, for the criterion, so one run cannot use two different prior modes.
 
@@ -214,7 +214,7 @@ marginal posterior rather than the joint one the EM iteration targets.
 
 This section used to record the mean-dispersion parameterisation `(n, mu, rho)`
 that `inference_binomial.py` used for repeated binary judgments, and its
-agreement with `scipy.stats.betabinom`. That module was removed in 7ff570e,
+agreement with `scipy.stats.betabinom`. That module was removed in 73466ff,
 together with the external validation that fitted it, so nothing in the tree
 implements the parameterisation now and there is nothing left to audit: the
 summary table above no longer lists it. The manuscript still presents a
