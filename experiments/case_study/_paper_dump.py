@@ -55,7 +55,8 @@ def run_mop_full(pairs, label=""):
             ps = np.array([p.inconsistency_level for p in prev.priorities])
             pm = np.array(prev.mixture_probabilities)
             u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=0.05)
+                X, y, pu, ps, pm, min_weight_share=0.05,
+                n_components=k)
             kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
         result = inference.mop(pcvector, link_functions, k,
                                lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)

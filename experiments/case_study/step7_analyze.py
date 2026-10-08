@@ -36,7 +36,7 @@ def load_pairs(dim_name=None, year=None):
     return pairs
 
 
-def warm_init(prev, X, y, nA):
+def warm_init(prev, X, y, nA, k):
     """Carry the converged fit with k-1 components over to k.
 
     The library routine does the work; the mixture weights are floored at
@@ -46,7 +46,8 @@ def warm_init(prev, X, y, nA):
     pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
     ps = np.array([p.inconsistency_level for p in prev.priorities])
     pm = np.array(prev.mixture_probabilities)
-    return _lib_warm_init(X, y, pu, ps, pm, min_weight_share=0.05)
+    return _lib_warm_init(X, y, pu, ps, pm, min_weight_share=0.05,
+                          n_components=k)
 
 
 def run_mop(pairs, trace=None):
@@ -73,7 +74,7 @@ def run_mop(pairs, trace=None):
     for k in range(1, 10):
         kw = {}
         if prev is not None:
-            ui, si, mi = warm_init(prev, X, y, nA)
+            ui, si, mi = warm_init(prev, X, y, nA, k)
             kw = {"u_init": ui, "sigma2_init": si, "mp_init": mi}
         result = inference.mop(pcvector, link_functions, k,
                                lambda_u=lu, lambda_pi=lpi,

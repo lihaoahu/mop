@@ -201,7 +201,7 @@ def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2, u
 
 def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         lambda_pi=None, s2=None, u_bar=None,
-        u_init=None, sigma2_init=None, mp_init=None):
+        u_init=None, sigma2_init=None, mp_init=None, minprior=0.05):
     """
     EM算法主函数 - 估计混合优先级模型
 
@@ -222,6 +222,15 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
     nJ = len(pcvector)
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA_minus_1 = X.shape[1]
+
+    # The size of the mixture is whatever the caller supplies when initial
+    # values are given. nP is otherwise only an upper bound: the removal below
+    # takes components out as their weight falls, so a fit can end smaller than
+    # it started, and a caller that warm-starts one candidate from the previous
+    # one cannot be required to know how many components the previous one
+    # finished with.
+    if u_init is not None and sigma2_init is not None and mp_init is not None:
+        nP = len(mp_init)
 
     # 默认先验均值为零向量 — 支持 per-component
     if u_bar is None:
@@ -347,11 +356,43 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         if np.isnan(pll_tp1) or np.isinf(pll_tp1):
             break
 
-        # Relative change in the penalized log-posterior. 1e-10 is far below
-        # any quantity that gets reported, whereas 1e-20 lies under double
-        # precision for magnitudes of this size, so the loop ran to the
-        # iteration cap instead of stopping.
-        if abs(pll_tp1 - pll_t) / (abs(pll_tp1) + 1e-300) < 1e-10:
+        # A component whose weight has fallen below minprior is removed, which
+        # is what flexmix does and at the same threshold. Such a component
+        # accounts for too few judgments to be a preference state, so keeping
+        # it only seeds the next candidate from a solution already rejected.
+        # The removal happens here, after the convergence test, because that
+        # test compares the current iterate with the candidate and the two must
+        # have the same shape; resizing first is what made an earlier version
+        # of this change collapse the mixture.
+        keep = None
+        if minprior > 0:
+            keep = np.flatnonzero(mp_new >= minprior)
+            if keep.size == 0:
+                keep = np.array([int(np.argmax(mp_new))])
+            if keep.size == nP:
+                keep = None
+            else:
+                u_new = u_new[keep]
+                sigma2_new = sigma2_new[keep]
+                mp_new = mp_new[keep] / np.sum(mp_new[keep])
+                if np.ndim(lambda_u) > 0:
+                    lambda_u = np.asarray(lambda_u)[keep]
+                if np.ndim(lambda_sigma) > 0:
+                    lambda_sigma = np.asarray(lambda_sigma)[keep]
+                # u_bar was tiled to one row per component above, so it has to
+                # lose the same rows; leaving it long is what made an earlier
+                # version of this change fail on the utility update, where it
+                # is indexed by component.
+                if np.ndim(u_bar) == 2 and np.shape(u_bar)[0] == nP:
+                    u_bar = np.asarray(u_bar)[keep]
+                nP = int(keep.size)
+
+        # Relative change in the penalized log-posterior. The 0.1 in the
+        # denominator is the scale normalisation flexmix uses, and the 1e-6 is
+        # its default tolerance: without the normalisation the test tightens as
+        # the log-posterior grows in magnitude, which for these data made a
+        # 1e-10 ratio unreachable and ran the loop to its cap.
+        if abs(pll_tp1 - pll_t) / (abs(pll_tp1) + 0.1) < 1e-6:
             break
 
         u, sigma2, mp = u_new, sigma2_new, mp_new

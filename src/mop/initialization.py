@@ -228,7 +228,8 @@ def seed_component(X, y, u_prev, family=None, weights=None, lambda_reg=1e-10,
 
 
 def warm_init(X, y, u_prev, phi_prev, pi_prev, family=None, weights=None,
-              lambda_reg=1e-10, deviance=None, min_weight_share=0.0):
+              lambda_reg=1e-10, deviance=None, min_weight_share=0.0,
+              n_components=None):
     """Carry a converged fit with ``P - 1`` components over to ``P``.
 
     The components already present are kept unchanged, one further component is
@@ -240,16 +241,24 @@ def warm_init(X, y, u_prev, phi_prev, pi_prev, family=None, weights=None,
     that level before the rescaling, so that a component cannot start the next
     round at a weight the following M-step will not move. The default of zero
     is the rescaling as the manuscript states it.
+
+    ``n_components`` is the size the caller wants the mixture to come back with.
+    By default one component is added; when a target is given and the fit
+    carried over has fewer components than ``n_components - 1``---which happens
+    once components can be removed during a fit---components are seeded until
+    the target is reached, so that candidate ``P`` always starts from ``P``
+    components.
     """
     u_prev = np.atleast_2d(np.asarray(u_prev, dtype=np.float64))
     phi_prev = np.atleast_1d(np.asarray(phi_prev, dtype=np.float64))
     pi_prev = np.atleast_1d(np.asarray(pi_prev, dtype=np.float64))
     n_old = u_prev.shape[0]
-    n_new = n_old + 1
+    n_new = n_old + 1 if n_components is None else max(int(n_components), n_old)
 
     u = np.zeros((n_new, X.shape[1]))
     u[:n_old] = u_prev
-    u[n_old] = seed_component(X, y, u_prev, family=family, weights=weights,
+    for q in range(n_old, n_new):
+        u[q] = seed_component(X, y, u[:q], family=family, weights=weights,
                               lambda_reg=lambda_reg, deviance=deviance)
 
     phi = np.ones(n_new) * float(np.mean(phi_prev))
@@ -257,7 +266,7 @@ def warm_init(X, y, u_prev, phi_prev, pi_prev, family=None, weights=None,
 
     pi = np.zeros(n_new)
     pi[:n_old] = pi_prev * (n_old / n_new)
-    pi[n_old] = 1.0 / n_new
+    pi[n_old:] = 1.0 / n_new
     if min_weight_share > 0.0:
         pi = np.maximum(pi, min_weight_share / n_new)
         pi = pi / np.sum(pi)
