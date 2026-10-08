@@ -132,7 +132,10 @@ def evaluate_one(method, pairs, n_alternatives, ground_truth):
             "sigma2": s2,
         },
         "cosine_sim": cosine_similarity(w_true, w_est),
-        "kl_pi": kl_divergence(ground_truth["pi_true"], pi_est),
+        # NaN where the comparison is undefined, i.e. where the two models have
+        # different numbers of components and one of them has no mixture weights
+        # to compare. The aggregate drops NaN, so the key is simply absent there.
+        "kl_pi": kl_divergence(w_true, ground_truth["pi_true"], w_est, pi_est),
         "kendall_tau": kendall_tau(ground_truth["w_true_avg"], w_avg_est),
         "time_s": t_elapsed,
     }
@@ -276,7 +279,10 @@ def _print_agg(key, agg):
         if method in agg and "cosine_sim" in agg[method]:
             m = agg[method]
             ka = f"{m['k_accuracy']:>7.3f}" if "k_accuracy" in m else "    ---"
-            print(f"  {method:<14} {m['cosine_sim']['mean']:>9.4f} {m['kl_pi']['mean']:>9.4f} {m['kendall_tau']['mean']:>9.4f} {ka} {m.get('k_mean',0):>7.2f} {m['time_s']['mean']:>8.4f}")
+            # absent where the comparison is undefined, e.g. the mixture weights
+            # of a model that has no mixture
+            kl = f"{m['kl_pi']['mean']:>9.4f}" if "kl_pi" in m else "      ---"
+            print(f"  {method:<14} {m['cosine_sim']['mean']:>9.4f} {kl} {m['kendall_tau']['mean']:>9.4f} {ka} {m.get('k_mean',0):>7.2f} {m['time_s']['mean']:>8.4f}")
 
 
 # ═══════════════════════════════════════════════════════════════════

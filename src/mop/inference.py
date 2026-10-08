@@ -164,7 +164,15 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
 
 
 def bic(pcvector, mop, link_functions):
-    """贝叶斯信息准则"""
+    """贝叶斯信息准则 — 未被使用，也不等价于论文的 pBIC。
+
+    Unused: nothing in this repository calls it, and the paper defines only the
+    penalized criterion in `pbic` below. It is kept out of the way rather than
+    deleted so that the difference is visible: this one scores the likelihood
+    alone with the same degrees of freedom, so it is an ordinary BIC, whereas
+    `pbic` evaluates the penalized log-posterior, which already carries the three
+    prior terms. Substituting one for the other would silently drop them.
+    """
     nJ = len(pcvector)
     nP = len(mop.mixture_probabilities)
 

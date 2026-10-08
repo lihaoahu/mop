@@ -106,6 +106,10 @@ def run_cv(pairs, n_folds=5, random_seed=42):
     all_fold_results = {m: {"mse": [], "mae": [], "pearson_r": [],
                              "spearman_rho": [], "accuracy": [], "time_s": []}
                          for m in METHODS}
+    # A fold that raises is skipped, so the number of folds a method actually
+    # contributed has to be recorded: n_folds below is the number requested, and
+    # reporting that alone would let a lost fold pass as a complete run.
+    folds_used = {m: 0 for m in METHODS}
 
     for train_idx, test_idx in skf.split(pairs_arr, dims):
         train_pairs = pairs_arr[train_idx].tolist()
@@ -129,6 +133,7 @@ def run_cv(pairs, n_folds=5, random_seed=42):
                     for k, v in metrics.items():
                         all_fold_results[method][k].append(v)
                     all_fold_results[method]["time_s"].append(t_elapsed)
+                    folds_used[method] += 1
 
             except Exception as e:
                 print(f"      {method}: ERROR — {e}")
@@ -140,6 +145,10 @@ def run_cv(pairs, n_folds=5, random_seed=42):
             vals = all_fold_results[method][metric]
             if vals:
                 final[method][metric] = {"mean": float(np.mean(vals)), "std": float(np.std(vals))}
+        final[method]["n_folds_used"] = folds_used[method]
+        if folds_used[method] < n_folds:
+            print(f"  WARNING: {method} contributed {folds_used[method]} of "
+                  f"{n_folds} folds; the metrics below are over those only")
     return final
 
 
@@ -202,7 +211,16 @@ def main():
                           for dim, dr in dim_results.items()},
     }
     with open(HOLDOUT_RESULTS, "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
+        # Wall-clock is dropped, as it is from step1's results: it differs on
+        # every run, and keeping it made this the second artefact a re-run could
+        # not reproduce. The timings are still printed above.
+        def without_timings(obj):
+            if isinstance(obj, dict):
+                return {k: without_timings(v) for k, v in obj.items() if k != "time_s"}
+            if isinstance(obj, list):
+                return [without_timings(v) for v in obj]
+            return obj
+        json.dump(without_timings(output), f, indent=2, ensure_ascii=False)
     print(f"\nSaved to {HOLDOUT_RESULTS}")
 
 

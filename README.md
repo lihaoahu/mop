@@ -18,7 +18,8 @@ experiments/
     case_study/               # Section 3.2: Chinese EV energy type preferences
         energy_pairs.jsonl    # the filtered corpus: 2,328 items (1,925 text, 403 video)
         mop_results.json      # SUPERSEDED: the 6-11 artefact, lambda_u=0.1, lambda_pi=30,
-                              # n=5408; nothing reads it (only _common.MOP_RESULTS names it)
+                              # n=5408; no code reads it (_common and step7_analyze
+                              # both import the path constant and neither uses it)
         balance_pooled_results.json  # dimension-balanced bootstrap
         step7_analyze.py      # MoP fitting + model selection, all subsets
         step8_balance.py      # dimension-balanced bootstrap
@@ -38,13 +39,15 @@ tests/
     audit_parameterisation.py # verifies every distribution convention in use
 ```
 
-`step2_holdout.py` writes `holdout_results.json`, whose overall MAE is 0.0764; the
-paper reports 0.2456, from `step5_holdout.py`. The two are not two estimates of
+`step2_holdout.py` writes `holdout_results.json`. Its MoP mean absolute error is
+0.0764 against its own single-component baseline of 0.2456; the paper reports
+0.2462 against 0.2456, from `step5_holdout.py`. Those are not two estimates of
 one quantity: step2 scores a held-out comparison with whichever component
 predicts it best, which reads the label it is supposed to predict, so its MoP
-column is an oracle selection rather than a forecast (step5's own docstring says
-so). Recomputing the paper's holdout numbers from step2's file gives different
-values, which is why the file is marked rather than merely unused.
+column is an oracle selection rather than a forecast and its apparent advantage
+is the oracle at work (step5's own docstring says so). Recomputing the paper's
+holdout numbers from step2's file gives different values, which is why the file
+is marked rather than merely unused.
 
 Two other files here are kept for the record and are read by nothing:
 `balance_results.json`, superseded by `balance_pooled_results.json`, and
@@ -74,6 +77,18 @@ import them, so the default environment is small.
 
 ## Reproducing results
 
+Every committed result file and printed table reproduces byte for byte from the
+scripts below; wall-clock timings are printed but deliberately not stored, which
+is what makes that true.
+
+One exception is worth knowing before re-capturing it.
+`experiments/case_study/analysis_output.txt` is the capture of
+`step7_analyze.py`'s stdout, and how it is captured matters: the redirect has to
+pass the bytes through. With `PYTHONIOENCODING=utf-8` and a shell redirect that
+does not re-encode, the file comes back identical (4019 bytes, verified with
+`cmd /c "... > analysis_output.txt"`); PowerShell's `>` decodes the child's
+output and writes UTF-16, so the numbers are the same but the file is not.
+
 ### Case study (Section 3.2)
 
 ```bash
@@ -92,7 +107,8 @@ computed a second time; the committed `analysis_output.txt` is that capture.
 `_gen_tables.py` emits the same fits as LaTeX (Tables 3, 5, 6 and 8), reading
 `run_mop` from `step7_analyze.py`, and caches them in `case_study_tables.json`.
 
-`step8_balance.py` takes about nine minutes at 100 replications, and its
+`step8_balance.py` takes about two minutes at 100 replications on the machine it
+was measured on, and its
 `--n-bootstrap` default is 50: the paper reports 100, so the flag is not
 optional. The two plotting scripts read the same fits and write into
 `manuscript/figures/`.

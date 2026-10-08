@@ -9,16 +9,19 @@ relies on. Run it with
 
 It exits non-zero if any convention fails to reproduce.
 
-Checklist
+Checklist, matching the seven sections printed below
   1  Gaussian likelihood: is the scale argument sqrt(sigma^2) (std) or sigma^2?
   2  Inverse-Gamma prior on sigma^2: does the code's log-density match
-     scipy.stats.invgamma with shape=(lambda_s-2)/2, scale=lambda_s*s2bar/2?
+     scipy.stats.invgamma with shape=(lambda_s-2)/2, scale=lambda_s*phi_0/2?
   3  M-step update for sigma^2 vs the strict MAP implied by that prior
   4  aggregate ranking: expected utility, and the benchmark's zero origin
-  6  transforms: logit/log are natural, expit <-> logit
-  7  synthetic data: noise added on the log-odds scale
-  8  ties encoded as score 0.5 -> logit 0
-  9  analytic M-step gradients vs central finite differences
+  5  transforms: logit/log are natural, expit <-> logit
+  6  synthetic data: noise added on the log-odds scale
+  7  ties encoded as score 0.5 -> logit 0
+
+Two checks this list used to carry are gone with the code they tested: the
+beta-binomial density against scipy, and its analytic gradients against finite
+differences. Both belonged to the module removed in 73466ff.
 """
 
 import math

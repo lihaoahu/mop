@@ -3,6 +3,7 @@
 import json
 import numpy as np
 from pathlib import Path
+from scipy.optimize import linear_sum_assignment
 from scipy.special import logit
 from scipy.stats import kendalltau, spearmanr, pearsonr
 
@@ -44,46 +45,69 @@ def priority_vector_from_logratios(u):
     return v / np.sum(v, axis=1, keepdims=True)
 
 
+def match_components(w_true, w_est):
+    """Pair each fitted component with a true one, by priority-vector similarity.
+
+    Returns (true_idx, est_idx) of length min(K_true, K_est), the assignment that
+    maximises the total cosine similarity. Two earlier versions of the metric
+    below compared components by their position in the array instead, which is
+    arbitrary: the fit's component order carries no meaning, so an index-wise
+    comparison measures the ordering as much as the recovery.
+    """
+    w_true = np.atleast_2d(np.asarray(w_true, dtype=float))
+    w_est = np.atleast_2d(np.asarray(w_est, dtype=float))
+    nt, ne = w_true.shape[0], w_est.shape[0]
+    sim = np.zeros((nt, ne))
+    for i in range(nt):
+        for j in range(ne):
+            denom = np.linalg.norm(w_true[i]) * np.linalg.norm(w_est[j])
+            sim[i, j] = float(np.dot(w_true[i], w_est[j]) / denom) if denom > 0 else 0.0
+    ti, ei = linear_sum_assignment(-sim)
+    return ti, ei, sim
+
+
 def cosine_similarity(w_true, w_est):
-    """Mean cosine similarity between best-matched component pairs."""
-    nP_true = w_true.shape[0]
-    nP_est = w_est.shape[0]
-    # Greedy matching: for each true component, find best estimated match
-    similarities = []
-    used = set()
-    for i in range(nP_true):
-        best_sim = -1.0
-        best_j = -1
-        for j in range(nP_est):
-            if j in used:
-                continue
-            sim = np.dot(w_true[i], w_est[j]) / (
-                np.linalg.norm(w_true[i]) * np.linalg.norm(w_est[j]) + 1e-300
-            )
-            if sim > best_sim:
-                best_sim = sim
-                best_j = j
-        if best_j >= 0:
-            used.add(best_j)
-            similarities.append(best_sim)
-    return float(np.mean(similarities)) if similarities else 0.0
+    """Mean cosine similarity over the matched component pairs.
+
+    One pair per component of whichever model has fewer, chosen to maximise the
+    total similarity. A model with too few components therefore scores only the
+    components it does have: the single-component baseline is scored on its one
+    best match, not on the average over the truth, which is what the paper's
+    sentence about "the recovered components" means.
+    """
+    _, _, sim = match_components(w_true, w_est)
+    if sim.size == 0:
+        return 0.0
+    ti, ei = linear_sum_assignment(-sim)
+    return float(np.mean(sim[ti, ei]))
 
 
-def kl_divergence(pi_true, pi_est):
-    """KL divergence D_KL(pi_true || pi_est)."""
+def kl_divergence(w_true, pi_true, w_est, pi_est):
+    """KL divergence between the true mixture weights and a fitted permutation.
+
+    Undefined, and returned as NaN, when the two models have different numbers of
+    components: "the divergence between the true and estimated mixture weights"
+    has no meaning when one of the two has no mixture to compare, and an earlier
+    version produced a number anyway by padding with zeros, flooring at 1e-10 and
+    renormalising, which made every unmatched component contribute log(1e-10) =
+    23.03. That constant, not the fit, is what the P=1 baseline's value was.
+    """
     pi_true = np.asarray(pi_true, dtype=float)
     pi_est = np.asarray(pi_est, dtype=float)
-    # Align sizes: pad smaller with zeros
-    n = max(len(pi_true), len(pi_est))
-    p = np.zeros(n)
-    q = np.zeros(n)
-    p[:len(pi_true)] = pi_true
-    q[:len(pi_est)] = pi_est
-    p = np.maximum(p, 1e-10)
-    q = np.maximum(q, 1e-10)
-    p /= p.sum()
-    q /= q.sum()
-    return float(np.sum(p * np.log(p / q)))
+    if len(pi_true) != len(pi_est) or len(pi_true) < 2:
+        return float("nan")
+    ti, ei, _ = match_components(w_true, w_est)
+    if len(ti) != len(pi_true):
+        return float("nan")
+    pi_est_matched = np.empty_like(pi_est)
+    pi_est_matched[ti] = pi_est[ei]
+    p = np.maximum(pi_true, 0.0)
+    q = np.maximum(pi_est_matched, 0.0)
+    p = p / p.sum()
+    q = q / q.sum()
+    # no floor: both vectors are proper distributions and the divergent entries
+    # are exactly the ones the fit got wrong, which is the quantity of interest
+    return float(np.sum(np.where(p > 0, p * np.log(p / np.maximum(q, 1e-300)), 0.0)))
 
 
 def ranking_from_priority(w):
@@ -147,11 +171,13 @@ def generate_synthetic_pairs(u_logratios, pi, sigma2, n_comparisons, rng=None):
 
 def generate_cancellation():
     """Cancellation — opposite preferences log-ratios, balanced → near-uniform."""
-    # u1 = [log(w_A/w_D), log(w_B/w_D), log(w_C/w_D)], D is the reference (u=0)
-    # Opposite: u2 = -u1
+    # u1 = [log(w_A/w_D), log(w_B/w_D), log(w_C/w_D)], D is the reference (u=0).
+    # The second component's priority vector is the exact reverse of the first's:
+    # these log-ratios are the mirror image of u1's spacings, which is what makes
+    # the two cancel in the aggregate. It is not -u1, which would not.
     u = np.array([
         [2.0, 1.0, 0.5],     # A > B > C > D (strict ordering, no ties)
-        [-2.0, -1.5, -1.0],  # D > C > B > A (exact reverse)
+        [-2.0, -1.5, -1.0],  # D > C > B > A (priority vector = reverse of u1's)
     ])
     pi = np.array([0.5, 0.5])
     return u, pi

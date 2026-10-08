@@ -71,10 +71,15 @@ HEADER = "Component & BEV & PHEV & REEV & ICEV & $\\pi_p$ & $\\phi_p$ \\\\"
 
 
 def table_overall(blk):
+    # The count in the caption is read off the fit rather than written in, so a
+    # fit that selected a different number of components cannot leave the caption
+    # describing a mixture that is not in the table below it.
+    n_comp = len(blk["components"])
+    word = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five"}.get(n_comp, str(n_comp))
     lines = [
         "\\begin{table}[ht]",
         "\t\\centering",
-        (f"\t\\caption{{Four-component mixture of preferences for the overall "
+        (f"\t\\caption{{{word}-component mixture of preferences for the overall "
          f"dataset ($n={thousands(blk['n'])}$, pBIC$={thousands(blk['pbic'])}$, "
          f"$\\lambda_u{{=}}10^{{-6}}$, $\\lambda_\\pi{{=}}1$, "
          f"$\\lambda_\\sigma{{=}}n/50{{\\approx}}{blk['n'] // 50}$).}}"

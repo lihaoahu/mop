@@ -83,11 +83,13 @@ def generate_text_report(sim_data, holdout_data):
                 # The noise scenario has no single true K, so step1_simulation.py
                 # drops k_accuracy for it. Defaulting that to 0 printed
                 # "K_acc=0.000" in every replicate, which reads as the opposite
-                # of what the scenario shows.
+                # of what the scenario shows. kl_pi is absent for the same kind
+                # of reason: a model with no mixture has no weights to compare.
                 ka = f"{m['k_accuracy']:.3f}" if "k_accuracy" in m else "  ---"
+                kl = f"{m['kl_pi']['mean']:.4f}" if "kl_pi" in m else "  ---"
                 lines.append(
                     f"  {method:<14} CosSim={m['cosine_sim']['mean']:.4f}  "
-                    f"KL(pi)={m['kl_pi']['mean']:.4f}  "
+                    f"KL(pi)={kl}  "
                     f"Kendall={m['kendall_tau']['mean']:.4f}  "
                     f"K_acc={ka}  k_mean={m.get('k_mean',0):.2f}"
                 )
@@ -151,7 +153,7 @@ def generate_simulation_tables(sim_data):
                     rows.append([
                         cond if method == "MoP" else "", method,
                         f"{m['cosine_sim']['mean']:.4f}",
-                        f"{m['kl_pi']['mean']:.4f}",
+                        f"{m['kl_pi']['mean']:.4f}" if 'kl_pi' in m else "---",
                         f"{m['kendall_tau']['mean']:.4f}",
                         ka,
                         f"{m.get('k_mean',0):.2f}",
