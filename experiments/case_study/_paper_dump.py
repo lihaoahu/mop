@@ -43,8 +43,8 @@ def run_mop_full(pairs, label=""):
     link_functions = [lambda s, _eps=EPS: logit(np.clip(s, _eps, 1-_eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA = X.shape[1]; lu = lpi = ls = nJ / D
-    u_pool = np.linalg.solve(X.T @ X + 1e-10*np.eye(nA), X.T @ y)
-    s2_bar = max(np.sum((X @ u_pool - y)**2) / max(nJ - nA + 1, 1), 1e-10)
+    # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
+    phi0 = inference.prior_mode_phi0(X, y)
 
     prev = None
     best_k, best_bic, best_result = None, np.inf, None
@@ -61,7 +61,7 @@ def run_mop_full(pairs, label=""):
         result = inference.mop(pcvector, link_functions, k,
                                lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
         val = inference.pbic(pcvector, result, link_functions,
-                             lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi, s2=s2_bar)
+                             lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi)
         if val < best_bic:
             best_bic = val; best_k = k; best_result = result
         prev = result
@@ -106,7 +106,7 @@ def run_mop_full(pairs, label=""):
         for _ in range(n_samples):
             # v_p = (lambda_sigma + n_p + A - 3)/2, with A = nA + 1 alternatives
             s2_sample = 1 / np.random.gamma((ls + len(idx_p) + nA - 2)/2,
-                                             1/(ls * s2_bar / 2 + 1e-10) if ls * s2_bar > 0 else 1)
+                                             1/(ls * phi0 / 2 + 1e-10) if ls * phi0 > 0 else 1)
             # Actually proper sampling requires q_p which is complex. Approximate.
             u_sample = np.random.multivariate_normal(mp_vec, sigma2_arr[p] * Sp)
             rank = tuple(np.argsort(-u_sample))

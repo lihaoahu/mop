@@ -140,13 +140,31 @@ Consequences:
 - `sigma2` should not be read to four significant figures. On this data the
   second digit is the honest limit; the mixture weights and priority vectors
   are stable to four.
-- The tolerance is 1e-10 rather than the earlier 1e-20. That earlier value
-  lies below double precision for these magnitudes, so the loop ran to its
-  10000-iteration cap instead of stopping: the tolerance was decorative and
-  the runtime an order of magnitude larger than necessary. The trajectory was
-  checked to confirm the iteration is monotone (the penalized log-posterior
-  rises from −896 to a flat −516.7 within 50 iterations), so this is a weak
-  direction of the objective rather than oscillation.
+- The stopping rule has two parts, and both matter. The test is
+  `|dPLL| / (|PLL| + 0.1) < 1e-6`: the `+ 0.1` is the scale normalisation
+  flexmix uses, and without it the test tightens as the log-posterior grows in
+  magnitude, which for these data made a 1e-10 ratio unreachable and ran the
+  loop to its 10000-iteration cap. The threshold is 1e-6, and that is a choice
+  with a cost: at 1e-10 the case study reproduces the values the tables carried
+  before this round, while at 1e-6 the third component's PHEV/REEV split moves
+  from (0.391, 0.415) to (0.407, 0.397) and the ordering inside that component
+  flips. The tables were regenerated at 1e-6 rather than the code tightened to
+  1e-10, so the reported numbers and this threshold belong together: moving the
+  threshold moves what the tables should say.
+
+### 4b. The prior mode of the dispersion has one definition
+
+`inference.prior_mode_phi0(X, y)` returns `SS / (K - p)` with `p = A - 1` free
+utilities, which is `eq:general gci` of the manuscript: the unbiased residual
+variance of the single-preference fit. It is called by `mop`, for the fit, and
+by `pbic`, for the criterion, so one run cannot use two different prior modes.
+
+It used to. The scripts each computed their own as `SS / (K - p + 1)` — their
+`nA` holds `p` but was used as `A` — while `mop` fell back to `SS / K` when the
+caller passed nothing, which every caller did. So the fit used one prior mode
+and the criterion another, 0.06 per cent apart on the case study. The scripts no
+longer compute it at all; `prior_mode_phi0` is the only place the formula
+appears.
 
 ### 5. Aggregate ranking is an expected utility, not a vote score
 

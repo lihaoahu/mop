@@ -52,8 +52,7 @@ def fit_mop(pairs, n_alternatives, max_K=None):
     X, y, _ = comparisons2regression(pcv, link_fns)
     nJ, nA = len(pcv), X.shape[1]
     lu = 1e-6; lpi = 1; ls = nJ / 50
-    u_pool = np.linalg.solve(X.T @ X + 1e-10 * np.eye(nA), X.T @ y)
-    s2_bar = max(np.sum((X @ u_pool - y) ** 2) / max(nJ - nA + 1, 1), 1e-10)
+    # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 
     prev = None
     best_k, best_bic, best_result = None, np.inf, None
@@ -70,7 +69,7 @@ def fit_mop(pairs, n_alternatives, max_K=None):
             kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
 
         result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
-        bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi, s2=s2_bar)
+        bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi)
         if bic_val < best_bic:
             best_bic = bic_val; best_k = k; best_result = result
         prev = result

@@ -178,12 +178,35 @@ def bic(pcvector, mop, link_functions):
     return -2 * LL + np.log(nJ) * ((nA - 1) * nP + 2 * nP - 1)
 
 
-def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2, u_bar=None):
+def prior_mode_phi0(X, y):
+    """先验众数 φ₀ (manuscript eq:general gci).
+
+    The unbiased residual variance of the single-preference fit,
+    ``SS / (K - p)`` with ``p = A - 1`` free utilities. Defined once, here,
+    because the fit and the pBIC criterion both need it: an earlier version
+    computed it in the scripts as ``SS / (K - p + 1)`` and in the fit as
+    ``SS / K``, so one run used three different prior modes.
+    """
+    X = np.asarray(X, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    n_j, p = X.shape
+    XtX = X.T @ X + 1e-10 * np.eye(p)
+    try:
+        u_pool = np.linalg.solve(XtX, X.T @ y)
+    except np.linalg.LinAlgError:
+        u_pool = np.linalg.lstsq(XtX, X.T @ y, rcond=None)[0]
+    ss = float(np.sum((X @ u_pool - y) ** 2))
+    return max(ss / max(n_j - p, 1), 1e-10)
+
+
+def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None, u_bar=None):
     """惩罚贝叶斯信息准则 (Eq.19)"""
     nJ = len(pcvector)
     nP = len(mop.mixture_probabilities)
 
     X, y, _ = comparisons2regression(pcvector, link_functions)
+    if s2 is None:
+        s2 = prior_mode_phi0(X, y)
     nA = X.shape[1] + 1
     df = (nA - 1) * nP + 2 * nP - 1
 
@@ -251,11 +274,8 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
 
     # 默认参数 — 仅对未指定的参数设默认值
     if s2 is None:
-        try:
-            u_init_tmp = np.linalg.solve(X.T @ X, X.T @ y)
-            s2 = max(np.sum((X @ u_init_tmp - y) ** 2) / nJ, 1e-10)
-        except Exception:
-            s2 = 1e-10
+        # 先验众数 φ₀ —— 与 pbic 用的是同一个定义，见 prior_mode_phi0
+        s2 = prior_mode_phi0(X, y)
     if lambda_u is None:
         lambda_u = 1e-10
     if lambda_sigma is None:

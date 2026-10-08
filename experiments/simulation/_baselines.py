@@ -13,8 +13,8 @@ def fit_single_k1(pairs, n_alternatives):
     pcv, X, y = _pairs_to_pcvector(pairs, link="logit")
     nJ = len(pcv)
     lu = 1e-6; lpi = 1; ls = nJ / 50
-    u_pool = np.linalg.solve(X.T @ X + 1e-10 * np.eye(X.shape[1]), X.T @ y)
-    s2_bar = max(np.sum((X @ u_pool - y) ** 2) / max(nJ - X.shape[1] + 1, 1), 1e-10)
+    # φ₀ comes from inference.prior_mode_phi0, which the fit applies itself;
+    # the copy that used to be computed here was never passed anywhere.
     result = inference.mop(pcv, [lambda s: logit(np.clip(s, EPS, 1 - EPS))], 1,
                            lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls)
     return {"mop_result": result}

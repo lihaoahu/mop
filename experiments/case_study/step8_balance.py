@@ -30,15 +30,14 @@ def fit_mop(pairs, fixed_k=None):
     link_functions = [lambda s, _eps=eps: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA = X.shape[1]; lu = 1e-6; lpi = 1; ls = nJ / 50
-    u_pool = np.linalg.solve(X.T @ X + 1e-10 * np.eye(nA), X.T @ y)
-    s2_bar = max(np.sum((X @ u_pool - y) ** 2) / (nJ - nA + 1), 1e-10)
+    # φ₀ 由 inference.prior_mode_phi0 定义一次，拟合与 pBIC 共用
 
     if fixed_k is not None:
         result = inference.mop(pcvector, link_functions, fixed_k,
                                lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls)
         bic_val = inference.pbic(pcvector, result, link_functions,
                                  lambda_u=lu, lambda_sigma=ls,
-                                 lambda_pi=lpi, s2=s2_bar)
+                                 lambda_pi=lpi)
         return result, fixed_k, bic_val
 
     # 搜索 K
@@ -59,7 +58,7 @@ def fit_mop(pairs, fixed_k=None):
                                lambda_sigma=ls, **kw)
         bic_val = inference.pbic(pcvector, result, link_functions,
                                  lambda_u=lu, lambda_sigma=ls,
-                                 lambda_pi=lpi, s2=s2_bar)
+                                 lambda_pi=lpi)
         bic_vals[k] = bic_val
         prev = result
 

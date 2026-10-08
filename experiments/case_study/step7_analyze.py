@@ -65,9 +65,7 @@ def run_mop(pairs, trace=None):
     link_functions = [lambda s, _eps=eps: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA = X.shape[1]; lu = 1e-6; lpi = 1; ls = nJ / 50
-    # 先验方差模式 φ₀ (Eq. general gci)
-    u_pool = np.linalg.solve(X.T @ X + 1e-10 * np.eye(nA), X.T @ y)
-    s2_bar = max(np.sum((X @ u_pool - y) ** 2) / (nJ - nA + 1), 1e-10)
+    # φ₀ (Eq. general gci) 由 inference.prior_mode_phi0 定义一次，拟合与 pBIC 共用
 
     prev = None
     models, bic_vals = {}, {}
@@ -81,7 +79,7 @@ def run_mop(pairs, trace=None):
                                lambda_sigma=ls, **kw)
         bic_val = inference.pbic(pcvector, result, link_functions,
                                  lambda_u=lu, lambda_sigma=ls,
-                                 lambda_pi=lpi, s2=s2_bar)
+                                 lambda_pi=lpi)
         models[str(k)] = {**result.to_dict(), "bic": bic_val}
         bic_vals[k] = bic_val
         prev = result
@@ -103,6 +101,27 @@ def run_mop(pairs, trace=None):
     return best_k, best, weighted, nJ
 
 
+def _report(display, n_j, best_k, best):
+    """Print one fit in the form the paper's tables are set from.
+
+    Tables 5, 6 and 8 carry the mixture weight, the inconsistency level and the
+    priority vector of every component, and this script is their only source, so
+    it prints all three rather than the aggregate alone. The component lines are
+    in the canonical type order, which is the column order of those tables.
+    """
+    pis = best["mixture"]["pis"]
+    phis = best["mixture"]["inconsistencies"]
+    ws = best["mixture"]["priorities"]
+    u_bar = expected_utility(ws, pis)
+    ranked = sorted(zip(T, u_bar), key=lambda x: -x[1])
+
+    print(f"[{display}] n={n_j}  K={best_k}  pBIC={best['bic']:.1f}")
+    for i, (pi, phi, w) in enumerate(zip(pis, phis, ws), start=1):
+        cells = "  ".join(f"{t}={v:.3f}" for t, v in zip(T, w))
+        print(f"    C{i}  pi={pi:.4f}  phi={phi:.4f}  {cells}")
+    print(f"    期望效用: {' > '.join(f'{t}({v:.3f})' for t, v in ranked)}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dim", help="单维度分析")
@@ -113,24 +132,18 @@ def main():
         return
 
     # 1. 整体
-    bk, best, w, nJ = run_mop(load_pairs())
-    ranked = sorted(zip(T, w), key=lambda x: -x[1])
-    print(f"[整体] n={nJ}  K={bk}  pBIC={best['bic']:.1f}")
-    print(f"  期望效用: {' > '.join(f'{t}({v:.3f})' for t, v in ranked)}")
-    for pi, pri in zip(best["mixture"]["pis"],
-                       best["mixture"]["priorities"]):
-        r = sorted(zip(T, pri), key=lambda x: -x[1])
-        print(f"    C(pi={pi:.4f}): {' > '.join(f'{t}({v:.3f})' for t, v in r)}")
+    bk, best, _, n_j = run_mop(load_pairs())
+    _report("整体", n_j, bk, best)
 
     # 2. 维度分解
     print(f"\n{'='*60}\n维度分解\n{'='*60}")
     for dim in DIMS:
-        _analyze_one(dim, f"  {DIM_LABELS[dim]} ({dim})")
+        _analyze_one(dim, f"{DIM_LABELS[dim]} ({dim})")
 
     # 3. 年份对比
     print(f"\n{'='*60}\n年份对比\n{'='*60}")
     for year in ["2025", "2026"]:
-        _analyze_one(f"{year}", f"  {year}年", year=year)
+        _analyze_one(f"{year}", f"{year}年", year=year)
 
 
 def _analyze_one(label, display, year=None):
@@ -139,10 +152,8 @@ def _analyze_one(label, display, year=None):
     if len(pairs) < 30:
         print(f"[{display}] 数据不足 (n={len(pairs)})")
         return
-    bk, best, w, nJ_ = run_mop(pairs)
-    ranked = sorted(zip(T, w), key=lambda x: -x[1])
-    r_str = " > ".join(f"{t}({v:.3f})" for t, v in ranked)
-    print(f"[{display}] n={nJ_}  K={bk}  pBIC={best['bic']:.1f}  {r_str}")
+    bk, best, _, n_j = run_mop(pairs)
+    _report(display, n_j, bk, best)
 
 
 if __name__ == "__main__":
