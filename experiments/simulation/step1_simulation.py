@@ -305,8 +305,18 @@ def main():
         if args.scenario is None or args.scenario == key:
             all_data[key] = runner(n_trials)
 
+    # Wall-clock is printed above but not stored: it differs on every run, and
+    # storing it made this the one result file a re-run could not reproduce.
+    # Everything else here is deterministic and comes back byte for byte.
+    def without_timings(obj):
+        if isinstance(obj, dict):
+            return {k: without_timings(v) for k, v in obj.items() if k != "time_s"}
+        if isinstance(obj, list):
+            return [without_timings(v) for v in obj]
+        return obj
+
     with open(SIM_RESULTS, "w", encoding="utf-8") as f:
-        json.dump(all_data, f, indent=2, ensure_ascii=False)
+        json.dump(without_timings(all_data), f, indent=2, ensure_ascii=False)
     print(f"\nSaved to {SIM_RESULTS}")
 
 
