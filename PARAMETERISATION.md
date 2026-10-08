@@ -19,8 +19,8 @@ It must print `ALL CONVENTIONS VERIFIED` and exit with status 0.
 | Judgment transform | `logit(score)`, natural log | `scipy.special.logit` | |
 | Structural inconsistency | `sigma2` is a **variance** on the log-odds scale | `norm.logpdf(x, scale=)` takes a **standard deviation** | `scale = sqrt(sigma2)` |
 | Aggregate ranking | `sum_p pi_p * log(w_pi / w_pA)` | – | expected utility; utilities are the logs of the normalised priority vector, taken against the benchmark alternative |
-| Variance prior | `sigma2 ~ InvGamma((lambda_s-2)/2, lambda_s*s2bar/2)` | `invgamma.logpdf(sigma2, a=(lambda_s-2)/2, scale=lambda_s*s2bar/2)` | density in `sigma2`; the shape exponent is `(alpha+1)` |
-| Utility prior | `u_p \| sigma2_p ~ N(ubar, lambda_u^-1 sigma2_p I)` | `norm.logpdf(u, loc=ubar, scale=sqrt(sigma2/lambda_u))` | |
+| Variance prior | `sigma2 ~ InvGamma((lambda_s-2)/2, lambda_s*phi_0/2)` | `invgamma.logpdf(sigma2, a=(lambda_s-2)/2, scale=lambda_s*phi_0/2)` | density in `sigma2`; the shape exponent is `(alpha+1)` |
+| Utility prior | `u_p \| sigma2_p ~ N(u_0, lambda_u^-1 sigma2_p I)` | `norm.logpdf(u, loc=u_0, scale=sqrt(sigma2/lambda_u))` | |
 | Mixture prior | `pi ~ Dirichlet(lambda_pi, ..., lambda_pi)` | `numpy.random.dirichlet` | concentration |
 | Repeated binary judgment | `m_k ~ BetaBinomial(n_k, mu_kp, rho_p)` | `betabinom.logpmf(k, n_k, a, b)` | `a = mu*(1-rho)/rho`, `b = (1-mu)*(1-rho)/rho` |
 | Overdispersion | `rho` = intra-pair correlation | – | `rho = 1/(a+b+1)`; `Var = n*mu*(1-mu)*[1+(n-1)*rho]` |
@@ -30,6 +30,17 @@ It must print `ALL CONVENTIONS VERIFIED` and exit with status 0.
 | Synthetic comparisons | noise added on the **log-odds** scale, `N(0, sigma2)` | – | verified empirically |
 
 ## Details
+
+### 0. Code identifiers against manuscript symbols
+
+The code names the dispersion `sigma2` and the prior locations `s2` and `u_bar`;
+the manuscript writes the dispersion `phi_p`, its prior mode `phi_0`, and the
+prior mean of the utilities `u_0`. The manuscript used to write the prior mode
+`sbar^2`, which was left over from the parameterisation in which the dispersion
+was itself a variance called `sigma^2`; `phi_0` says what the quantity is
+measured in. The identifiers are unchanged, so a call site still reads
+`s2=`/`u_bar=`, and `u_bar_i` in `mixture_of_priorities.py` is a different
+object again: the expected utility of Section 2.6.
 
 ### 1. `sigma2` is a variance, never a standard deviation
 
@@ -47,10 +58,10 @@ the distinction is worth stating explicitly rather than assuming.
 alpha * log(beta) - gammaln(alpha) - (alpha + 1) * log(sigma2) - beta / sigma2
 ```
 
-with `alpha = (lambda_s - 2) / 2` and `beta = lambda_s * s2bar / 2`. That is
+with `alpha = (lambda_s - 2) / 2` and `beta = lambda_s * phi_0 / 2`. That is
 exactly `scipy.stats.invgamma.logpdf(sigma2, a=alpha, scale=beta)`, which is how
 the manuscript states the prior, as `phi_p ~ InvGamma((lambda_s-2)/2,
-lambda_s*s2bar/2)` in `eq:prior1` of `sections/02_model.tex`. The same
+lambda_s*phi_0/2)` in `eq:prior1` of `sections/02_model.tex`. The same
 distribution can be written as a Gamma on `1/sigma2`, but only if the density is
 then read on `sigma2` with the Jacobian the change of variables contributes;
 dropping that Jacobian would give exponent `(alpha - 1)` instead of
@@ -62,7 +73,7 @@ dropping that Jacobian would give exponent `(alpha - 1)` instead of
 `inference.py` updates the variance as
 
 ```
-sigma2 <- (SS + lambda_u * ||u - ubar||^2 + lambda_s * s2bar)
+sigma2 <- (SS + lambda_u * ||u - u_0||^2 + lambda_s * phi_0)
           / (sum_k gamma_k + lambda_s + (nA - 1))
 ```
 
@@ -80,7 +91,7 @@ The numerator carries the quadratic term of the utility prior.
 
 **This section needed three corrections, and the history is worth keeping.**
 
-The first version used `(SS + lambda_s * s2bar) / (sum_k gamma_k + lambda_s)`,
+The first version used `(SS + lambda_s * phi_0) / (sum_k gamma_k + lambda_s)`,
 omitting the prior-density term and the utility prior's quadratic term alike;
 that update was not a stationary point of the density
 `penalized_log_likelihood` evaluates.
@@ -90,10 +101,10 @@ for the prior as it then stood, `Gamma((lambda_s+2)/2, ...)`, since then
 `2*(alpha+1) - lambda_s = 4` -- but still omitted `nA - 1`.
 
 The third and current version makes the denominator exactly `n_p + d + lambda_s`
-and moves the prior to `Gamma((lambda_s-2)/2, lambda_s * s2bar / 2)`, which has
-two effects. The prior mode of `phi_p` becomes exactly `sbar^2`; under the old
+and moves the prior to `Gamma((lambda_s-2)/2, lambda_s * phi_0 / 2)`, which has
+two effects. The prior mode of `phi_p` becomes exactly `phi_0`; under the old
 shape it was `lambda_s / (lambda_s + 4)` times that, so the manuscript sentence
-"the prior mode `sbar^2` is placed on the inconsistency levels" was not true as
+"the prior mode `phi_0` is placed on the inconsistency levels" was not true as
 written. And the `+4` disappears from the update. The shape requires
 `lambda_s > 2` to be a valid Gamma and `lambda_s > 4` for the prior mean to
 exist; the manuscript states the latter.

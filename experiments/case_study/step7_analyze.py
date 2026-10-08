@@ -65,7 +65,7 @@ def run_mop(pairs, trace=None):
     link_functions = [lambda s, _eps=eps: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA = X.shape[1]; lu = 1e-6; lpi = 1; ls = nJ / 50
-    # 先验方差模式 s̄² (Eq. general gci)
+    # 先验方差模式 φ₀ (Eq. general gci)
     u_pool = np.linalg.solve(X.T @ X + 1e-10 * np.eye(nA), X.T @ y)
     s2_bar = max(np.sum((X @ u_pool - y) ** 2) / (nJ - nA + 1), 1e-10)
 

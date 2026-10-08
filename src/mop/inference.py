@@ -104,8 +104,8 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     惩罚对数似然函数 (Eq.10 的对数)，与 manuscript 完全一致
 
     先验 (Eq.5-7):
-      σ²_p ~ InvGamma((λ_σ-2)/2, λ_σ s̄²/2)
-      u_p | σ²_p ~ N(ū, λ_u⁻¹ σ²_p I)
+      σ²_p ~ InvGamma((λ_σ-2)/2, λ_σ φ₀/2)
+      u_p | σ²_p ~ N(u₀, λ_u⁻¹ σ²_p I)
       π ~ Dirichlet(λ_π, ..., λ_π)
 
     Args:
@@ -117,8 +117,8 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
         lambda_u: u 先验的精度系数
         lambda_sigma: σ² 先验的影响参数 (manuscript 中的 λ_σ)
         lambda_pi: π 先验的 Dirichlet 浓度参数
-        s2: 先验方差模式 s̄²
-        u_bar: u 的先验均值向量 ū (nA-1,)，默认为零向量
+        s2: 先验方差模式 φ₀ (manuscript 中的 φ_0)
+        u_bar: u 的先验均值向量 u₀ (nA-1,)，默认为零向量
     """
     from scipy.special import gammaln
     nP = len(sigma2)
@@ -137,14 +137,14 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     if u_bar.ndim == 1:
         u_bar = np.tile(u_bar, (nP, 1))
 
-    # 1. u 的先验: u_p | σ²_p ~ N(ū_p, λ_{u,p}⁻¹ σ²_p I) — Eq.(6)
+    # 1. u 的先验: u_p | σ²_p ~ N(u₀_p, λ_{u,p}⁻¹ σ²_p I) — Eq.(6)
     for p in range(nP):
         sp2 = max(sigma2[p], 1e-300)
         diff = u[p] - u_bar[p]
         PLL -= (lambda_u[p] / (2.0 * sp2)) * np.sum(diff ** 2)
         PLL -= (nA_minus_1 / 2.0) * np.log(2.0 * np.pi * sp2 / lambda_u[p])
 
-    # 2. σ² 的先验: σ²_p ~ InvGamma((λ_{σ,p}-2)/2, λ_{σ,p} s̄²/2) — Eq.(5)
+    # 2. σ² 的先验: σ²_p ~ InvGamma((λ_{σ,p}-2)/2, λ_{σ,p} φ₀/2) — Eq.(5)
     for p, sp2 in enumerate(sigma2):
         if sp2 < 1e-300:
             continue
@@ -213,7 +213,7 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         lambda_sigma: sigma2 的 inverse-Gamma 先验系数
         lambda_pi: mp的Dirichlet先验系数
         s2: 先验方差模式
-        u_bar: u的先验均值向量 (nA-1,)，默认为零向量
+        u_bar: u 的先验均值向量 u₀ (nA-1,)，默认为零向量
         u_init, sigma2_init, mp_init: 可选自定义初始值
         minprior: 权重低于此值的组件在拟合中被移除；默认 0.0 即不移除。
             flexmix 的这一阈值是 0.05。论文报告候选实际拟合出的组件，
