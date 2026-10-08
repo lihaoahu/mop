@@ -65,7 +65,9 @@ def comparisons2regression(
     
     Args:
         pcvector: 成对比较对象列表
-        link_functions: 链接函数列表
+        link_functions: 响应变换列表，每个决策主体一个。注意这是论文的 g（把判断
+            送到响应尺度），不是 GLM 的连接函数；连接函数是均值函数的逆，即论文的
+            h^{-1}。名字沿用历史 API，语义从论文 2.1 节可定义。
         nA: 备选方案数量，如果为None则自动推断
     
     Returns:
