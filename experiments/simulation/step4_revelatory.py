@@ -79,11 +79,10 @@ def fit_mop(pairs, nA, max_K=8):
             best_bic = bic_val; best_k = k; best_result = result; best_ll = ll
         prev = result
 
-        # A candidate whose fit comes back with fewer components than it asked
-        # for had one removed for falling below minprior. Raising the candidate
-        # further can only reproduce that mixture, so the search stops here.
-        # The candidate itself still counts, since its solution is the one the
-        # removal produced.
+        # If minprior is turned on and a candidate loses a component to it,
+        # raising the candidate further can only reproduce that mixture, so the
+        # search stops there. With the default of no removal the test never
+        # fires and the whole grid is searched.
         if len(result) < k:
             break
 
@@ -187,8 +186,7 @@ def analyze(label, pairs, nA=4):
     print(f"  P=1 LL: {models[1]['ll']:.1f}    MoP LL: {models[best_k]['ll']:.1f}    Δℓ: {ll_gain:.1f}")
     print(f"  Component divergence: {div:.4f}")
     print(f"  Components:")
-    # the fitted mixture can be smaller than the candidate P, since components
-    # whose weight falls below minprior are removed during the fit
+    # if minprior is on the fitted mixture can be smaller than the candidate P
     for i in range(len(pis)):
         print(f"    C{i+1}: π={pis[i]:.4f}  σ²={sigmas[i]:.4f}  {rank_str(ws[i])}")
     # Expected utility, the aggregate the manuscript reports

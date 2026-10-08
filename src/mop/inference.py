@@ -201,7 +201,7 @@ def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2, u
 
 def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         lambda_pi=None, s2=None, u_bar=None,
-        u_init=None, sigma2_init=None, mp_init=None, minprior=0.05):
+        u_init=None, sigma2_init=None, mp_init=None, minprior=0.0):
     """
     EM算法主函数 - 估计混合优先级模型
 
@@ -215,6 +215,9 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         s2: 先验方差模式
         u_bar: u的先验均值向量 (nA-1,)，默认为零向量
         u_init, sigma2_init, mp_init: 可选自定义初始值
+        minprior: 权重低于此值的组件在拟合中被移除；默认 0.0 即不移除。
+            flexmix 的这一阈值是 0.05。论文报告候选实际拟合出的组件，
+            包括权重很小的那些，因为组件数正是待推断的量。
 
     Returns:
         MixtureOfPriorities: 估计的混合优先级模型
@@ -224,11 +227,9 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
     nA_minus_1 = X.shape[1]
 
     # The size of the mixture is whatever the caller supplies when initial
-    # values are given. nP is otherwise only an upper bound: the removal below
-    # takes components out as their weight falls, so a fit can end smaller than
-    # it started, and a caller that warm-starts one candidate from the previous
-    # one cannot be required to know how many components the previous one
-    # finished with.
+    # values are given, which is the same as the argument unless removal is on.
+    # minprior is off by default, so it normally is; the branch stays so that a
+    # caller who turns removal on need not track the size itself.
     if u_init is not None and sigma2_init is not None and mp_init is not None:
         nP = len(mp_init)
 
@@ -357,7 +358,12 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
             break
 
         # A component whose weight has fallen below minprior is removed, which
-        # is what flexmix does and at the same threshold. Such a component
+        # is what flexmix does. minprior is off by default: the paper reports
+        # the components a candidate fits, including a component with a small
+        # weight, since the number of preference states is what is being
+        # inferred and discarding one during the fit would decide it early.
+        # Set it to flexmix's 0.05 to have spent components dropped instead.
+        # Such a component
         # accounts for too few judgments to be a preference state, so keeping
         # it only seeds the next candidate from a solution already rejected.
         # The removal happens here, after the convergence test, because that
