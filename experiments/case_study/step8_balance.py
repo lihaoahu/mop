@@ -29,7 +29,7 @@ def fit_mop(pairs, fixed_k=None):
     eps = 1e-10
     link_functions = [lambda s, _eps=eps: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
-    nA = X.shape[1]; lu = 1e-6; lpi = 1; ls = nJ / 50
+    lu = 1e-6; lpi = 1; ls = nJ / 50
     # φ₀ 由 inference.prior_mode_phi0 定义一次，拟合与 pBIC 共用
 
     if fixed_k is not None:
@@ -41,6 +41,7 @@ def fit_mop(pairs, fixed_k=None):
         return result, fixed_k, bic_val
 
     # 搜索 K
+    models = {}
     prev = None
     bic_vals = {}
     for k in range(1, 10):
@@ -60,6 +61,7 @@ def fit_mop(pairs, fixed_k=None):
                                  lambda_u=lu, lambda_sigma=ls,
                                  lambda_pi=lpi)
         bic_vals[k] = bic_val
+        models[k] = result
         prev = result
 
         # If minprior is turned on and a candidate loses a component to it,
@@ -70,7 +72,10 @@ def fit_mop(pairs, fixed_k=None):
             break
 
     best_k = min(bic_vals, key=bic_vals.get)
-    return prev, best_k, bic_vals[best_k]
+    # models[best_k], not prev: prev is whichever candidate the loop reached
+    # last (K = 9 here), and returning it with best_k attached published a
+    # nine-component fit under a three-component label.
+    return models[best_k], best_k, bic_vals[best_k]
 
 
 def main():
