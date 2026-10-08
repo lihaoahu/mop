@@ -105,14 +105,15 @@
     "canonical_types": ["纯电", "插混", "增程", "燃油"],
 
     "mop": {
-        "lambda_u": "nJ / 100",
-        "lambda_pi": "nJ / 100",
-        "lambda_sigma": "nJ / 100",
-        "prior_mode_s2": "unbiased estimator via Eq. (general gci)",
+        "_note": "the values step7_analyze.py and step8_balance.py actually use; nJ is the number of comparisons in the subset being fitted",
+        "lambda_u": "1e-6",
+        "lambda_pi": "1",
+        "lambda_sigma": "nJ / 50",
+        "prior_mode_phi0": "unbiased residual variance via Eq. (general gci), computed once in mop.inference.prior_mode_phi0",
         "u_bar": 0,
-        "max_components": 10,
+        "max_components": 9,
         "selection_criterion": "pBIC",
-        "initialization": "warm-start (K-1 → K) with residual-based seeding",
+        "initialization": "warm-start (K-1 → K) with residual-based seeding, min_weight_share 0.05",
         "credibility_samples": 10000,
         "reference_type": "燃油"
     },

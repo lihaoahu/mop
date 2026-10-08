@@ -64,14 +64,21 @@ import them, so the default environment is small.
 
 ```bash
 uv run python experiments/case_study/step7_analyze.py       # fits, all subsets
-uv run python experiments/case_study/_gen_tables.py         # Tables 2-4, 6
 uv run python experiments/case_study/step8_balance.py --n-bootstrap 100
 uv run python experiments/case_study/_plot_pbic.py          # pBIC figure
 uv run python experiments/case_study/_plot_dim_distribution.py
 ```
 
-`step8_balance.py` takes about nine minutes at 100 replications. The two
-plotting scripts read the same fits and write into `manuscript/figures/`.
+`step7_analyze.py` prints the tables: for every fit — overall, the seven
+dimensions and both years — it reports each component's mixture weight, its
+inconsistency level and its priority vector, then the aggregate. It is the only
+source of Tables 5, 6 and 8, so the values are read off its output rather than
+computed a second time.
+
+`step8_balance.py` takes about nine minutes at 100 replications, and its
+`--n-bootstrap` default is 50: the paper reports 100, so the flag is not
+optional. The two plotting scripts read the same fits and write into
+`manuscript/figures/`.
 
 ### Controlled simulations (Section 3.1.1)
 
@@ -83,9 +90,9 @@ uv run python experiments/simulation/step4_revelatory.py
 uv run python experiments/simulation/step3_report.py
 ```
 
-The 500-trial simulation runs for roughly 75 minutes. `step2_holdout.py`
-reports point-prediction metrics and is not the source of the holdout table,
-which comes from `step5_holdout.py`.
+The 500-trial simulation runs for roughly 35 minutes at the stopping tolerance
+in use. `step2_holdout.py` reports point-prediction metrics and is not the
+source of the holdout table, which comes from `step5_holdout.py`.
 
 ### Self-checks
 
