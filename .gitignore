@@ -15,3 +15,7 @@ __pycache__/
 *_rerun.txt
 *_out.txt
 *.backup.json
+# intermediates of tests/compare_with_flexmix.py; the R script regenerates them
+tests/_flexmix_data.csv
+tests/_flexmix_mop.json
+tests/_flexmix_flexmix.json
