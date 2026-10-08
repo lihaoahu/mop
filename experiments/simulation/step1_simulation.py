@@ -211,7 +211,7 @@ def run_noise(trials):
     print("\n" + "=" * 60)
     print("Noise — random raters, MoP isolates noise")
     print("=" * 60)
-    u_true, pi_true, _ = generate_noise_ground_truth()
+    u_true, pi_true = generate_noise_ground_truth()
     nA = u_true.shape[1] + 1
     sigma2 = CFG["simulation"]["sigma2"]
     noise_f = CFG["simulation"]["scenarios"]["noise"]["noise_fraction"]

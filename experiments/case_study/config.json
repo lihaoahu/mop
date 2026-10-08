@@ -119,6 +119,7 @@
     },
 
     "files": {
+        "_note": "Where each stage reads and writes. Only energy_pairs.jsonl is committed; the rest are inputs or intermediates of the pipeline that produced it, so a fresh checkout will not have them.",
         "article_ids": "data/article_ids.jsonl",
         "article_details": "data/article_details.jsonl",
         "transcripts": "data/transcript/",

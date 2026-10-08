@@ -122,7 +122,7 @@ def generate_simulation_tables(sim_data):
     all_latex.append(_scenario_table("Scenario A: Cancellation", w_a, pi_a))
     all_latex.append("")
 
-    u_d, pi_d, _ = generate_noise_ground_truth()
+    u_d, pi_d = generate_noise_ground_truth()
     w_d = priority_vector_from_logratios(u_d)
     all_latex.append(_scenario_table("Scenario D: Noise (true preference)", w_d, pi_d))
     all_latex.append("")

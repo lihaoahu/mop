@@ -168,23 +168,28 @@ def generate_random_mixture(K, nA, rng=None):
     return u, pi
 
 
-def generate_noise_ground_truth(noise_fraction=0.3):
-    """Noise scenario — true K=1 but fraction of comparisons are random.
+def generate_noise_ground_truth():
+    """Noise scenario — true K=1 but a fraction of comparisons are random.
 
     The population has ONE true preference, but a fraction of raters give
     random (uniform) responses. MoP should discover K=2: one clean component
-    capturing the real preference, and one noise component with high σ²
+    capturing the real preference, and one noise component with high sigma2
     and near-uniform priority vector to absorb the random responses.
 
+    The fraction itself is not returned. It is read from
+    config["simulation"]["scenarios"]["noise"]["noise_fraction"], which is what
+    generate_noise_pairs is given; this function used to carry a default of its
+    own, and every caller discarded it, so the two numbers could have disagreed
+    without anything failing.
+
     Returns:
-        u_logratios: (1 × nA-1) the single true preference
+        u_logratios: (1 x nA-1) the single true preference
         pi_true: just [1.0] (ground truth is K=1)
-        noise_fraction: the fraction of random comparisons to inject
     """
     # Single true preference: A > B > C > D
     u = np.array([[1.5, 1.0, 0.5]])
     pi = np.array([1.0])
-    return u, pi, noise_fraction
+    return u, pi
 
 
 def generate_noise_pairs(u_logratios, sigma2, n_comparisons, noise_fraction, rng=None):

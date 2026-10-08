@@ -29,7 +29,7 @@ experiments/
 
     simulation/               # Section 3.1.1: controlled simulations
         step1_simulation.py   # cancellation, general, noise scenarios
-        step2_holdout.py      # 5-fold CV, point-prediction metrics
+        step2_holdout.py      # SUPERSEDED: oracle selection, see the note below
         step3_report.py       # text summary of the above
         step4_revelatory.py   # log-likelihood gain, component count
         step5_holdout.py      # 5-fold CV, marginal log-likelihood (as reported)
@@ -37,6 +37,19 @@ experiments/
 tests/
     audit_parameterisation.py # verifies every distribution convention in use
 ```
+
+`step2_holdout.py` writes `holdout_results.json`, whose overall MAE is 0.0764; the
+paper reports 0.2456, from `step5_holdout.py`. The two are not two estimates of
+one quantity: step2 scores a held-out comparison with whichever component
+predicts it best, which reads the label it is supposed to predict, so its MoP
+column is an oracle selection rather than a forecast (step5's own docstring says
+so). Recomputing the paper's holdout numbers from step2's file gives different
+values, which is why the file is marked rather than merely unused.
+
+Two other files here are kept for the record and are read by nothing:
+`balance_results.json`, superseded by `balance_pooled_results.json`, and
+`regenwetter_newinit.txt` at the repository root, the log of an external
+validation removed in 7ff570e.
 
 ## Parameterisation
 
