@@ -16,12 +16,13 @@ src/mop/                      # Core library
 
 experiments/
     case_study/               # Section 3.2: Chinese EV energy type preferences
-        energy_pairs.jsonl    # 5,401 comparison pairs (LLM-extracted)
-        mop_results.json      # MoP fit for the overall dataset
+        energy_pairs.jsonl    # the filtered corpus: 2,328 items (1,925 text, 403 video)
+        mop_results.json      # SUPERSEDED: the 6-11 artefact, lambda_u=0.1, lambda_pi=30,
+                              # n=5408; nothing reads it (only _common.MOP_RESULTS names it)
         balance_pooled_results.json  # dimension-balanced bootstrap
         step7_analyze.py      # MoP fitting + model selection, all subsets
         step8_balance.py      # dimension-balanced bootstrap
-        _gen_tables.py        # LaTeX for Tables 2-4 and 6
+        _gen_tables.py        # LaTeX for Tables 3, 5, 6 and 8
         _plot_pbic.py         # pBIC against P (figure)
         _plot_dim_distribution.py    # dimension share donut (figure)
         _paper_dump.py        # full result dump, for inspection
@@ -67,13 +68,16 @@ uv run python experiments/case_study/step7_analyze.py       # fits, all subsets
 uv run python experiments/case_study/step8_balance.py --n-bootstrap 100
 uv run python experiments/case_study/_plot_pbic.py          # pBIC figure
 uv run python experiments/case_study/_plot_dim_distribution.py
+uv run python experiments/case_study/_gen_tables.py --json case_study_tables.json
 ```
 
 `step7_analyze.py` prints the tables: for every fit — overall, the seven
 dimensions and both years — it reports each component's mixture weight, its
-inconsistency level and its priority vector, then the aggregate. It is the only
+inconsistency level and its priority vector, then the aggregate. It is the
 source of Tables 5, 6 and 8, so the values are read off its output rather than
-computed a second time.
+computed a second time; the committed `analysis_output.txt` is that capture.
+`_gen_tables.py` emits the same fits as LaTeX (Tables 3, 5, 6 and 8), reading
+`run_mop` from `step7_analyze.py`, and caches them in `case_study_tables.json`.
 
 `step8_balance.py` takes about nine minutes at 100 replications, and its
 `--n-bootstrap` default is 50: the paper reports 100, so the flag is not

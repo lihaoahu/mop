@@ -22,9 +22,6 @@ It must print `ALL CONVENTIONS VERIFIED` and exit with status 0.
 | Variance prior | `sigma2 ~ InvGamma((lambda_s-2)/2, lambda_s*phi_0/2)` | `invgamma.logpdf(sigma2, a=(lambda_s-2)/2, scale=lambda_s*phi_0/2)` | density in `sigma2`; the shape exponent is `(alpha+1)` |
 | Utility prior | `u_p \| sigma2_p ~ N(u_0, lambda_u^-1 sigma2_p I)` | `norm.logpdf(u, loc=u_0, scale=sqrt(sigma2/lambda_u))` | |
 | Mixture prior | `pi ~ Dirichlet(lambda_pi, ..., lambda_pi)` | `numpy.random.dirichlet` | concentration |
-| Repeated binary judgment | `m_k ~ BetaBinomial(n_k, mu_kp, rho_p)` | `betabinom.logpmf(k, n_k, a, b)` | `a = mu*(1-rho)/rho`, `b = (1-mu)*(1-rho)/rho` |
-| Overdispersion | `rho` = intra-pair correlation | – | `rho = 1/(a+b+1)`; `Var = n*mu*(1-mu)*[1+(n-1)*rho]` |
-| Degenerate `rho = 0` | exactly the binomial | `binom.logpmf(k, n, mu)` | verified to 1e-12 |
 | Link / response | `logit` / `expit`, natural log | `scipy.special` | no base-10 anywhere |
 | Ties | score `0.5` -> `logit = 0` | – | scores clipped to `[1e-10, 1-1e-10]` |
 | Synthetic comparisons | noise added on the **log-odds** scale, `N(0, sigma2)` | – | verified empirically |
@@ -85,7 +82,7 @@ of the posterior that carries `phi_p`:
 |---|---|
 | `sum_k gamma_k` | the Gaussian likelihood, one factor per observation |
 | `nA - 1` | the normalising constant of the utility prior, whose density carries `phi_p^{-(A-1)/2}` |
-| `lambda_s` | the Gamma density on `1/phi_p`, where `lambda_s = 2*(alpha + 1)` with `alpha = (lambda_s - 2)/2` |
+| `lambda_s` | the inverse-Gamma shape parameter, through `alpha = (lambda_s - 2)/2`; equivalently the Gamma shape on `1/phi_p`, `alpha + 1` |
 
 The numerator carries the quadratic term of the utility prior.
 
@@ -101,19 +98,19 @@ for the prior as it then stood, `Gamma((lambda_s+2)/2, ...)`, since then
 `2*(alpha+1) - lambda_s = 4` -- but still omitted `nA - 1`.
 
 The third and current version makes the denominator exactly `n_p + d + lambda_s`
-and moves the prior to `Gamma((lambda_s-2)/2, lambda_s * phi_0 / 2)`, which has
+and moves the prior to `InvGamma((lambda_s-2)/2, lambda_s * phi_0 / 2)`, written
+directly on `phi_p` as §2 argues it must be, which has
 two effects. The prior mode of `phi_p` becomes exactly `phi_0`; under the old
 shape it was `lambda_s / (lambda_s + 4)` times that, so the manuscript sentence
 "the prior mode `phi_0` is placed on the inconsistency levels" was not true as
 written. And the `+4` disappears from the update. The shape requires
-`lambda_s > 2` to be a valid Gamma and `lambda_s > 4` for the prior mean to
-exist; the manuscript states the latter.
+`lambda_s > 2` for the mode to exist and `lambda_s > 4` for the prior mean to
+exist; the manuscript states both.
 
 The omission of `nA - 1` is invisible at large `n`: for the case study the two
 denominators differ by about 0.15%, and refitting moves `pi` in the fourth
 decimal. Where a component's effective sample size is small -- `K = 1` fits,
-near-empty components, the external validation with ten observations per unit,
-small-`A` simulation cells -- it is not.
+near-empty components, small-`A` simulation cells -- it is not.
 
 `tests/audit_parameterisation.py` checks the update against a numerical
 maximiser, and now sweeps `A` across the test cases. It is worth recording why
@@ -130,10 +127,12 @@ The EM loop stops when successive values of the penalized log-posterior agree
 to a relative tolerance. On the cancellation replicate the log-posterior is
 flat enough in `sigma2` that a change below 1e-10 still leaves the variance
 free to move by 1–5%, while the utility vectors and mixture weights settle to
-four decimals. Concretely, loosening the tolerance from 1e-20 to 1e-10 moved
-that replicate's two component variances from 0.1005/0.1003 to 0.0988/0.0987
-and its single-component variance from 1.4082 to 1.3972, with the priority
-vectors unchanged at 1e-4.
+four decimals. At the tolerance now in use, 1e-6, that replicate's two
+component variances are 0.09963 and 0.09956 and its single-component variance
+is 1.4001. The sweep that first showed this ran before the M-step correction
+recorded in §3: going from 1e-20 to 1e-10 moved the two component variances
+from 0.1005/0.1003 to 0.0988/0.0987 and the single-component variance from
+1.4082 to 1.3972, with the priority vectors unchanged at 1e-4.
 
 Consequences:
 
@@ -211,24 +210,31 @@ to a relative error of 1e-10, and differs from `SS / n` by 3.6%. The `A - 1`
 would vanish only if the utility vector were integrated out first, which is the
 marginal posterior rather than the joint one the EM iteration targets.
 
-### 7. Beta-binomial
+### 7. Beta-binomial — no longer in the code
 
-`src/mop/inference.py` uses the mean-dispersion parameterisation
-`(n, mu, rho)`, which does not exist in scipy. It was validated against
-`scipy.stats.betabinom(k, n, a, b)` through `a = mu * c`, `b = (1 - mu) * c`
-with `c = (1 - rho) / rho`: the two agree to 1e-12 over 300 random parameter
-draws, and the variance identity
-`n * mu * (1 - mu) * [1 + (n - 1) * rho]` matches `betabinom.var` to 1e-9.
+This section used to record the mean-dispersion parameterisation `(n, mu, rho)`
+that `inference_binomial.py` used for repeated binary judgments, and its
+agreement with `scipy.stats.betabinom`. That module was removed in 7ff570e,
+together with the external validation that fitted it, so nothing in the tree
+implements the parameterisation now and there is nothing left to audit: the
+summary table above no longer lists it. The manuscript still presents a
+repeated-choice likelihood as a member of the observation family it defines --
+the binomial in the appendix table, with a free dispersion admitted for it
+under quasi-likelihood in Section 2.3 -- which is a
+statement about the family; it does not name the beta-binomial, and the code
+that accompanies the paper implements the Gaussian variants only.
 
-Two further points about `rho`:
+The two properties the module's `rho` had are kept here because they are
+properties of the parameterisation rather than of the removed code, and would
+have to be reintroduced with it:
 
-- it is bounded to `[1e-5, 0.9]`. The upper bound is not cosmetic: as
+- `rho` was bounded to `[1e-5, 0.9]`. The upper bound is not cosmetic: as
   `rho -> 1` the Beta shapes `a, b -> 0`, and on perfectly separated data
   (every pair decided unanimously) the likelihood is monotone in `rho` and
   maximised at the boundary. `rho` is then not identified for that unit, and
   the fitted ranking is the same either way.
-- the gradient uses a floored `digamma` (`_digamma_safe`) because
-  `digamma(a)` diverges as `a -> 0`.
+- the gradient needed a floored `digamma` because `digamma(a)` diverges as
+  `a -> 0`.
 
 ### 8. Transforms and ties
 

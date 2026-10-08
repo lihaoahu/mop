@@ -9,8 +9,8 @@ Usage:
     uv run python _gen_tables.py                   # print the LaTeX
     uv run python _gen_tables.py --json out.json   # also dump the raw numbers
 
-The three tables written are tab:mop_overall, tab:dimension_mop and
-tab:year_overall.
+The four tables written are tab:pair_distribution, tab:mop_overall,
+tab:dimension_mop and tab:year_overall (Tables 3, 5, 6 and 8 of the EJOR build).
 """
 
 import argparse, json
