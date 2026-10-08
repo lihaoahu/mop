@@ -51,7 +51,12 @@ def main():
     ax.spines["right"].set_visible(False)
     plt.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(OUT, dpi=200, bbox_inches="tight")
+    # CreationDate is omitted so that regenerating the figure leaves the
+    # committed file unchanged; matplotlib writes the current time into it
+    # otherwise, which made this the one artefact a re-run could never
+    # reproduce byte for byte.
+    plt.savefig(OUT, dpi=200, bbox_inches="tight",
+                metadata={"CreationDate": None})
     print(f"  wrote {OUT}")
     if k_min != best_k:
         print(f"  WARNING: run_mop selected P={best_k} but the plotted "

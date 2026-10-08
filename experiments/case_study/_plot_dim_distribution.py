@@ -65,8 +65,10 @@ def main():
     )
     plt.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(OUT, bbox_inches="tight")
-    plt.savefig(OUT.with_suffix(".png"), dpi=200, bbox_inches="tight")
+    # CreationDate omitted: see the note in _plot_pbic.py.
+    plt.savefig(OUT, bbox_inches="tight", metadata={"CreationDate": None})
+    plt.savefig(OUT.with_suffix(".png"), dpi=200, bbox_inches="tight",
+                metadata={"CreationDate": None})
     print(f"  wrote {OUT}")
     print(f"  wrote {OUT.with_suffix('.png')}")
 
