@@ -1,0 +1,111 @@
+{
+  "grid": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "slices": {
+    "overall": {
+      "fixed": {
+        "pBIC_best": 4,
+        "BIC_best": 4
+      },
+      "free": {
+        "pBIC_best": 3,
+        "BIC_best": 5
+      }
+    },
+    "cost": {
+      "fixed": {
+        "pBIC_best": 2,
+        "BIC_best": 2
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 4
+      }
+    },
+    "driving_experience": {
+      "fixed": {
+        "pBIC_best": 1,
+        "BIC_best": 1
+      },
+      "free": {
+        "pBIC_best": 1,
+        "BIC_best": 3
+      }
+    },
+    "range": {
+      "fixed": {
+        "pBIC_best": 2,
+        "BIC_best": 2
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 5
+      }
+    },
+    "refueling_convenience": {
+      "fixed": {
+        "pBIC_best": 2,
+        "BIC_best": 2
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 4
+      }
+    },
+    "reliability": {
+      "fixed": {
+        "pBIC_best": 1,
+        "BIC_best": 2
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 3
+      }
+    },
+    "policy": {
+      "fixed": {
+        "pBIC_best": 1,
+        "BIC_best": 2
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 3
+      }
+    },
+    "other": {
+      "fixed": {
+        "pBIC_best": 3,
+        "BIC_best": 3
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 2
+      }
+    },
+    "2025": {
+      "fixed": {
+        "pBIC_best": 4,
+        "BIC_best": 4
+      },
+      "free": {
+        "pBIC_best": 4,
+        "BIC_best": 5
+      }
+    },
+    "2026": {
+      "fixed": {
+        "pBIC_best": 3,
+        "BIC_best": 3
+      },
+      "free": {
+        "pBIC_best": 2,
+        "BIC_best": 4
+      }
+    }
+  }
+}
