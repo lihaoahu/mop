@@ -165,8 +165,15 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
 
 def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
         u_init=None, phi_init=None, pi_init=None, s2=None, u_bar=None,
-        max_iter=5000, tol=1e-6):
-    """EM for the Gaussian (ratio) variant, with phi_p estimated or fixed at one."""
+        max_iter=5000, tol=1e-6, phi_fixed=None):
+    """EM for the Gaussian (ratio) variant, with phi_p estimated or fixed.
+
+    ``free_phi`` False pins every component's dispersion at one; ``phi_fixed`` pins
+    them all at a supplied value instead, which is what a profile over phi needs. The
+    two are separate arguments rather than one so that a call site cannot pin phi at
+    something other than one by accident while believing it is doing the phi = 1
+    comparison.
+    """
     nJ, A1 = X.shape
     if s2 is None:
         # Default to 1, NOT to prior_mode_phi0(X, y).
@@ -202,7 +209,8 @@ def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
         pi = (np.full(nP, 1.0 / nP) if pi_init is None
               else np.asarray(pi_init, dtype=float).copy())
     if not free_phi:
-        phi = np.ones(nP)
+        phi = (np.ones(nP) if phi_fixed is None
+               else np.full(nP, float(phi_fixed)))
 
     prev, n_iter, converged = None, 0, False
     for n_iter in range(1, max_iter + 1):

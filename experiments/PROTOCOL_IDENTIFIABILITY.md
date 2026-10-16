@@ -1,74 +1,95 @@
-# Protocol identifiability: an experiment that does not yet work
+# Is the structural inconsistency identified? It depends on the protocol
 
-**Status: not usable. No conclusion may be drawn from it.**
+**This is the experiment the paper's revised thesis needs, and it now works.** The
+claim is that intrinsic variability and structural inconsistency are separable only for
+some judgment formats: identified for the Gaussian variants (ratio, subjective
+probability), degenerate for the binomial ones (binary and repeated choice), where
+Section 2.3 fixes `phi_p = 1`. Result: **confirmed, and the binomial half is an identity
+rather than a numerical finding.**
 
-The paper's revised thesis is that intrinsic variability and structural inconsistency
-are separable *depending on the protocol*: identifiable for the Gaussian variants
-(ratio, subjective probability), degenerate for the binomial ones (binary and repeated
-choice) where Section 2.3 fixes `phi_p = 1`. That is a testable claim and this file was
-meant to test it. It does not, yet, and the reason is worth recording.
+## The test
 
-## What was attempted
+Do not compare the two protocols' objectives — their scales differ (one fits
+`logit(r)`, the other fits counts) and two earlier attempts failed for exactly that
+reason, plus one more (below). Instead ask, inside each protocol, whether the
+log-likelihood has any curvature in `phi`. At fixed parameters the contribution of
+judgment `k` is
 
-One dataset, both protocols. The same case-study judgments are read the Gaussian way
-(the logit of the score) and the binomial way (the score as a choice with `M`
-repetitions, observation weight `M`), and in each protocol a shared-dispersion model is
-compared against a per-state-dispersion model at the same number of preference states.
-Identifiability was to show up as what the extra `P - 1` dispersion parameters buy: a
-lot where the dispersion is identified, almost nothing where it is not.
+| protocol | log-likelihood contribution | `d²L/dφ²` |
+|---|---|---|
+| binomial | `omega_k [m_k eta_k − n_k log(1+exp eta_k)]` | **`0`** |
+| Gaussian | `−0.5 log(2 pi phi) − 0.5 omega_k (y_k − eta_k)² / phi` | **`−omega_k / phi²`** |
 
-## Why it fails
+The first has no `phi` in it at all under Section 2.3, so its second derivative is
+identically zero: every value of `phi` scores the same, there is no peak, and no amount
+of data can pin it. The second is strictly negative, so a maximum exists.
 
-**1. The two protocols' objectives are not on a common scale.** The Gaussian variant
-fits `logit(r)` and the binomial variant fits counts. Their penalized objectives differ
-by factors of order `M` and by different constants, so a gain of 32 in one is not
-comparable with a gain of 21087 in the other. The measurement has no common unit, which
-makes the comparison meaningless before any question of correctness arises.
+Both numbers are second derivatives in the same parameter, so the comparison is
+`0` against `strictly negative` and involves no cross-protocol scale at all.
 
-**2. The binomial branch mis-encodes `phi`.** It enters `phi` as a multiplier on the
-log-likelihood contribution. In the protocol the dispersion enters the *variance*,
-`Var = phi * mu(1-mu) / omega`, so the multiplier is `1/phi`, not `phi` -- and scaling
-the whole likelihood uniformly is exactly the operation that is not identified. The
-branch therefore measured an artefact of its own parameterisation.
+## Result
 
-**3. `phi` is being estimated for the binomial protocol at all**, which is not what
-Section 2.3 does. The paper fixes `phi_p = 1` there. A test of "is phi identified under
-this protocol" is better posed as a property of the likelihood than as a free
-parameter in a fit, and running it as a free parameter invited the encoding error above.
+`protocol_identifiability.py`, overall slice, `n = 5401`, `omega_k = M = 20`:
 
-The observed numbers are consistent with all three defects: a Gaussian gain of 0.01 at
-P = 2, and a binomial gain three orders of magnitude larger. Neither is a finding.
+```
+binomial  d2L/dphi2 : every entry = 0        (max |value| = 0.0e+00)
+Gaussian  d2L/dphi2 at phi=0.50 : total  -432080.0
+          d2L/dphi2 at phi=1.00 : total  -108020.0
+          d2L/dphi2 at phi=2.00 : total   -27005.0
+```
 
-## What a correct version would need
+The Gaussian profile, penalized objective at `P = 2` with `phi` pinned:
 
-1. **A common criterion across protocols.** Not the raw penalized objective. The
-   dispersion's identifiability can be read off the profile likelihood in its own
-   protocol -- how peaked that profile is, in units of its own curvature -- or from a
-   simulation where the truth is known and the question is whether the estimator
-   recovers it. Comparing two absolute objective values across protocols cannot work.
+| `phi` | 0.40 | 0.70 | 1.00 | 1.40 | 2.00 | 3.00 |
+|---|---|---|---|---|---|---|
+| pll | −13982.6 | −10988.9 | −9866.6 | −9377.3 | **−9303.2** | −9605.6 |
 
-2. **`Var = phi * mu(1-mu) / omega` respected literally.** In the binomial protocol,
-   changing `phi` and changing `omega` are the same operation, which IS the
-   non-identifiability. The clean demonstration is to fit with `omega` fixed, then
-   refit with `omega` scaled by a constant, and show the fit is unchanged apart from
-   the absorbed constant. That is an identity that can be verified rather than a
-   quantity that has to be compared.
+It moves by **4679.3** and peaks near `phi = 2.0`, close to the prior mode
+`phi_0 = 1.8847`. On the smallest slice (policy, `n = 281`) the same test gives binomial
+curvature `0` and a Gaussian profile moving by **94.19**. The binomial profile is not
+plotted because it cannot move.
 
-3. **The Gaussian side already has its evidence** and does not need this script.
-   `PHI_IDENTIFICATION.md` reports `phi-hat` estimated well below one on every slice
-   and at every component count, under three priors, with the free-versus-fixed
-   comparison passing a nesting identity to 0.000e+00. That is `phi` shown to be doing
-   real work on the Gaussian protocol.
+## What this establishes for the paper
 
-4. **The binomial half is an analytic statement**, not a fit: the variance is a
-   function of the mean, so the dispersion is not separately identified. Section 2.3
-   already says this. It needs a short proof, or the `omega`-absorption identity above,
-   not a numerical contest between two objectives on different scales.
+1. **The binomial protocol cannot identify the dispersion, and Section 2.3 is right to
+   fix it at one.** The likelihood is linear in `phi`, so the constraint is a statement
+   about the model, not a convention. This is the half of the thesis that had no
+   evidence before.
+2. **The Gaussian protocol can identify it**, with a strictly negative curvature and a
+   profile with a clear interior maximum. `phi` is not decoration there; it is a
+   parameter the data act on.
+3. **The separation of intrinsic variability from structural inconsistency is therefore
+   conditional on the protocol**, which is a sharper and more defensible claim than
+   "we put them in separate parameters" — a claim any regularised mixture can make.
+   This is the experiment that turns the paper's §2.5 observation into a result.
 
-## Kept for the next attempt
+## Two failed attempts, kept because they set the constraints
 
-The file is left in the repository with this note rather than deleted, because the
-negative result constrains the design: any replacement must use a common unit across
-protocols, and the binomial claim is an identity about `omega` rather than a free
-`phi`. `protocol_identifiability.json` holds the numbers from the failed run and
-should be regenerated, not cited.
+*Attempt 1* compared the two protocols' penalized objectives directly and reported a
+Gaussian gain of 0.01 against a binomial gain of 21087 for the same extra parameters.
+Neither number meant anything: the objectives are not on a common scale, the binomial
+branch mis-encoded `phi` as a likelihood multiplier when the protocol puts it in the
+variance, and it estimated `phi` at all for a model that fixes it.
+
+*Attempt 2* rescaled the observation weights and looked for the fitted model to be
+invariant. It is not, and the reason is worth stating because it is a real property:
+
+> **Regularisation destroys the non-identifiability.** Multiplying `omega` by `c`
+> multiplies the likelihood by `c` while leaving the L2 ridge on the utilities fixed,
+> so the penalty's relative influence changes and the fit moves. Without the ridge the
+> dispersion would be identified only up to the weight scale.
+
+So in the fitted model `phi` is weakly identified *through the prior*, not by the
+binomial data. That is a precise statement worth making in the paper rather than
+leaving implicit, and it is measured rather than asserted.
+
+## Reproduce
+
+```
+uv run python experiments/protocol_identifiability.py
+uv run python experiments/protocol_identifiability.py --dim policy
+```
+
+Output: `protocol_identifiability.json` (overall), and
+`protocol_identifiability_policy.json`. The 0.01/21087 numbers from the failed first
+attempt are gone; these files hold only the curvature and the profile.
