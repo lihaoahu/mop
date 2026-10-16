@@ -138,7 +138,17 @@ def fit(X, y, nP, free_phi, lam_u=1e-6, lam_pi=1.0, lam_sigma=None,
     """EM for the Gaussian (ratio) variant, with phi_p estimated or fixed at one."""
     nJ, A1 = X.shape
     if s2 is None:
-        s2 = prior_mode_phi0(X, y)
+        # Default to 1, NOT to prior_mode_phi0(X, y).
+        #
+        # This is the prior mode of phi, and fixing phi at one is itself a claim
+        # that one is the prior mode. Letting the free-phi run estimate phi0 from
+        # the data while the fixed-phi run uses the same number would be fine, but
+        # letting the two runs use DIFFERENT phi0 conflates two changes at once:
+        # the parameterisation and the prior. An earlier version of this script did
+        # exactly that -- the fixed run took s2 = var(y) while the free run took
+        # s2 = prior_mode_phi0 -- and the resulting comparison was not a comparison
+        # of the parameterisation at all. See PHI_IDENTIFICATION.md.
+        s2 = 1.0
     if lam_sigma is None:
         lam_sigma = nJ / 50.0
     if u_bar is None:
@@ -220,7 +230,7 @@ def criteria(fitres, X, y, A, nP, free_phi):
 
 # ── comparison ───────────────────────────────────────────────────────────────
 
-def compare(pairs, label, grid, verbose=True):
+def compare(pairs, label, grid, verbose=True, s2=1.0):
     X, y = build_design(pairs)
     nJ, A1 = X.shape
     A = A1 + 1
@@ -233,7 +243,7 @@ def compare(pairs, label, grid, verbose=True):
     for tag, free in (("fixed_phi", False), ("free_phi", True)):
         prev = None
         for k in grid:
-            kw = {}
+            kw = {"s2": s2}
             if prev is not None:
                 # Seed the new component where the current mixture explains worst,
                 # the K-Ridge step, then keep the converged components.
@@ -242,7 +252,7 @@ def compare(pairs, label, grid, verbose=True):
                 ui = np.vstack([u_prev, seed_component(X, y, u_prev)])
                 pi_i = np.concatenate([prev["pi"] * (k - 1) / k, [1.0 / k]])
                 ph_i = np.concatenate([prev["phi"], [np.mean(prev["phi"])]])
-                kw = {"u_init": ui, "phi_init": ph_i, "pi_init": pi_i}
+                kw = {"s2": s2, "u_init": ui, "phi_init": ph_i, "pi_init": pi_i}
             r = fit(X, y, k, free, **kw)
             crit = criteria(r, X, y, A, k, free)
             out[tag][str(k)] = {
@@ -256,12 +266,20 @@ def compare(pairs, label, grid, verbose=True):
             if verbose:
                 print(f"    {tag:9s} P={k}  pBIC {crit['pBIC']:12.2f}  "
                       f"BIC {crit['BIC']:12.2f}  df {crit['df']:3d}  "
-                      f"iters {r['n_iter']:4d}  conv {r['converged']}")
+                      f"ll {crit['loglik']:12.1f}  iters {r['n_iter']:4d}  "
+                      f"conv {r['converged']}")
 
     for tag in ("fixed_phi", "free_phi"):
         for crit in ("pBIC", "BIC"):
             vals = {int(k): v[crit] for k, v in out[tag].items()}
             out[f"{tag}_best_by_{crit}"] = int(min(vals, key=vals.get))
+    # The gap between the best and the runner-up, which is what decides whether the
+    # selection is a finding or a coin toss.
+    for tag in ("fixed_phi", "free_phi"):
+        for crit in ("pBIC", "BIC"):
+            vals = sorted(v[crit] for v in out[tag].values())
+            out[f"{tag}_{crit}_gap_best_vs_second"] = (
+                float(vals[1] - vals[0]) if len(vals) > 1 else None)
     return out
 
 
@@ -270,29 +288,27 @@ def main():
     ap.add_argument("--dim", default=None, help="one dimension, e.g. cost")
     ap.add_argument("--year", default=None)
     ap.add_argument("--grid", type=int, nargs="+", default=[1, 2, 3, 4, 5])
+    ap.add_argument("--s2", type=float, default=1.0,
+                    help="prior mode phi_0, shared by both parameterisations so "
+                         "that the contrast is the parameterisation alone")
+    ap.add_argument("--all", action="store_true",
+                    help="run every dimension and both years, not just the corpus")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    if args.dim:
-        pairs = load_pairs(dim_name=args.dim)
-        label = f"{DIM_LABELS.get(args.dim, args.dim)} ({args.dim})"
+    if args.all:
+        slices = [("overall", dict())]
+        for d in DIMS:
+            slices.append((f"{DIM_LABELS.get(d, d)} ({d})", dict(dim_name=d)))
+        for y in ("2025", "2026"):
+            slices.append((y, dict(year=y)))
+    elif args.dim:
+        slices = [(f"{DIM_LABELS.get(args.dim, args.dim)} ({args.dim})",
+                   dict(dim_name=args.dim))]
     elif args.year:
-        pairs = load_pairs(year=args.year)
-        label = args.year
+        slices = [(args.year, dict(year=args.year))]
     else:
-        pairs = load_pairs()
-        label = "overall"
-    print(f"[{label}] n={len(pairs)} judgments, grid P={args.grid}")
-    res = compare(pairs, label, args.grid)
-
-    print(f"\n  selected component count")
-    for tag in ("fixed_phi", "free_phi"):
-        print(f"    {tag:9s}  by pBIC: P={res[f'{tag}_best_by_pBIC']}   "
-              f"by BIC: P={res[f'{tag}_best_by_BIC']}")
-    same_p = res["fixed_phi_best_by_pBIC"] == res["free_phi_best_by_pBIC"]
-    same_b = res["fixed_phi_best_by_BIC"] == res["free_phi_best_by_BIC"]
-    print(f"\n  phi changes the pBIC selection: {not same_p}")
-    print(f"  phi changes the BIC  selection: {not same_b}")
+        slices = [("overall", dict())]
 
     outpath = Path(args.out) if args.out else (
         HERE / "phi_identification_results.json")
@@ -302,7 +318,23 @@ def main():
             data = json.loads(outpath.read_text(encoding="utf-8"))
         except Exception:
             data = {}
-    data[label if args.dim or args.year else "overall"] = res
+
+    for label, kw in slices:
+        pairs = load_pairs(**kw)
+        if len(pairs) < 30:
+            print(f"[{label}] too few judgments (n={len(pairs)}), skipped")
+            continue
+        print(f"\n[{label}] n={len(pairs)} judgments, grid P={args.grid}, "
+              f"phi_0={args.s2}")
+        res = compare(pairs, label, args.grid, s2=args.s2)
+        res["phi0"] = args.s2
+        for tag in ("fixed_phi", "free_phi"):
+            print(f"    {tag:9s}  by pBIC: P={res[f'{tag}_best_by_pBIC']}   "
+                  f"by BIC: P={res[f'{tag}_best_by_BIC']}")
+        moved = (res["fixed_phi_best_by_pBIC"] != res["free_phi_best_by_pBIC"])
+        print(f"    phi changes the pBIC selection: {moved}")
+        data[label] = res
+
     outpath.write_text(json.dumps(data, indent=2, ensure_ascii=False),
                        encoding="utf-8")
     print(f"\nwritten: {outpath}")
