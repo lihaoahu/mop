@@ -66,20 +66,28 @@ def e_gamma_from_pc(pcvector, mop, link_functions):
     return e_gamma(X, y, u, sigma2, mp)
 
 
-def log_likelihood(X, y, u, sigma2, mp):
-    """对数似然函数（向量化优化版）"""
+def log_likelihood(X, y, u, sigma2, mp, omega=None):
+    """对数似然函数（向量化优化版）
+
+    omega: 每个判断的观测权重 ω_k（可空，默认全 1）。与稿件 eq:glm 的
+        Var[y]=φ V(μ)/ω 一致；权重只改变各项的相对贡献，不改变 E 步的
+        责任度 γ（ω_k 在分子分母中相消）。
+    """
     nJ, nC = X.shape[0], len(sigma2)
-    
+
     # 向量化计算
     means = X @ u.T  # (nJ, nC)
     stds = np.sqrt(sigma2)  # (nC,)
-    
+
     # 计算每个组件的似然
     probs = mp * norm.pdf(y[:, np.newaxis], loc=means, scale=stds)
     Lk = np.sum(probs, axis=1)
     Lk = np.maximum(Lk, 1e-300)
-    
-    return np.sum(np.log(Lk))
+
+    log_Lk = np.log(Lk)
+    if omega is None:
+        return np.sum(log_Lk)
+    return float(np.sum(np.asarray(omega, dtype=float) * log_Lk))
 
 
 def log_likelihood_from_pc(pcvector, mop, link_functions):
@@ -99,7 +107,7 @@ def log_likelihood_from_pc(pcvector, mop, link_functions):
     return log_likelihood(X, y, u, sigma2, mp)
 
 
-def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar=None):
+def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar=None, omega=None):
     """
     惩罚对数似然函数 (Eq.10 的对数)，与 manuscript 完全一致
 
@@ -127,7 +135,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     if u_bar is None:
         u_bar = np.zeros(nA_minus_1)
 
-    PLL = log_likelihood(X, y, u, sigma2, mp)
+    PLL = log_likelihood(X, y, u, sigma2, mp, omega)
 
     # 统一为 per-component 数组
     if np.isscalar(lambda_u):
@@ -209,8 +217,12 @@ def prior_mode_phi0(X, y):
     return max(ss / max(n_j - p, 1), 1e-10)
 
 
-def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None, u_bar=None):
-    """惩罚贝叶斯信息准则 (Eq.19)"""
+def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None, u_bar=None, omega=None):
+    """惩罚贝叶斯信息准则 (Eq.19)
+
+    omega: 每个判断的观测权重 ω_k（可空）。惩罚项用 ln(Σ_k ω_k)，未加权时
+        即 ln(nJ)，与原式一致。
+    """
     nJ = len(pcvector)
     nP = len(mop.mixture_probabilities)
 
@@ -228,13 +240,26 @@ def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=No
         w = mop[p].priority_vector
         u[p, :] = np.log(w[:nA - 1] / w[nA - 1])
 
-    PLL = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar)
-    return -2 * PLL + np.log(nJ) * df
+    if omega is None:
+        omega_eff = None
+        n_eff = float(nJ)
+    else:
+        omega_eff = np.asarray(omega, dtype=float).ravel()
+        if omega_eff.size != nJ:
+            raise ValueError(
+                f"omega 长度({omega_eff.size})与判断数({nJ})不一致")
+        if np.any(omega_eff <= 0):
+            raise ValueError("omega 必须为正")
+        omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
+        n_eff = float(np.sum(omega_eff))
+
+    PLL = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar, omega_eff)
+    return -2 * PLL + np.log(n_eff) * df
 
 
 def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         lambda_pi=None, s2=None, u_bar=None,
-        u_init=None, sigma2_init=None, mp_init=None, minprior=0.0):
+        u_init=None, sigma2_init=None, mp_init=None, minprior=0.0, omega=None):
     """
     EM算法主函数 - 估计混合优先级模型
 
@@ -251,6 +276,10 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         minprior: 权重低于此值的组件在拟合中被移除；默认 0.0 即不移除。
             flexmix 的这一阈值是 0.05。论文报告候选实际拟合出的组件，
             包括权重很小的那些，因为组件数正是待推断的量。
+        omega: 每个判断的观测权重 ω_k（长度 nJ，可空）。与稿件一致：
+            ratio 与主观概率判断取 1，重复选择取试验次数 n_k。**必须由协议
+            显式给定，不自动推断**。内部归一化到均值 1，此时加权与未加权
+            目标只差一个常数 −Σω_k·ln(Σω_k)，M 步与 pBIC 因此不受影响。
 
     Returns:
         MixtureOfPriorities: 估计的混合优先级模型
@@ -258,6 +287,20 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
     nJ = len(pcvector)
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA_minus_1 = X.shape[1]
+
+    # 观测权重：归一化到均值 1（见 docstring）。omega=None 时退化为全 1，
+    # 与未加权版本逐位一致。
+    if omega is None:
+        omega_eff = None
+    else:
+        omega_eff = np.asarray(omega, dtype=float).ravel()
+        if omega_eff.size != nJ:
+            raise ValueError(
+                f"omega 长度({omega_eff.size})与判断数({nJ})不一致")
+        if np.any(omega_eff <= 0):
+            raise ValueError("omega 必须为正")
+        omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
+    use_weighted = omega_eff is not None and not np.allclose(omega_eff, 1.0)
 
     # The size of the mixture is whatever the caller supplies when initial
     # values are given, which is the same as the argument unless removal is on.
@@ -322,7 +365,9 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
             break
 
         # M步
-        if USE_CYTHON:
+        if USE_CYTHON and not use_weighted:
+            # Cython 版 M 步不带观测权重；仅在权重全为 1 时使用它，
+            # 有非均匀权重时走下面的 NumPy 实现。
             u_new, sigma2_new, mp_new = m_step_cython(
                 np.asarray(X, dtype=np.float64),
                 np.asarray(y, dtype=np.float64),
@@ -334,10 +379,17 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
             )
         else:
             # 向量化M步
-            sum_gkc = np.sum(gkc, axis=0)  # (nP,)
+            sum_gkc = np.sum(gkc, axis=0)  # (nP,)  — 未加权，供组件移除与诊断用
 
-            # 更新mp
-            mp_new = (sum_gkc + lambda_pi - 1) / (nJ + lambda_pi * nP - nP)
+            # 更新 mp。加权形式见稿件 eq:pi_general：
+            #   π_p = (Σ_k ω_k γ_kp + λ_π − 1) / (Σ_k ω_k + λ_π P − P)
+            # 未加权时 Σ_k ω_k = nJ，退化为原式。
+            if use_weighted:
+                sum_wgkc = omega_eff @ gkc          # (nP,)
+                sum_omega = float(np.sum(omega_eff))
+                mp_new = (sum_wgkc + lambda_pi - 1) / (sum_omega + lambda_pi * nP - nP)
+            else:
+                mp_new = (sum_gkc + lambda_pi - 1) / (nJ + lambda_pi * nP - nP)
             mp_new = np.maximum(mp_new, 1e-10)
             mp_new = mp_new / np.sum(mp_new)
 
@@ -346,11 +398,19 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
             sigma2_new = np.zeros(nP)
 
             for p in range(nP):
-                gkc_p = gkc[:, p]  # (nJ,)
+                # 有效权重 = ω_k γ_kp。加权时 ω_k 只乘在数据项上，先验项
+                # （λ_u 与 (A−1)）不受权重影响，这与稿件 eq:glm 的
+                # Var[y]=φV(μ)/ω 及附录的 M 步推导一致。
+                if use_weighted:
+                    gkc_w = omega_eff * gkc[:, p]
+                    sum_gkc_p = float(np.sum(gkc_w))
+                else:
+                    gkc_w = gkc[:, p]
+                    sum_gkc_p = sum_gkc[p]
 
                 # 加权矩阵（修正：添加 lambda_u[p] * u_bar[p] 项）
-                XtWX = X.T @ (X * gkc_p[:, np.newaxis]) + lambda_u[p] * eye_matrix
-                Xty_w = X.T @ (y * gkc_p) + lambda_u[p] * u_bar[p]
+                XtWX = X.T @ (X * gkc_w[:, np.newaxis]) + lambda_u[p] * eye_matrix
+                Xty_w = X.T @ (y * gkc_w) + lambda_u[p] * u_bar[p]
 
                 try:
                     u_new[p, :] = np.linalg.solve(XtWX, Xty_w)
@@ -372,11 +432,11 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 # An earlier version omitted nA_minus_1, which put this update
                 # off the stationary point; see PARAMETERISATION.md section 3.
                 residuals = y - X @ u_new[p, :]
-                ss_resid = float(np.sum(gkc_p * residuals ** 2))
+                ss_resid = float(np.sum(gkc_w * residuals ** 2))
                 ss_prior_u = lambda_u[p] * float(np.sum((u_new[p] - u_bar[p]) ** 2))
                 sigma2_new[p] = max(
                     (lambda_sigma[p] * s2 + ss_resid + ss_prior_u)
-                    / (lambda_sigma[p] + sum_gkc[p] + nA_minus_1),
+                    / (lambda_sigma[p] + sum_gkc_p + nA_minus_1),
                     1e-10
                 )
 
@@ -385,8 +445,8 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
             break
 
         # 检查收敛
-        pll_t = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar)
-        pll_tp1 = penalized_log_likelihood(X, y, u_new, sigma2_new, mp_new, lambda_u, lambda_sigma, lambda_pi, s2, u_bar)
+        pll_t = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar, omega_eff)
+        pll_tp1 = penalized_log_likelihood(X, y, u_new, sigma2_new, mp_new, lambda_u, lambda_sigma, lambda_pi, s2, u_bar, omega_eff)
 
         if np.isnan(pll_tp1) or np.isinf(pll_tp1):
             break
