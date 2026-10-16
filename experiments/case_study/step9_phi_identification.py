@@ -99,9 +99,21 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
                free_phi):
     """Penalized log-posterior, the quantity pBIC penalizes (`eq:pbic`).
 
-    With ``free_phi`` false the Inverse-Gamma prior on phi is dropped and the
-    normalising constant of the normal prior loses its phi dependence, because
-    phi is not a parameter of that model.
+    ``free_phi`` false evaluates the SAME objective at ``phi = 1``, keeping every
+    term a fixed value still has. That matters for more than tidiness:
+
+      * the dispersion phi_p is not a parameter of the fixed model, but the prior
+        on it does not vanish -- at phi = 1 it is a constant, ``f(1)``;
+      * keeping the constant makes the fixed model *literally* the restriction of
+        the free model to the face ``phi = 1``, so the two are nested and the free
+        maximiser is guaranteed to do at least as well;
+      * dropping the constant instead, which an earlier version did, broke that
+        nesting by about 33 units and made "the free fit must not do worse" a test
+        of nothing. `_audit_params.py` checks the identity exactly.
+
+    The normalising constant of the normal prior on u keeps its phi dependence in
+    the free model and is evaluated at phi = 1 in the fixed one, for the same
+    reason: it is a term of one objective, not a property of one parameterisation.
     """
     from scipy.special import gammaln
     nJ, A1 = X.shape
@@ -114,19 +126,25 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
     mx = comp.max(axis=1, keepdims=True)
     ll = float(np.sum(mx.ravel() + np.log(np.exp(comp - mx).sum(axis=1))))
     total = ll
+    a = (lam_sigma - 2.0) / 2.0
+    b = lam_sigma * s2 / 2.0
+    # The noninformative limit lam_sigma -> 0 makes the Inverse-Gamma prior improper
+    # (alpha -> -1, so b -> 0 and log b -> -inf). Its normalising terms are then
+    # infinite constants that cancel from any comparison of two fits of the same
+    # model and would otherwise poison the arithmetic, so they are dropped when
+    # lam_sigma is zero. What remains is the same objective minus a constant.
+    use_phi_prior = lam_sigma > 0.0
+    lg_b = np.log(b) if use_phi_prior else 0.0
     for p in range(nP):
-        if free_phi:
-            sp2 = max(phi[p], 1e-300)
-            diff = u[p] - u_bar[p]
-            total -= (lam_u / (2.0 * sp2)) * float(np.sum(diff ** 2))
-            total -= (A1 / 2.0) * np.log(2.0 * np.pi * sp2 / lam_u)
-            a = (lam_sigma - 2.0) / 2.0
-            b = lam_sigma * s2 / 2.0
-            total += a * np.log(b) - gammaln(a) - (a + 1.0) * np.log(sp2) - b / sp2
-        else:
-            diff = u[p] - u_bar[p]
-            total -= (lam_u / 2.0) * float(np.sum(diff ** 2))
-            total -= (A1 / 2.0) * np.log(2.0 * np.pi / lam_u)
+        sp2 = max(phi[p], 1e-300)
+        diff = u[p] - u_bar[p]
+        total -= (lam_u / (2.0 * sp2)) * float(np.sum(diff ** 2))
+        total -= (A1 / 2.0) * np.log(2.0 * np.pi * sp2 / lam_u)
+        # The Inverse-Gamma density on phi_p. Present in both models: in the free
+        # one it is a function of the parameter, in the fixed one it is the
+        # constant f(1).
+        if use_phi_prior:
+            total += a * lg_b - gammaln(a) - (a + 1.0) * np.log(sp2) - b / sp2
     total += (lam_pi - 1.0) * float(np.sum(np.log(np.maximum(pi, EPS))))
     total += gammaln(nP * lam_pi) - nP * gammaln(lam_pi)
     return total, ll
@@ -288,9 +306,13 @@ def main():
     ap.add_argument("--dim", default=None, help="one dimension, e.g. cost")
     ap.add_argument("--year", default=None)
     ap.add_argument("--grid", type=int, nargs="+", default=[1, 2, 3, 4, 5])
-    ap.add_argument("--s2", type=float, default=1.0,
-                    help="prior mode phi_0, shared by both parameterisations so "
-                         "that the contrast is the parameterisation alone")
+    ap.add_argument("--s2", default="data",
+                    help="prior mode phi_0. 'data' (default) uses the paper's rule, "
+                         "mop.inference.prior_mode_phi0(X, y), evaluated per slice; "
+                         "any number pins it. Both parameterisations always receive "
+                         "the SAME value, since fixing phi at one is itself a claim "
+                         "that one is the prior mode and using two values would "
+                         "change the prior as well as the parameterisation.")
     ap.add_argument("--all", action="store_true",
                     help="run every dimension and both years, not just the corpus")
     ap.add_argument("--out", default=None)
@@ -319,15 +341,28 @@ def main():
         except Exception:
             data = {}
 
+    s2_arg = args.s2
+    if s2_arg == "data":
+        from mop.inference import prior_mode_phi0 as _pm
+
+        def resolver(Xa, ya):
+            return float(_pm(Xa, ya))
+    else:
+        def resolver(Xa, ya):
+            return float(s2_arg)
+
     for label, kw in slices:
         pairs = load_pairs(**kw)
         if len(pairs) < 30:
             print(f"[{label}] too few judgments (n={len(pairs)}), skipped")
             continue
+        Xs, ys = build_design(pairs)
+        s2_here = resolver(Xs, ys)
         print(f"\n[{label}] n={len(pairs)} judgments, grid P={args.grid}, "
-              f"phi_0={args.s2}")
-        res = compare(pairs, label, args.grid, s2=args.s2)
-        res["phi0"] = args.s2
+              f"phi_0={s2_here:.4f} ({s2_arg})")
+        res = compare(pairs, label, args.grid, s2=s2_here)
+        res["phi0"] = s2_here
+        res["phi0_source"] = str(s2_arg)
         for tag in ("fixed_phi", "free_phi"):
             print(f"    {tag:9s}  by pBIC: P={res[f'{tag}_best_by_pBIC']}   "
                   f"by BIC: P={res[f'{tag}_best_by_BIC']}")
