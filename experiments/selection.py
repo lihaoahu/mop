@@ -159,6 +159,33 @@ def select_best(X, y, candidate, free_phi, s2, chain_from=None, restarts=0, seed
                     per_p[k] = r
                     changed = True
 
+    # Pass 3: the sequential chain, low count to high, each seeded from the PREVIOUS
+    # count's fit as found rather than from its best. This is what step7_analyze and the
+    # paper do, and it must be reproduced rather than assumed to be dominated: on the
+    # pooled free-dispersion case the sequential chain reaches 18,346 at P = 4 where a
+    # search that warm-starts P = 4 from the BEST P = 3 fit reaches only 18,451. The two
+    # families of start reach different optima at the same count and neither contains the
+    # other, so skipping this pass is what made an earlier version of this module report
+    # P = 3 where the paper's own procedure reports P = 4.
+    prev = None
+    for k in keys:
+        kw = {}
+        if prev is not None:
+            try:
+                ui, si, mi = warm_init(X, y, prev["u"], prev["phi"], prev["pi"],
+                                       min_weight_share=MP.min_weight_share,
+                                       n_components=k)
+                ui = np.atleast_2d(np.asarray(ui, dtype=float))
+                if ui.shape[0] == k:
+                    kw = {"u_init": ui, "phi_init": si, "pi_init": mi}
+            except Exception:
+                kw = {}
+        r = fit(X, y, k, free_phi=free_phi, s2=s2, **kw)
+        if r["pll"] > per_p[k]["pll"] + 1e-8:
+            per_p[k] = r
+        prev = r
+
+
     out = {}
     for k in candidate:
         c = criteria(per_p[k], X, y, A, k, free_phi)
