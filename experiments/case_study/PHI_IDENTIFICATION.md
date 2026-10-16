@@ -7,22 +7,48 @@ still in the code, and the checks are what make the current numbers quotable.
 
 ## The verified parameter set
 
-Everything the comparison depends on lives in `phi_config.json`, not in a script.
-The audit (`_audit_params.py`) confirms it and enforces one identity:
+Everything the comparison depends on lives in **one** file,
+`experiments/mop_params.json`, read through `experiments/_mop_params.py`. Before that
+file existed the same five values were copied into five scripts and described but
+never read by two `config.json` files, so a change to one copy could silently
+disagree with the rest.
 
-| parameter | value | source |
+| parameter | value | note |
 |---|---|---|
-| `lambda_u` | 1e-6 | `config.json` `mop` block |
-| `lambda_pi` | 1 | same |
-| `lambda_sigma` | `nJ / 50` | same |
+| `lambda_u` | 1e-6 | ridge on the utilities |
+| `lambda_pi` | 1 | uniform Dirichlet on the mixture weights |
+| `lambda_sigma` | `0.02 * nJ` = `nJ / 50` | 108.02 on the corpus |
 | **`phi_0`** | **`prior_mode_phi0(X, y)`** | the paper's rule, **chosen by the author** |
-| grid | P = 1..5 | `config.json` allows 9; the curve is flat beyond 5 |
+| `min_weight_share` | 0.05 | component floor when warm-starting |
+| grid | P = 1..5 | `mop_params.json` allows 9 |
 | EM tol / cap | 1e-6 / 5000 | `mop.inference` |
 
-Per-slice `phi_0` runs 1.05 (driving experience) to 2.08 (other), 1.88 on the full
-corpus.
+`experiments/_mop_params_check.py` verifies three things and is the gate for quoting
+any of this:
 
-**The identity that gates everything.** With `phi_0` shared by both fits, fixing
+1. **the coefficient is 1/50** — an arithmetic identity, not a fitted quantity;
+2. **the configs agree** — `phi_config.json` carries a copy, and a copy that disagrees
+   is how the two drifted apart in the first place;
+3. **`step7_analyze.py` reproduces `analysis_output.txt`** — that file is the source of
+   every number the case study reports.
+
+All three pass.
+
+**A coefficient error was caught by check 3, not by review.** When `mop_params.json`
+was first written, `lambda_sigma_over_n` was set to `0.05`, which is `nJ / 20` — a
+prior differing by a factor of 2.5 from the paper's `nJ / 50 = 0.02 * nJ`. Nothing
+complained, because a wrong prior is still a valid prior; what exposed it was that
+`step7_analyze.py` stopped reproducing the recorded output, selecting K = 3 where the
+recorded run has K = 4.
+
+**The error did not contaminate the φ results below.** `phi_config.json` carried the
+same wrong coefficient, but `step9_phi_identification.py` never read it — it computed
+`nJ / 50` itself — so every φ number published before the fix is reproduced digit for
+digit after it. That was checked rather than assumed: the two results files are
+identical at every pBIC to 1e-6. The corrected file matters for what comes next, not
+for what has already been reported.
+
+**The identity that gates the comparison.** With `phi_0` shared by both fits, fixing
 `phi = 1` restricts the free model to a face of its parameter space, so the two
 penalized objectives must agree exactly at `phi = 1`. They do, to 0.000e+00, and
 `_audit_params.py` fails if they do not. An earlier version dropped the Inverse-Gamma

@@ -4,10 +4,10 @@
   "mop": {
     "lambda_u": 1e-6,
     "lambda_pi": 1.0,
-    "lambda_sigma_over_n": 0.05,
-    "_lambda_sigma_note": "config.json specifies lambda_sigma = nJ / 50, i.e. 0.05 * nJ, with nJ the number of judgments in the fitted subset",
+    "lambda_sigma_over_n": 0.02,
+    "_lambda_sigma_note": "lambda_sigma = 0.02 * nJ, i.e. nJ / 50, matching experiments/mop_params.json. This file previously carried 0.05 here, which is nJ/20 and a different prior by a factor of 2.5; every phi comparison run before that was corrected used the wrong lambda_sigma. The two files must agree, and experiments/mop_params.json is now the single source of truth -- this block exists only so that a reader of the phi experiment sees the value without following a second file.",
     "max_components": 5,
-    "_max_components_note": "config.json allows up to 9; the comparison uses 5 because beyond that the pBIC curve has been flat in every slice tested, and the bootstrap grids were chosen inside this range"
+    "_max_components_note": "mop_params.json allows up to 9; the comparison uses 5 because beyond that the pBIC curve has been flat in every slice tested"
   },
 
   "prior_mode_phi0": {

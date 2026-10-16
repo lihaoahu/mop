@@ -1,10 +1,18 @@
 """Baseline: P=1 — MoP with K=1, identical prior specification."""
 
+import sys
+from pathlib import Path
+
 import numpy as np
 from scipy.special import logit
 
 from mop import inference
 from mop.pairwise_comparison import PairwiseComparison, comparisons2regression
+
+# The fitting parameters come from experiments/mop_params.json, the single source of
+# truth. They used to be hard-coded here and in three other scripts.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _mop_params import lambda_u, lambda_pi, lambda_sigma_for   # noqa: E402
 
 EPS = 1e-10
 
@@ -12,7 +20,7 @@ EPS = 1e-10
 def fit_single_k1(pairs, n_alternatives):
     pcv, _, _ = _pairs_to_pcvector(pairs, link="logit")
     nJ = len(pcv)
-    lu = 1e-6; lpi = 1; ls = nJ / 50
+    lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
     # φ₀ comes from inference.prior_mode_phi0, which the fit applies itself;
     # the copy that used to be computed here was never passed anywhere.
     result = inference.mop(pcv, [lambda s: logit(np.clip(s, EPS, 1 - EPS))], 1,

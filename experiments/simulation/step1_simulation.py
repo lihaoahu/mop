@@ -11,6 +11,8 @@ Usage:
 """
 
 import argparse, json, time
+import sys
+from pathlib import Path
 import numpy as np
 from scipy.special import logit
 
@@ -29,6 +31,13 @@ from _common import (
 )
 from _baselines import fit_single_k1, get_priorities_single_k1
 
+# Fitting parameters come from experiments/mop_params.json, the single source of
+# truth. This script used to read max_K from simulation/config.json and hard-code the
+# three lambdas and the weight floor.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _mop_params import (lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
+                         min_weight_share, max_components)
+
 EPS = 1e-10
 METHODS = ["MoP", "P=1"]
 
@@ -39,7 +48,7 @@ METHODS = ["MoP", "P=1"]
 
 def fit_mop(pairs, n_alternatives, max_K=None):
     if max_K is None:
-        max_K = CFG["mop_params"]["max_K"]
+        max_K = max_components
 
     name_to_id = {i: i + 1 for i in range(n_alternatives)}
     pcv = [PairwiseComparison(
@@ -51,7 +60,7 @@ def fit_mop(pairs, n_alternatives, max_K=None):
     link_fns = [lambda s, _eps=EPS: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcv, link_fns)
     nJ = len(pcv)
-    lu = 1e-6; lpi = 1; ls = nJ / 50
+    lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 
     prev = None
@@ -64,7 +73,7 @@ def fit_mop(pairs, n_alternatives, max_K=None):
             ps = np.array([p.inconsistency_level for p in prev.priorities])
             pm = np.array(prev.mixture_probabilities)
             u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=0.05,
+                X, y, pu, ps, pm, min_weight_share=min_weight_share,
                 n_components=k)
             kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
 

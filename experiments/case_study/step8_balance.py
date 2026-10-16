@@ -15,12 +15,22 @@ from mop import inference, pairwise_comparison
 from mop.inference import comparisons2regression
 from mop.initialization import warm_init
 
+import sys as _sys
+from pathlib import Path as _Path
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+from _mop_params import (lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
+                         min_weight_share, max_components)
+
 from _common import T, DIMS, ENERGY_PAIRS, TYPE_MAP, expected_utility
 from step7_analyze import load_pairs
 
 
 def fit_mop(pairs, fixed_k=None):
-    """MoP 拟合。fixed_k=None 时搜索 K=1..9；否则固定 K。"""
+    """MoP 拟合。fixed_k=None 时搜索 K=1..mop_params.json 的 max_components。
+
+    拟合参数（lambda_u / lambda_pi / lambda_sigma / min_weight_share）全部来自
+    experiments/mop_params.json，这里不再硬编码。
+    """
     nJ = len(pairs)
     name_to_id = {t: i + 1 for i, t in enumerate(T)}
     pcvector = [pairwise_comparison.PairwiseComparison(
@@ -29,7 +39,7 @@ def fit_mop(pairs, fixed_k=None):
     eps = 1e-10
     link_functions = [lambda s, _eps=eps: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
-    lu = 1e-6; lpi = 1; ls = nJ / 50
+    lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
     # φ₀ 由 inference.prior_mode_phi0 定义一次，拟合与 pBIC 共用
 
     if fixed_k is not None:
@@ -44,14 +54,14 @@ def fit_mop(pairs, fixed_k=None):
     models = {}
     prev = None
     bic_vals = {}
-    for k in range(1, 10):
+    for k in range(1, max_components + 1):
         kw = {}
         if prev is not None:
             pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
             ps = np.array([p.inconsistency_level for p in prev.priorities])
             pm = np.array(prev.mixture_probabilities)
             u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=0.05,
+                X, y, pu, ps, pm, min_weight_share=min_weight_share,
                 n_components=k)
             kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
         result = inference.mop(pcvector, link_functions, k,

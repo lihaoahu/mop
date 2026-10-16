@@ -50,12 +50,25 @@ from scipy.special import logit
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+# experiments/ itself, where _mop_params.py lives: HERE is experiments/case_study,
+# so parents[0] is experiments/ and parents[1] would be revised/.
+sys.path.insert(0, str(HERE.parents[0]))
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
 from _common import CFG, ENERGY_PAIRS, TYPE_MAP, T, DIMS, DIM_LABELS  # noqa: E402
 from mop.inference import prior_mode_phi0                             # noqa: E402
 from mop.initialization import kridge                                 # noqa: E402
 from mop.pairwise_comparison import comparisons2regression            # noqa: E402
+
+# The MoP fitting parameters live in experiments/mop_params.json. This module used to
+# read its own copy in phi_config.json, and the two disagreed on lambda_sigma by a
+# factor of 2.5 (0.05*nJ against the paper's nJ/50 = 0.02*nJ), which silently changed
+# every result here. The shared file is the only source now.
+import _mop_params as _MP                                             # noqa: E402
+
+LAMBDA_U = _MP.lambda_u
+LAMBDA_PI = _MP.lambda_pi
+LAMBDA_SIGMA_OVER_N = _MP.LAMBDA_SIGMA_OVER_N
 
 EPS = 1e-10
 CLIP = 50.0
@@ -150,7 +163,7 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
     return total, ll
 
 
-def fit(X, y, nP, free_phi, lam_u=1e-6, lam_pi=1.0, lam_sigma=None,
+def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
         u_init=None, phi_init=None, pi_init=None, s2=None, u_bar=None,
         max_iter=5000, tol=1e-6):
     """EM for the Gaussian (ratio) variant, with phi_p estimated or fixed at one."""
@@ -168,7 +181,7 @@ def fit(X, y, nP, free_phi, lam_u=1e-6, lam_pi=1.0, lam_sigma=None,
         # of the parameterisation at all. See PHI_IDENTIFICATION.md.
         s2 = 1.0
     if lam_sigma is None:
-        lam_sigma = nJ / 50.0
+        lam_sigma = LAMBDA_SIGMA_OVER_N * float(nJ)
     if u_bar is None:
         u_bar = np.zeros((nP, A1))
     else:

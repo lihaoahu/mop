@@ -5,12 +5,20 @@
     uv run python experiments/case_study/step7_analyze.py --dim cost   # 单维度
 """
 
-import argparse, json
+import argparse, json, sys
+from pathlib import Path
 import numpy as np
 from scipy.special import logit
 from mop import inference, pairwise_comparison
 from mop.initialization import warm_init as _lib_warm_init
 from mop.inference import comparisons2regression
+
+# The MoP fitting parameters live in one file, experiments/mop_params.json, read
+# through experiments/_mop_params.py. They used to be hard-coded here (and in four
+# other scripts), while config.json documented them without any script reading it.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _mop_params import (lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
+                         min_weight_share, max_components, summary)
 
 from _common import (CFG, ENERGY_PAIRS, MOP_RESULTS, TYPE_MAP, T, DIMS,
                      DIM_LABELS, expected_utility)
@@ -46,12 +54,12 @@ def warm_init(prev, X, y, nA, k):
     pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
     ps = np.array([p.inconsistency_level for p in prev.priorities])
     pm = np.array(prev.mixture_probabilities)
-    return _lib_warm_init(X, y, pu, ps, pm, min_weight_share=0.05,
+    return _lib_warm_init(X, y, pu, ps, pm, min_weight_share=min_weight_share,
                           n_components=k)
 
 
 def run_mop(pairs, trace=None):
-    """MoP 拟合，K 从 1 搜到 9。
+    """MoP 拟合，K 从 1 搜到 mop_params.json 的 max_components。
 
     trace: 可选 dict；给了就写入 trace["bic_vals"]（每个 K 的 pBIC）和
     trace["models"]（每个 K 的完整结果），供画图和审计使用。
@@ -64,12 +72,13 @@ def run_mop(pairs, trace=None):
     eps = 1e-10
     link_functions = [lambda s, _eps=eps: logit(np.clip(s, _eps, 1 - _eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
-    nA = X.shape[1]; lu = 1e-6; lpi = 1; ls = nJ / 50
+    nA = X.shape[1]
+    lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
     # φ₀ (Eq. general gci) 由 inference.prior_mode_phi0 定义一次，拟合与 pBIC 共用
 
     prev = None
     models, bic_vals = {}, {}
-    for k in range(1, 10):
+    for k in range(1, max_components + 1):
         kw = {}
         if prev is not None:
             ui, si, mi = warm_init(prev, X, y, nA, k)
