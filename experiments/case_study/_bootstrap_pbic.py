@@ -41,9 +41,21 @@ def main():
     ap.add_argument("--grid", type=int, nargs="+", default=[2, 3, 4, 5])
     ap.add_argument("--dim", default=None)
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--s2", type=float, default=1.0)
+    ap.add_argument("--s2", default="data",
+                    help="prior mode phi_0: 'data' (default, and what "
+                         "step7_analyze.py does) computes it per replicate from the "
+                         "resampled data via prior_mode_phi0; a number pins it. The "
+                         "earlier default was 1.0, which is a DIFFERENT prior from the "
+                         "one the paper's fits use, so the bootstrap was describing a "
+                         "different model from step7_analyze.py's -- see "
+                         "PHI_IDENTIFICATION.md.")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
+
+    from mop.inference import prior_mode_phi0
+
+    def resolve_s2(Xa, ya):
+        return float(prior_mode_phi0(Xa, ya)) if args.s2 == "data" else float(args.s2)
 
     pairs = load_pairs(dim_name=args.dim) if args.dim else load_pairs()
     X, y = build_design(pairs)
@@ -59,7 +71,7 @@ def main():
     for tag, free in (("fixed_phi", False), ("free_phi", True)):
         vals = {}
         for k in args.grid:
-            r = fit(X, y, k, free, s2=args.s2)
+            r = fit(X, y, k, free, s2=resolve_s2(X, y))
             vals[k] = criteria(r, X, y, A, k, free)["pBIC"]
         best = min(vals, key=vals.get)
         point[tag] = {"pBIC": vals, "best": best}
@@ -76,7 +88,7 @@ def main():
         for tag, free in (("fixed_phi", False), ("free_phi", True)):
             vals = {}
             for k in args.grid:
-                r = fit(Xb, yb, k, free, s2=args.s2)
+                r = fit(Xb, yb, k, free, s2=resolve_s2(Xb, yb))
                 vals[k] = criteria(r, Xb, yb, A, k, free)["pBIC"]
             best = min(vals, key=vals.get)
             order = sorted(vals, key=vals.get)
@@ -87,6 +99,7 @@ def main():
 
     print(f"\n=== bootstrap selection frequencies, {args.reps} replicates ===")
     result = {"label": label, "n": int(nJ), "reps": args.reps,
+              "s2_setting": args.s2, "phi0_point": resolve_s2(X, y),
               "grid": list(args.grid), "point_estimate": {
                   t: {"best": int(v["best"]),
                       "pBIC": {str(k): float(x) for k, x in v["pBIC"].items()}}
