@@ -1,21 +1,33 @@
 """Full MoP detail dump, for inspection.
 
 Not a source for anything in the paper: no table or number in the manuscript
-comes from this script. It sets its own hyperparameters (``D = 100``, so
-``lambda_u = lambda_sigma = n/100``, against the paper's ``lambda_u = 1e-6``
-and ``lambda_sigma = n/50``) and the credibility figures it prints sample an
-approximate posterior. Use ``step7_analyze.py`` for the paper's fits and
-``_gen_tables.py`` for its tables.
+comes from this script. By default it now runs with the PAPER's parameters, read
+from ``experiments/mop_params.json``, so that running it cannot produce numbers
+that look like the paper's while resting on different hyperparameters. Pass
+``--exploratory`` to use the older ``lambda_u = lambda_sigma = n/100`` setting
+instead, which diverges from the paper's ``lambda_u = 1e-6`` and
+``lambda_sigma = n/50``; that mode prints a banner naming every value it changes.
+The credibility figures it prints sample an approximate posterior. Use
+``step7_analyze.py`` for the paper's fits and ``_gen_tables.py`` for its tables.
 """
 import sys, json, math
+from pathlib import Path
 import numpy as np
 from scipy.special import logit
 from mop import inference, pairwise_comparison
 from mop.inference import comparisons2regression
 from mop.initialization import warm_init
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from _mop_params import (lambda_u as PAPER_LAMBDA_U, lambda_pi as PAPER_LAMBDA_PI,
+                         lambda_sigma_for, min_weight_share,
+                         max_components, summary as params_summary)
+
 from _common import ENERGY_PAIRS, TYPE_MAP, T
 
+# Only used under --exploratory; the divisor that produced the old settings.
 D = 100
+EXPLORATORY = False
 EPS = 1e-10
 
 def load_pairs(dim_name=None, year=None):
@@ -42,20 +54,31 @@ def run_mop_full(pairs, label=""):
         agent_id=1, judgment=p["score"]) for p in pairs]
     link_functions = [lambda s, _eps=EPS: logit(np.clip(s, _eps, 1-_eps))]
     X, y, _ = comparisons2regression(pcvector, link_functions)
-    nA = X.shape[1]; lu = lpi = ls = nJ / D
+    nA = X.shape[1]
+    if EXPLORATORY:
+        # Deliberately NOT the paper's settings. Named individually so a reader of the
+        # output cannot mistake it for the case study's fit.
+        lu = lpi = ls = nJ / D
+        print(f"    [EXPLORATORY] lambda_u = lambda_pi = lambda_sigma = nJ/{D} "
+              f"= {ls:.4f}")
+        print(f"    [EXPLORATORY] the paper uses lambda_u = {PAPER_LAMBDA_U:g}, "
+              f"lambda_pi = {PAPER_LAMBDA_PI:g}, "
+              f"lambda_sigma = {lambda_sigma_for(nJ):.4f}")
+    else:
+        lu, lpi, ls = PAPER_LAMBDA_U, PAPER_LAMBDA_PI, lambda_sigma_for(nJ)
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
     phi0 = inference.prior_mode_phi0(X, y)
 
     prev = None
     best_k, best_bic, best_result = None, np.inf, None
-    for k in range(1, 10):
+    for k in range(1, max_components + 1):
         kw = {}
         if prev is not None:
             pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
             ps = np.array([p.inconsistency_level for p in prev.priorities])
             pm = np.array(prev.mixture_probabilities)
             u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=0.05,
+                X, y, pu, ps, pm, min_weight_share=min_weight_share,
                 n_components=k)
             kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
         result = inference.mop(pcvector, link_functions, k,
@@ -136,6 +159,23 @@ def run_mop_full(pairs, label=""):
     return best_k, best_result, weighted, nJ, credibility
 
 if __name__ == "__main__":
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--exploratory", action="store_true",
+                    help=f"use lambda_u = lambda_pi = lambda_sigma = nJ/{D} instead "
+                         f"of the paper's parameters; NOT a source for the paper")
+    _args = ap.parse_args()
+    if _args.exploratory:
+        EXPLORATORY = True
+        print("=" * 78)
+        print("EXPLORATORY MODE: these are NOT the paper's parameters. No number or")
+        print("table in the manuscript may be taken from this run. Use")
+        print("step7_analyze.py for the paper's fits.")
+        print("=" * 78)
+    else:
+        print(f"using the paper's parameters: {params_summary()}")
+
     for label, dim, year in [("整体", None, None),
                               ("Cost", "cost", None),
                               ("Driving", "driving_experience", None),

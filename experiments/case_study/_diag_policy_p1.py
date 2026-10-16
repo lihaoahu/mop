@@ -23,7 +23,14 @@ from scipy.special import logit
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE.parents[0]))
 sys.path.insert(0, str(HERE.parents[1] / "src"))
+
+# The point of this script is to arbitrate between two implementations, so it must NOT
+# carry its own copy of the parameters: a duplicate would only confirm that a copy
+# agrees with itself. Everything comes from experiments/mop_params.json.
+from _mop_params import (lambda_u as LAMBDA_U, lambda_pi as LAMBDA_PI,  # noqa: E402
+                         lambda_sigma_for)
 
 from _common import T                                                   # noqa: E402
 from mop import inference                                               # noqa: E402
@@ -37,6 +44,10 @@ pairs = load_pairs(dim_name="policy")
 X, y = build_design(pairs)
 nJ, A1 = X.shape
 A = A1 + 1
+# Derived once from the shared config, never written out by hand.
+lam_sigma = lambda_sigma_for(nJ)
+print(f"parameters from mop_params.json: lambda_u={LAMBDA_U:g} "
+      f"lambda_pi={LAMBDA_PI:g} lambda_sigma={lam_sigma:.4f}")
 s2_internal = prior_mode_phi0(X, y)
 print(f"policy slice: n={nJ}, A={A}")
 print(f"  var(y)                  = {float(np.var(y)):.6f}   (what the fixed-phi run used as s2)")
@@ -68,7 +79,7 @@ print("penalized log-posterior at one fixed u, under each objective:")
 u_test = r_fixed["u"]
 for tag, free in (("fixed", False), ("free ", True)):
     phi = np.ones(1) if not free else np.array([1.0])
-    pll, ll = _penalized(X, y, u_test, phi, np.array([1.0]), 1e-6, nJ / 50, 1,
+    pll, ll = _penalized(X, y, u_test, phi, np.array([1.0]), LAMBDA_U, lam_sigma, LAMBDA_PI,
                          s2_internal, np.zeros((1, A1)), free)
     print(f"  {tag}: pll={pll:.4f}  loglik={ll:.4f}")
 
@@ -79,8 +90,8 @@ pcv = [PairwiseComparison(former_id=name_to_id[p["ft"]],
                           latter_id=name_to_id[p["lt"]],
                           agent_id=1, judgment=p["score"]) for p in pairs]
 link = [lambda s, _eps=1e-10: logit(np.clip(s, _eps, 1 - _eps))]
-res = inference.mop(pcv, link, 1, lambda_u=1e-6, lambda_pi=1, lambda_sigma=nJ / 50)
-pb = inference.pbic(pcv, res, link, lambda_u=1e-6, lambda_sigma=nJ / 50, lambda_pi=1)
+res = inference.mop(pcv, link, 1, lambda_u=LAMBDA_U, lambda_pi=LAMBDA_PI, lambda_sigma=lam_sigma)
+pb = inference.pbic(pcv, res, link, lambda_u=LAMBDA_U, lambda_sigma=lam_sigma, lambda_pi=LAMBDA_PI)
 u_paper = np.array([np.log(r.priority_vector[:A1] / r.priority_vector[A1])
                     for r in res.priorities])
 phi_paper = np.array([r.inconsistency_level for r in res.priorities])
@@ -92,10 +103,10 @@ print(f"  my free-phi u   = {np.round(r_free['u'][0], 4).tolist()}")
 
 # ── (4) the phi prior at the two s2 values ──────────────────────────────────
 print()
-print("the Inverse-Gamma prior on phi, lambda_sigma = n/50 = %.3f:" % (nJ / 50))
+print("the Inverse-Gamma prior on phi, lambda_sigma = %.3f:" % lam_sigma)
 from scipy.stats import invgamma
-a_shape = (nJ / 50 - 2) / 2
-scale = nJ / 50 * s2_internal / 2
+a_shape = (lam_sigma - 2) / 2
+scale = lam_sigma * s2_internal / 2
 for phi_val in (0.48, 1.0, 1.087):
     d = invgamma.logpdf(phi_val, a=a_shape, scale=scale)
     print(f"  log prior density at phi={phi_val}: {d:+.4f}")
