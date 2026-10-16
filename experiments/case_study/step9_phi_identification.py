@@ -189,12 +189,11 @@ def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
         s2 = 1.0
     if lam_sigma is None:
         lam_sigma = LAMBDA_SIGMA_OVER_N * float(nJ)
-    if u_bar is None:
-        u_bar = np.zeros((nP, A1))
-    else:
-        u_bar = np.asarray(u_bar, dtype=float)
-        if u_bar.ndim == 1:
-            u_bar = np.tile(u_bar, (nP, 1))
+
+    # u_bar is built against nP, and u_init can CHANGE nP below. So it is built after
+    # the initialisation block, not before. Building it first meant a call that supplied
+    # a u_init with a different number of rows indexed past the end of u_bar, which is
+    # what a warm start from another component count does.
 
     if u_init is None:
         u0, phi0, pi0 = kridge(X, y, nP)
@@ -208,6 +207,18 @@ def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
                else np.asarray(phi_init, dtype=float).copy())
         pi = (np.full(nP, 1.0 / nP) if pi_init is None
               else np.asarray(pi_init, dtype=float).copy())
+
+    if u_bar is None:
+        u_bar = np.zeros((nP, A1))
+    else:
+        u_bar = np.asarray(u_bar, dtype=float)
+        if u_bar.ndim == 1:
+            u_bar = np.tile(u_bar, (nP, 1))
+        if u_bar.shape[0] != nP:
+            raise ValueError(
+                f"u_bar has {u_bar.shape[0]} rows but the fit has {nP} components; "
+                f"u_init changed the component count after u_bar was supplied")
+
     if not free_phi:
         phi = (np.ones(nP) if phi_fixed is None
                else np.full(nP, float(phi_fixed)))
