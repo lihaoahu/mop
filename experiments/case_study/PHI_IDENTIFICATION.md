@@ -93,6 +93,15 @@ exercise that does not depend on a model-selection criterion.
 
 ## Result 2 (not robust): the component count
 
+> **The table below was produced with the prior mode PINNED AT 1, under a note that
+> claimed it was the paper's rule. It is superseded by `selection_facts.json`, produced
+> by `_selection_facts.py` with the paper's `prior_mode_phi0` and warm-start
+> initialisation.** The direction of the conclusion does not change — a fixed
+> dispersion selects 4 states on the corpus and a free dispersion selects 3 — but the
+> numbers below are for a different prior than the one the paper uses, so quote the
+> script rather than this table. The fixed-φ column is the one affected: with the
+> paper's prior it selects 4, not 3.
+
 Selection by pBIC, `phi_0` per slice, grid P = 1..5:
 
 | slice | n | φ fixed | φ free | moves |
