@@ -161,11 +161,28 @@ ones should not.
 ## Reproduce
 
 ```
-uv run python experiments/case_study/_validate_phi.py       # all acceptance checks
+uv run python experiments/case_study/_validate_phi.py       # the three acceptance checks
 uv run python experiments/case_study/_audit_params.py       # parameters + identity
 uv run python experiments/case_study/_check_nesting.py      # free >= fixed everywhere
 uv run python experiments/case_study/_check_step9.py        # vs mop.inference
-uv run python experiments/case_study/_phi_robustness.py     # phi-hat under 3 priors
 uv run python experiments/case_study/step9_phi_identification.py --all --grid 1 2 3 4 5
-uv run python experiments/case_study/_bootstrap_pbic.py --reps 10 --grid 3 4 5 6
 ```
+
+**Note on what was removed.** Five scripts that produced intermediate results for this
+document have been deleted, because the analysis they belong to is finished and its
+conclusions are now in the manuscript, so leaving them to be rerun served only to make the
+experiment directory look larger than the paper's evidence:
+
+  * `_phi_robustness.py` (the phi-hat table under three priors, above),
+  * `_phi_summary.py`,
+  * `_bootstrap_pbic.py` (superseded by `_bootstrap_via_mop.py`, which does the same
+    thing through the paper's own fitting function and is what the Limitations
+    paragraph cites),
+  * `_selection_facts.py` and `_pbic_curve.py` (superseded by
+    `_specification_sensitivity.py` and `selection.py`),
+  * `_diag_policy_p1.py` and `_diag_step7_params.py`, which diagnosed problems that are
+    now fixed.
+
+The tables above are kept as the record of what was found at the time; the numbers the
+manuscript quotes come from `_specification_sensitivity.py`, `_bootstrap_via_mop.py`,
+`protocol_identifiability.py` and `phi_recovery.py`, all of which remain.

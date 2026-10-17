@@ -148,9 +148,6 @@ def check_no_hardcoded():
 
     ALLOWED = {
         "_mop_params.py": "the loader itself; the values are documented here",
-        "_diag_step7_params.py":
-            "deliberately re-runs the OLD hard-coded settings to compare the two "
-            "pBIC curves; the literals are the point of the script",
         "_check_step9.py":
             "validates the free-phi fit against mop.inference, so it must call the "
             "library directly; its values are asserted against mop_params below",
