@@ -1,24 +1,17 @@
 {
   "_note": "Single source of truth for the MoP fitting parameters used by every experiment. Before this file existed the same values were copied into five scripts (step7_analyze, simulation/step1, simulation/step4, simulation/_baselines, and the case-study balance script since removed) and the config.json files only documented them, so a change to one copy would silently disagree with the others. Scripts now load this file through experiments/_mop_params.py and none of them may hard-code these values.",
-
-  "lambda_u": 1e-6,
+  "lambda_u": 1e-06,
   "_lambda_u_note": "ridge on the utilities; small enough not to shrink them",
-
   "lambda_pi": 1.0,
   "_lambda_pi_note": "Dirichlet concentration on the mixture weights; 1 is the uniform prior",
-
   "lambda_sigma_over_n": 0.02,
   "_lambda_sigma_note": "lambda_sigma = 0.02 * nJ, i.e. nJ / 50, with nJ the number of judgments in the fitted subset. This was written as 0.05 when the file was first created, which is a different prior by a factor of 2.5: 1/50 = 0.02, and 0.05 would be nJ/20. The mistake was caught because step7_analyze.py stopped reproducing the case study's recorded output: at 0.05 the corpus pBIC curve put its minimum at K=3 instead of the recorded K=4. Section 2.4 requires lambda_sigma > 2 for the prior mode to exist; with nJ = 5401 this is 108.02.",
-
   "prior_mode_phi0": "data",
   "_prior_mode_phi0_note": "How phi_0 is set: 'data' uses mop.inference.prior_mode_phi0(X, y), the paper's rule; a number pins it. Used by the phi-identification comparison, which must share this value between its two parameterisations.",
-
   "min_weight_share": 0.05,
   "_min_weight_share_note": "floor on a component's share when warm-starting from P-1 to P components, so a component does not begin the next round at a weight the M-step will not move",
-
   "max_components": 9,
-  "_max_components_note": "upper end of the component search; the paper also bounds P <= A in practice",
-
+  "_max_components_note": "computational search limit, applied together with the ordinal bound: the grid stops at min(A!, max_components), so a problem with A = 2 alternatives is searched to 2 components and one with A = 4 to 9. A! is the number of strict preference orderings; beyond it at least two components share an ordering by the pigeonhole principle.",
   "selection_criterion": "pBIC",
   "reference_type": "燃油"
 }

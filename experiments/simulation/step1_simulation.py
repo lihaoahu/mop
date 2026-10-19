@@ -18,7 +18,7 @@ from scipy.special import logit
 
 from mop import inference
 from mop.pairwise_comparison import PairwiseComparison, comparisons2regression
-from mop.initialization import warm_init
+from mop.initialization import kridge
 
 from _common import (
     CFG, SIM_RESULTS,
@@ -35,7 +35,7 @@ from _baselines import fit_single_k1, get_priorities_single_k1
 # truth. This script used to read max_K from simulation/config.json and hard-code the
 # three lambdas and the weight floor.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from _mop_params import (lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
+from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
                          min_weight_share, max_components)
 
 EPS = 1e-10
@@ -48,7 +48,7 @@ METHODS = ["MoP", "P=1"]
 
 def fit_mop(pairs, n_alternatives, max_K=None):
     if max_K is None:
-        max_K = max_components
+        max_K = max_components_for(n_alternatives)
 
     name_to_id = {i: i + 1 for i in range(n_alternatives)}
     pcv = [PairwiseComparison(
@@ -63,32 +63,17 @@ def fit_mop(pairs, n_alternatives, max_K=None):
     lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 
-    prev = None
     best_k, best_bic, best_result = None, np.inf, None
 
     for k in range(1, max_K + 1):
-        kw = {}
-        if prev is not None:
-            pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
-            ps = np.array([p.inconsistency_level for p in prev.priorities])
-            pm = np.array(prev.mixture_probabilities)
-            u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=min_weight_share,
-                n_components=k)
-            kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
-
-        result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
-        bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi)
+        # K-Ridge from scratch at every candidate count; deterministic, no warm chain.
+        u0, phi0, mp0 = kridge(X, y, k)
+        result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls,
+                               u_init=u0, sigma2_init=phi0, mp_init=mp0)
+        bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls,
+                                 lambda_pi=lpi)
         if bic_val < best_bic:
             best_bic = bic_val; best_k = k; best_result = result
-        prev = result
-
-        # If minprior is turned on and a candidate loses a component to it,
-        # raising the candidate further can only reproduce that mixture, so the
-        # search stops there. With the default of no removal the test never
-        # fires and the whole grid is searched.
-        if len(result) < k:
-            break
 
     w_avg = np.zeros(n_alternatives)
     for pi, pr in zip(best_result.mixture_probabilities, best_result.priorities):
@@ -302,16 +287,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--scenario", choices=["cancellation", "general", "noise"])
     parser.add_argument("--trials", type=int, default=None)
+    parser.add_argument("--out", default=None,
+                        help="write results here instead of the default path; used to run "
+                             "the scenarios in parallel")
     args = parser.parse_args()
+    results_path = Path(args.out) if args.out else SIM_RESULTS
 
     n_trials = args.trials or CFG["simulation"]["n_trials"]
     print(f"Simulation — {n_trials} trials | MoP vs P=1\n")
 
     # Load existing results to preserve scenarios not being re-run
     all_data = {}
-    if SIM_RESULTS.exists():
+    if results_path.exists():
         try:
-            all_data = json.load(open(SIM_RESULTS, encoding="utf-8"))
+            all_data = json.load(open(results_path, encoding="utf-8"))
         except Exception:
             pass
 
@@ -330,9 +319,9 @@ def main():
             return [without_timings(v) for v in obj]
         return obj
 
-    with open(SIM_RESULTS, "w", encoding="utf-8") as f:
+    with open(results_path, "w", encoding="utf-8") as f:
         json.dump(without_timings(all_data), f, indent=2, ensure_ascii=False)
-    print(f"\nSaved to {SIM_RESULTS}")
+    print(f"\nSaved to {results_path}")
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ import numpy as np
 from scipy.special import logit
 from mop import inference, pairwise_comparison
 from mop.inference import comparisons2regression
-from mop.initialization import warm_init
+from mop.initialization import kridge
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (lambda_u as PAPER_LAMBDA_U, lambda_pi as PAPER_LAMBDA_PI,
@@ -69,25 +69,17 @@ def run_mop_full(pairs, label=""):
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
     phi0 = inference.prior_mode_phi0(X, y)
 
-    prev = None
     best_k, best_bic, best_result = None, np.inf, None
     for k in range(1, max_components + 1):
-        kw = {}
-        if prev is not None:
-            pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
-            ps = np.array([p.inconsistency_level for p in prev.priorities])
-            pm = np.array(prev.mixture_probabilities)
-            u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=min_weight_share,
-                n_components=k)
-            kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
+        u_init, sigma2_init, mp_init = kridge(X, y, k)
         result = inference.mop(pcvector, link_functions, k,
-                               lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
+                               lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls,
+                               u_init=u_init, sigma2_init=sigma2_init,
+                               mp_init=mp_init)
         val = inference.pbic(pcvector, result, link_functions,
                              lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi)
         if val < best_bic:
             best_bic = val; best_k = k; best_result = result
-        prev = result
 
         # If minprior is turned on and a candidate loses a component to it,
         # raising the candidate further can only reproduce that mixture, so the

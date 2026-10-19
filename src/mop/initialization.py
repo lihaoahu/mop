@@ -290,12 +290,14 @@ def kridge(
 ):
     """Seed ``nP`` components from scratch, then refine them by hard assignment.
 
-    This is the from-scratch initialiser, for a fit that has no smaller fit to
-    carry over. The components are seeded from the judgments farthest from the
+    This is the initialiser the model-selection grid uses at every candidate
+    count. The components are seeded from the judgments farthest from the
     component set, and the assignments are then refined by alternating
-    assignment and re-estimation. A grid search over ``P`` does not use it: that
-    carries each fit over from the one before it with :func:`warm_init`, whose
-    seeding step is :func:`seed_component`.
+    assignment and re-estimation. It is deterministic: the same data and the
+    same count give the same starting point. :func:`warm_init` is an alternative
+    that carries a converged fit forward to a larger count; the grid does not use
+    it, because a carried fit can inherit the local optimum the smaller fit
+    reached.
 
     Args:
         X: design matrix, ``(nJ, nA-1)``

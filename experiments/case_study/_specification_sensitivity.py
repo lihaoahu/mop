@@ -55,23 +55,16 @@ SLICES = [("overall", {}),
 GRID = [1, 2, 3, 4, 5]
 
 
-def curve_via_chain(X, y, grid, s2):
-    """The paper's search order: warm start low to high, then take the criterion minimum."""
-    from mop.initialization import warm_init
+def curve_kridge(X, y, grid, s2):
+    """K-Ridge initialisation at every candidate count, then the criterion curve."""
+    from mop.initialization import kridge
     A = X.shape[1] + 1
-    prev, out = None, {}
+    out = {}
     for k in grid:
-        kw = {}
-        if prev is not None:
-            ui, si, mi = warm_init(X, y, prev["u"], prev["phi"], prev["pi"],
-                                   min_weight_share=MP.min_weight_share,
-                                   n_components=k)
-            ui = np.atleast_2d(ui)
-            if ui.shape[0] == k:
-                kw = {"u_init": ui, "phi_init": si, "pi_init": mi}
-        r = fit(X, y, k, free_phi=True, s2=s2, **kw)
+        u0, phi0, pi0 = kridge(X, y, k)
+        r = fit(X, y, k, free_phi=True, s2=s2,
+                u_init=u0, phi_init=phi0, pi_init=pi0)
         out[k] = criteria(r, X, y, A, k, True)
-        prev = r
     return out
 
 
@@ -86,7 +79,7 @@ def main():
     print(f"parameters: {MP.summary()}\n")
 
     # ── 1. candidate set, and 2. pBIC against BIC, per slice ──
-    print(f"{'slice':<24} {'chain P':>8} {'no P=2':>8} {'pBIC':>10} {'BIC':>10} "
+    print(f"{'slice':<24} {'K-Ridge P':>8} {'no P=2':>8} {'pBIC':>10} {'BIC':>10} "
           f"{'agree':>6}")
     print("-" * 74)
     per_slice = {}
@@ -97,18 +90,18 @@ def main():
             continue
         X, y = build_design(pairs)
         s2 = float(prior_mode_phi0(X, y))
-        full = curve_via_chain(X, y, GRID, s2)
+        full = curve_kridge(X, y, GRID, s2)
         best_p = min(full, key=lambda k: full[k]["pBIC"])
         best_b = min(full, key=lambda k: full[k]["BIC"])
         # drop P=2 from the candidate set
         if 2 in GRID and best_p == 2:
-            without = curve_via_chain(X, y, [k for k in GRID if k != 2], s2)
+            without = curve_kridge(X, y, [k for k in GRID if k != 2], s2)
             best_w = min(without, key=lambda k: without[k]["pBIC"])
         else:
             best_w = None
         per_slice[label] = {
             "phi0": s2,
-            "chain_best_pBIC": best_p, "chain_best_BIC": best_b,
+            "kridge_best_pBIC": best_p, "kridge_best_BIC": best_b,
             "without_P2": best_w,
             "curve": {str(k): {"pBIC": float(v["pBIC"]), "BIC": float(v["BIC"])}
                       for k, v in full.items()},
@@ -127,14 +120,14 @@ def main():
     if disagree:
         print(f"    {disagree}")
     print()
-    print("  candidate set: of the slices whose chain selects P=2, dropping P=2 from the")
+    print("  candidate set: of the slices whose K-Ridge selection is P=2, dropping P=2 from the")
     print("  grid selects:")
     for label, r in per_slice.items():
-        if r["chain_best_pBIC"] == 2 and r["without_P2"] is not None:
+        if r["kridge_best_pBIC"] == 2 and r["without_P2"] is not None:
             print(f"    {label:<24} -> P={r['without_P2']}")
 
     # ── 3. resampling ──
-    print(f"\nresampling the judgments, {args.reps} replicates, chain selection each time")
+    print(f"\nresampling the judgments, {args.reps} replicates, K-Ridge selection each time")
     rng = np.random.default_rng(args.seed)
     pairs = load_pairs()
     X, y = build_design(pairs)
@@ -145,7 +138,7 @@ def main():
         idx = rng.integers(0, nJ, size=nJ)
         Xb, yb = X[idx], y[idx]
         s2b = float(prior_mode_phi0(Xb, yb))
-        cur = curve_via_chain(Xb, yb, GRID, s2b)
+        cur = curve_kridge(Xb, yb, GRID, s2b)
         b = min(cur, key=lambda k: cur[k]["pBIC"])
         counts[b] += 1
         if rep < 10 or rep == args.reps - 1:

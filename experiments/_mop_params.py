@@ -16,7 +16,7 @@ through this module.
 
 Usage
 -----
-    from _mop_params import lambda_u, lambda_pi, lambda_sigma_for, min_weight_share
+    from _mop_params import lambda_u, lambda_pi, lambda_sigma_for, min_weight_share, max_components_for
 
 ``lambda_sigma`` depends on the number of judgments being fitted, so it is not a
 constant: call ``lambda_sigma_for(nJ)``.
@@ -24,6 +24,7 @@ constant: call ``lambda_sigma_for(nJ)``.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 PARAMS_PATH = Path(__file__).resolve().parent / "mop_params.json"
@@ -59,6 +60,23 @@ prior_mode_phi0: object = _get("prior_mode_phi0")
 selection_criterion: str = _get("selection_criterion")
 
 reference_type: str = _get("reference_type")
+
+
+def max_components_for(n_alternatives: int) -> int:
+    """Upper end of the component search for a problem with ``A`` alternatives.
+
+    A preference state is an ordering of the alternatives, and there are ``A!`` strict
+    orderings. A search beyond that admits components that repeat an ordering, so the grid
+    stops at ``min(A!, max_components)``. For A = 4 this is min(24, 9) = 9, the grid the
+    paper's results were produced with; for A = 2 it is 2, so a binary problem cannot be
+    searched to nine components.
+
+    This is a modelling restriction on what counts as a distinct preference state, not an
+    identification theorem: two components that share an ordering but differ in intensity or
+    dispersion are different parameter points, which is how the noise scenario uses a second
+    component. The cap keeps the search inside the set of ordinally distinct states.
+    """
+    return min(int(max_components), math.factorial(int(n_alternatives)))
 
 
 def lambda_sigma_for(n_judgments: int) -> float:

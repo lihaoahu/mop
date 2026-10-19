@@ -10,14 +10,14 @@ from pathlib import Path
 import numpy as np
 from scipy.special import logit
 from mop import inference, pairwise_comparison
-from mop.initialization import warm_init as _lib_warm_init
+from mop.initialization import kridge
 from mop.inference import comparisons2regression
 
 # The MoP fitting parameters live in one file, experiments/mop_params.json, read
 # through experiments/_mop_params.py. They used to be hard-coded here (and in four
 # other scripts), while config.json documented them without any script reading it.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from _mop_params import (lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
+from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
                          min_weight_share, max_components, summary)
 
 from _common import (CFG, ENERGY_PAIRS, MOP_RESULTS, TYPE_MAP, T, DIMS,
@@ -44,65 +44,21 @@ def load_pairs(dim_name=None, year=None):
     return pairs
 
 
-def warm_init(prev, X, y, nA, k):
-    """Carry the converged fit with k-1 components over to k.
+def _fit_kridge(pcvector, link_functions, k, lu, lpi, ls, X, y):
+    """Fit ``k`` components from the K-Ridge initialiser, from scratch.
 
-    The library routine does the work; the mixture weights are floored at
-    1/20 of a share so that a component does not start the next round at a
-    weight the M-step will not move.
+    The initialiser seeds the components on the judgments the current mixture explains least,
+    refines them by alternating assignment and ridge re-estimation, and hands the result to the
+    EM algorithm. It is deterministic: the same data give the same starting point and the same
+    fit, which is what makes the selected count reproducible. The grid does not carry a fit
+    forward from a smaller count; a chained start inherits the local optimum the smaller fit
+    reached, and on this case study that changed the selected count on two dimensions.
     """
-    pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
-    ps = np.array([p.inconsistency_level for p in prev.priorities])
-    pm = np.array(prev.mixture_probabilities)
-    return _lib_warm_init(X, y, pu, ps, pm, min_weight_share=min_weight_share,
-                          n_components=k)
-
-
-def _fit_with_restarts(pcvector, link_functions, k, lu, lpi, ls, prev, X, y, nA,
-                       n_random=4, tol_improve=1.0):
-    """Fit ``k`` components from the warm chain start and independent random starts.
-
-    The warm chain alone can stop in a local optimum: on the refueling slice its two-component
-    pBIC was 2194.0 while an independent start reaches 2080.0, so the chain then chose three
-    components (2112.6) over a better two; on the range slice the chain's two-component fit was
-    60 pBIC units above the best one. Independent starts remove that dependence.
-
-    A different start is accepted only when it lowers the criterion by more than
-    ``tol_improve``. Two solutions that differ by less than that are numerically tied, and
-    switching between them would change the reported decomposition without changing any
-    conclusion; the chain's solution is kept in that case.
-    """
-    rng = np.random.default_rng(1000 * k + len(y))
-    s2 = float(inference.prior_mode_phi0(X, y))
-
-    if prev is not None:
-        ui, si, mi = warm_init(prev, X, y, nA, k)
-        kw = {"u_init": ui, "sigma2_init": si, "mp_init": mi}
-    else:
-        kw = {}
-    chain = inference.mop(pcvector, link_functions, k, lambda_u=lu, lambda_pi=lpi,
-                          lambda_sigma=ls, **kw)
-    chain_bic = float(inference.pbic(pcvector, chain, link_functions,
-                                     lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi))
-    result, bic_val = chain, chain_bic
-
-    best_restart = None
-    for _ in range(n_random):
-        u0 = rng.normal(0.0, 1.0, (k, nA))
-        m0 = rng.dirichlet(np.ones(k))
-        try:
-            cand = inference.mop(pcvector, link_functions, k, lambda_u=lu, lambda_pi=lpi,
-                                 lambda_sigma=ls, u_init=u0, sigma2_init=np.full(k, s2),
-                                 mp_init=m0)
-            cand_bic = float(inference.pbic(pcvector, cand, link_functions,
-                                            lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi))
-        except Exception:
-            continue
-        if best_restart is None or cand_bic < best_restart[0]:
-            best_restart = (cand_bic, cand)
-
-    if best_restart is not None and best_restart[0] < chain_bic - tol_improve:
-        bic_val, result = best_restart
+    u0, phi0, mp0 = kridge(X, y, k)
+    result = inference.mop(pcvector, link_functions, k, lambda_u=lu, lambda_pi=lpi,
+                           lambda_sigma=ls, u_init=u0, sigma2_init=phi0, mp_init=mp0)
+    bic_val = float(inference.pbic(pcvector, result, link_functions,
+                                   lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi))
     return result, bic_val
 
 
@@ -126,12 +82,10 @@ def run_mop(pairs, trace=None):
 
     prev = None
     models, bic_vals = {}, {}
-    for k in range(1, max_components + 1):
-        result, bic_val = _fit_with_restarts(pcvector, link_functions, k, lu, lpi, ls,
-                                             prev, X, y, nA)
+    for k in range(1, max_components_for(nA) + 1):
+        result, bic_val = _fit_kridge(pcvector, link_functions, k, lu, lpi, ls, X, y)
         models[str(k)] = {**result.to_dict(), "bic": bic_val}
         bic_vals[k] = bic_val
-        prev = result
 
         # If minprior is turned on and a candidate loses a component to it,
         # raising the candidate further can only reproduce that mixture, so the

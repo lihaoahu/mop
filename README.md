@@ -12,7 +12,7 @@ src/mop/                      # Core library
     general_fit.py            # direct numerical MAP, for any observation family
     winloss.py                # binomial family: EM with a numerically solved M-step
     pairwise_comparison.py    # Data representation, design matrix
-    initialization.py         # K-Ridge seeding, and the GLM/IRLS variant
+    initialization.py         # K-Ridge from-scratch initializer (deterministic), and the GLM/IRLS variant
     decision.py               # Decision-theoretic ranking extraction
     visualization.py          # Ternary plot, priority bar charts
 

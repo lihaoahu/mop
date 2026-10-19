@@ -14,7 +14,7 @@ from scipy.special import logit
 # Fitting parameters come from experiments/mop_params.json, the single source of
 # truth. They used to be hard-coded here and in three other scripts.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from _mop_params import (lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
+from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
                          min_weight_share, max_components)
 
 from mop import inference
@@ -22,7 +22,7 @@ from mop.pairwise_comparison import PairwiseComparison, comparisons2regression
 
 from _common import SIM_DIR, ENERGY_PAIRS, CANONICAL_TYPES, TYPE_MAP
 from mop import expected_utility
-from mop.initialization import warm_init
+from mop.initialization import kridge
 
 EPS = 1e-10
 T = CANONICAL_TYPES
@@ -50,7 +50,7 @@ def load_pairs(dim=None):
 
 def fit_mop(pairs, nA, max_K=None):
     if max_K is None:
-        max_K = max_components
+        max_K = max_components_for(nA)
     name_to_id = {i: i+1 for i in range(nA)}
     pcv = [PairwiseComparison(former_id=name_to_id[p["ft"]],
                                latter_id=name_to_id[p["lt"]],
@@ -61,57 +61,25 @@ def fit_mop(pairs, nA, max_K=None):
     lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
     # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 
-    prev = None
     best_k, best_bic, best_result, best_ll = None, np.inf, None, None
     models = {}
 
     for k in range(1, max_K+1):
-        kw = {}
-        if prev is not None:
-            pu = np.array([p.priority_vector[:-1] for p in prev.priorities])
-            ps = np.array([p.inconsistency_level for p in prev.priorities])
-            pm = np.array(prev.mixture_probabilities)
-            u_init, sigma2_init, mp_init = warm_init(
-                X, y, pu, ps, pm, min_weight_share=min_weight_share,
-                n_components=k)
-            kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
-
-        # Chain start plus independent random starts, keeping a start only when it lowers the
-        # criterion by more than one unit (see step7_analyze._fit_with_restarts: the chain alone
-        # stranded the refueling and range fits in local optima).
-        rng = np.random.default_rng(1000 * k + nJ)
-        s2 = float(inference.prior_mode_phi0(X, y))
-        result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
-        bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi)
+        # K-Ridge from scratch at every candidate count; deterministic, no warm chain.
+        u0, phi0, mp0 = kridge(X, y, k)
+        result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls,
+                               u_init=u0, sigma2_init=phi0, mp_init=mp0)
+        bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls,
+                                 lambda_pi=lpi)
         ll = inference.log_likelihood_from_pc(pcv, result, link_fns)
-        best_restart = None
-        for _ in range(4):
-            u0 = rng.normal(0.0, 1.0, (k, X.shape[1]))
-            m0 = rng.dirichlet(np.ones(k))
-            try:
-                r2 = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi,
-                                   lambda_sigma=ls, u_init=u0,
-                                   sigma2_init=np.full(k, s2), mp_init=m0)
-                b2 = inference.pbic(pcv, r2, link_fns, lambda_u=lu, lambda_sigma=ls,
-                                    lambda_pi=lpi)
-            except Exception:
-                continue
-            if best_restart is None or b2 < best_restart[0]:
-                best_restart = (b2, r2, inference.log_likelihood_from_pc(pcv, r2, link_fns))
-        if best_restart is not None and best_restart[0] < bic_val - 1.0:
-            bic_val, result, ll = best_restart
+
         models[k] = {"pis": result.mixture_probabilities.copy(),
                       "ws": np.array([pr.priority_vector for pr in result.priorities]),
                       "sigma2": np.array([pr.inconsistency_level for pr in result.priorities]),
                       "bic": bic_val, "ll": ll}
         if bic_val < best_bic:
             best_bic = bic_val; best_k = k; best_result = result; best_ll = ll
-        prev = result
 
-        # If minprior is turned on and a candidate loses a component to it,
-        # raising the candidate further can only reproduce that mixture, so the
-        # search stops there. With the default of no removal the test never
-        # fires and the whole grid is searched.
         if len(result) < k:
             break
 
