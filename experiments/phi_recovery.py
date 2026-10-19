@@ -89,8 +89,13 @@ def design(pairs):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--reps", type=int, default=10)
-    ap.add_argument("--pairs", type=int, default=800)
+    # The defaults are the configuration behind the ratios quoted in Section 3.1: six replicates
+    # per setting and 2,000 comparisons. They were 10 and 800 here, which a bare run would have
+    # used, and its numbers would not have matched the paper (at phi = 1 the ratio would have been
+    # 0.96 rather than 1.035). A default that does not reproduce the reported result is a
+    # reproducibility defect however good the other configuration is.
+    ap.add_argument("--reps", type=int, default=6)
+    ap.add_argument("--pairs", type=int, default=2000)
     ap.add_argument("--phi", type=float, nargs="+", default=[0.25, 0.5, 1.0, 2.0, 4.0])
     ap.add_argument("--seed", type=int, default=20261016)
     ap.add_argument("--grid", type=float, nargs="+", default=None,

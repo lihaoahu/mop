@@ -34,6 +34,11 @@ experiments/
         step3_report.py       # text summary of the above
         step4_revelatory.py   # log-likelihood gain, component count
         step5_holdout.py      # 5-fold CV, marginal log-likelihood (as reported)
+        step6_binomial.py     # binomial protocol: recovery, and a beta-binomial baseline
+
+    phi_recovery.py           # dispersion recovery on synthetic Gaussian data
+    protocol_identifiability.py  # curvature of the likelihood in phi, per protocol
+    selection.py              # unified model selection, free and fixed dispersion
 
 tests/
     audit_parameterisation.py # verifies every distribution convention in use
@@ -120,7 +125,13 @@ uv run python experiments/simulation/step2_holdout.py
 uv run python experiments/simulation/step5_holdout.py       # as reported
 uv run python experiments/simulation/step4_revelatory.py
 uv run python experiments/simulation/step3_report.py
+uv run python experiments/simulation/step6_binomial.py      # 100 replicates, both conditions
+uv run python experiments/phi_recovery.py                   # 6 replicates, 2,000 comparisons
+uv run python experiments/protocol_identifiability.py
 ```
+
+`phi_recovery.py` defaults to the configuration behind the ratios quoted in Section 3.1 --
+six replicates per setting and 2,000 comparisons -- so a bare run reproduces them.
 
 The 500-trial simulation runs for roughly 35 minutes at the stopping tolerance
 in use. `step2_holdout.py` reports point-prediction metrics and is not the
