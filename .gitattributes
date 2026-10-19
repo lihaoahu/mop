@@ -1,0 +1,11 @@
+# Store text as LF regardless of what an editing tool writes to the working tree.
+# Several tools on Windows write CRLF; without this, every edit showed up as a whole-file
+# change in the diff, which buried the real change and made review harder than it needed
+# to be.
+* text=auto eol=lf
+
+# Binary assets are left alone.
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
