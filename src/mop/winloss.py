@@ -428,6 +428,29 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
         if nP > 1:
             starts.append(_sign_split_seed(X, y, nP, omega_eff, lam_u_arr[0], u_bar_arr[0]))
 
+    # nP is final now (u_init may have overridden it), so the per-component arrays are rebuilt
+    # here rather than trusting the ones built from the argument.
+    if np.isscalar(lambda_u):
+        lam_u_arr = np.full(nP, float(lambda_u))
+    else:
+        lam_u_arr = np.asarray(lambda_u, dtype=np.float64).ravel()
+        if lam_u_arr.size == 1:
+            lam_u_arr = np.full(nP, float(lam_u_arr[0]))
+        elif lam_u_arr.size != nP:
+            raise ValueError(
+                f"lambda_u has {lam_u_arr.size} entries but the fit has {nP} components")
+    _ub = np.asarray(u_bar if u_bar is not None else np.zeros((1, nA_minus_1)),
+                     dtype=np.float64)
+    if _ub.ndim == 1:
+        _ub = _ub.reshape(1, -1)
+    if _ub.shape[0] == 1:
+        u_bar_arr = np.tile(_ub, (nP, 1))
+    elif _ub.shape[0] == nP:
+        u_bar_arr = _ub
+    else:
+        raise ValueError(
+            f"u_bar has {_ub.shape[0]} rows but the fit has {nP} components")
+
     results = [run_em(u_s, mp_s) for u_s, mp_s in starts]
     u, mp, prev, n_iter, converged = max(results, key=lambda r: r[2])
 
