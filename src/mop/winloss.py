@@ -322,7 +322,10 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
         u_bar: prior mean ``u_0`` of the utilities, shape ``(A-1,)`` or
             ``(nP, A-1)``.
         omega: observation weight ``omega_k`` per comparison, length ``nJ``.
-            ``n_k`` for a repeated comparison, ones for binary choices.
+            ``n_k`` for a repeated comparison, ones for binary choices. It is
+            used as given and is not rescaled: ``n_k`` is the number of trials
+            behind judgment ``k``, and dividing it out would change the model,
+            because ``phi`` is fixed at one here and cannot absorb the scale.
         u_init, mp_init: optional starting values.
         max_iter, tol: iteration cap and relative tolerance on the penalized
             log-posterior, using the same normalisation as
@@ -382,6 +385,7 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
         """One EM run from one starting point. Returns (u, mp, pll, n_iter, converged)."""
         u, mp = u_start, mp_start
         prev = None
+        pll_last = -np.inf
         n_iter = 0
         converged = False
         for n_iter in range(1, max_iter + 1):
@@ -393,6 +397,7 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
                                               lambda_pi, u_bar_arr, omega_eff)
             if not np.isfinite(pll_tp1):
                 break
+            pll_last = pll_tp1
             if verbose:
                 print(f"  iter {n_iter:5d}  penalized log-posterior {pll_tp1:.6f}")
             u, mp = u_new, mp_new
@@ -402,8 +407,11 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
                 converged = True
                 break
             prev = pll_tp1
-        pll = prev if prev is not None else -np.inf
-        return u, mp, pll, n_iter, converged
+        # pll_last, not prev: on convergence the loop breaks before `prev` is updated, so `prev`
+        # belongs to the iterate before the one being returned. The two are compared across
+        # starting points now, and a start that converges one iteration earlier would otherwise
+        # be scored one step behind.
+        return u, mp, pll_last, n_iter, converged
 
     # Initialisation. Two starting points are used whenever the caller does not supply one:
     # the deviance-based seeding of _seed_winloss, and the sign-split seeding of

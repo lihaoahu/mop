@@ -4,16 +4,17 @@ Why this experiment exists
 --------------------------
 The manuscript claims that the two sources of variability occupy separate parameters, but that the
 separation is only recoverable where the likelihood leaves the dispersion free. On binary and
-repeated choices it does not: the variance is fixed by the response scale, a mixture of binomials
-is itself overdispersed, and "several preferences executed consistently" and "one preference
-executed inconsistently" therefore imply the same distribution of judgments.
+repeated choices it does not: the variance is fixed by the response scale and no dispersion
+parameter exists, so structural inconsistency cannot be estimated separately from the mixture.
+What the data can and cannot decide is the question this experiment measures -- the answer is not
+observational equivalence, which is why the claim in the paper was narrowed to what holds.
 
 Until now that claim rested on the analytic second derivative in phi and on the Gaussian-side
 recovery study, and the third contribution -- one framework across three protocols -- had no
 empirical support outside the Gaussian variants. This experiment supplies it.
 
   1. Recovery. Repeated binomial choices generated from a two-state mixture. A binomial mixture is
-     fitted for P = 1, 2, 3 and selected by pBIC: does the mixture recover the states and the
+     fitted for P = 1, ..., 4 and selected by pBIC: does the mixture recover the states and the
      weights from binary data at all, given that phi is fixed?
 
   2. Non-identification. The same data fitted by a beta-binomial single-preference model, which is
@@ -151,8 +152,10 @@ def seed_starts(X, y, n, nP, n_starts=4):
 
 def fit_best(pc, X, y, n, nP):
     """Best of the requested starts, by penalized log-posterior."""
+    n_starts = 1 if nP == 1 else 4
     fits = [fit_winloss(pc, nP, lambda_u=lambda_u, lambda_pi=lambda_pi, omega=n,
-                        u_init=u, mp_init=mp) for u, mp in seed_starts(X, y, n, nP)]
+                        u_init=u, mp_init=mp)
+            for u, mp in seed_starts(X, y, n, nP, n_starts)]
     return max(fits, key=lambda m: m.penalized_log_posterior)
 
 
@@ -221,7 +224,9 @@ def one_replicate(rng, condition="mixture"):
     p_hat = min(criteria, key=criteria.get)
 
     cos = None
-    if p_hat > 1:
+    # Only the mixture condition has a two-state truth to recover; in the reverse condition the
+    # truth is a single preference and a cosine against U_TRUE measures nothing.
+    if condition == "mixture" and p_hat > 1:
         est = priority_vector_from_logratios(model_logratios(models[p_hat]))
         truth = priority_vector_from_logratios(U_TRUE)
         cos = cosine_similarity(truth, est)
