@@ -72,7 +72,7 @@ def main():
               f"{pbic_paper:>13.2f} {mc['pBIC'] - pbic_paper:>12.3e}")
 
     print("\nNote: perfect agreement is not expected. The two implementations differ")
-    print("in initialisation (kridge from scratch here, warm-start in step7 the")
+    print("in initialisation (kridge from scratch in both step7 and here, the")
     print("paper's script does a K sweep) and in the convergence test, and a")
     print("Gaussian mixture has many local optima. What matters for step9 is that")
     print("the two reach the SAME parameterisation and the same order of magnitude")

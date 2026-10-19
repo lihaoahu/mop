@@ -20,7 +20,7 @@ from mop.initialization import kridge
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (lambda_u as PAPER_LAMBDA_U, lambda_pi as PAPER_LAMBDA_PI,
-                         lambda_sigma_for, min_weight_share,
+                         lambda_sigma_for,
                          max_components, summary as params_summary)
 
 from _common import ENERGY_PAIRS, TYPE_MAP, T

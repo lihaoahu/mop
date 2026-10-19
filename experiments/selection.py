@@ -3,7 +3,7 @@
 Why this exists
 ---------------
 Three scripts reported the case study's component count and all three agreed, because all
-three warm-start the component search from the low end of the grid. The penalized
+three initialise every candidate from the K-Ridge rule. The penalized
 objective is multimodal, so that shared habit fixed which local optimum they reached, and
 their agreement was an artefact of the shared procedure rather than evidence. Sweeping the
 grid's starting point exposes it: on the pooled data the free-dispersion search selects
@@ -15,7 +15,7 @@ What "the" selection should mean
 The count that minimises the criterion over the candidate set, taking the best optimum
 found rather than the first one a chain happens to reach. This module makes that explicit:
 
-  1. for each P in the candidate set, fit from several starts -- the warm-start chain, the
+  1. for each P in the candidate set, fit from the K-Ridge initialisation,
      K-Ridge initialisation, and (optionally) starts seeded from neighbouring chains;
   2. keep the fit with the highest penalized objective for that P;
   3. select the P minimising pBIC (and report BIC alongside).

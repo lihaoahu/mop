@@ -160,8 +160,7 @@ def check_no_hardcoded():
         # name to be preceded by start/whitespace/`;` avoids matching `lambda_sigma=`.
         (r"(?:(?<=^)|(?<=[\s;]))(?:ls|lam_sigma)\s*=\s*[\w.]+\s*/\s*50",
          "hard-coded lambda_sigma"),
-        (r"min_weight_share\s*=\s*0\.05", "hard-coded min_weight_share"),
-    ]
+        ]
 
     def _in_docstring_or_comment(text, pos):
         """True when the offset sits in a comment or inside a triple-quoted string.

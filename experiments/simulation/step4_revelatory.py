@@ -15,7 +15,7 @@ from scipy.special import logit
 # truth. They used to be hard-coded here and in three other scripts.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
-                         min_weight_share, max_components)
+                         max_components)
 
 from mop import inference
 from mop.pairwise_comparison import PairwiseComparison, comparisons2regression

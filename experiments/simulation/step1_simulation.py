@@ -36,7 +36,7 @@ from _baselines import fit_single_k1, get_priorities_single_k1
 # three lambdas and the weight floor.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
-                         min_weight_share, max_components)
+                         max_components)
 
 EPS = 1e-10
 METHODS = ["MoP", "P=1"]

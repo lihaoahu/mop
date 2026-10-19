@@ -16,7 +16,7 @@ through this module.
 
 Usage
 -----
-    from _mop_params import lambda_u, lambda_pi, lambda_sigma_for, min_weight_share, max_components_for
+    from _mop_params import lambda_u, lambda_pi, lambda_sigma_for, max_components_for
 
 ``lambda_sigma`` depends on the number of judgments being fitted, so it is not a
 constant: call ``lambda_sigma_for(nJ)``.
@@ -47,9 +47,6 @@ lambda_pi: float = _get("lambda_pi")
 
 #: multiplier turning nJ into lambda_sigma
 LAMBDA_SIGMA_OVER_N: float = _get("lambda_sigma_over_n")
-
-#: floor on a component's share when warm-starting from P-1 to P components
-min_weight_share: float = _get("min_weight_share")
 
 #: upper end of the component search
 max_components: int = _get("max_components")
@@ -114,7 +111,7 @@ def summary() -> str:
     """One-line description of the parameters in force, for run logs."""
     return (f"lambda_u={lambda_u:g} lambda_pi={lambda_pi:g} "
             f"lambda_sigma={LAMBDA_SIGMA_OVER_N:g}*nJ "
-            f"min_weight_share={min_weight_share:g} max_K={max_components} "
+            f"max_K={max_components} "
             f"phi0={prior_mode_phi0} criterion={selection_criterion}")
 
 

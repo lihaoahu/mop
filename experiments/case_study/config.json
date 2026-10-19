@@ -113,7 +113,7 @@
         "u_bar": 0,
         "max_components": 9,
         "selection_criterion": "pBIC",
-        "initialization": "warm-start (K-1 → K) with residual-based seeding, min_weight_share 0.05",
+        "initialization": "K-Ridge from scratch at every candidate count (deterministic)",
         "credibility_samples": 10000,
         "reference_type": "燃油"
     },

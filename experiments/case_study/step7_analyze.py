@@ -18,7 +18,7 @@ from mop.inference import comparisons2regression
 # other scripts), while config.json documented them without any script reading it.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
-                         min_weight_share, max_components, summary)
+                         max_components, summary)
 
 from _common import (CFG, ENERGY_PAIRS, MOP_RESULTS, TYPE_MAP, T, DIMS,
                      DIM_LABELS, expected_utility)

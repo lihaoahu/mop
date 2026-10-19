@@ -19,7 +19,6 @@ disagree with the rest.
 | `lambda_pi` | 1 | uniform Dirichlet on the mixture weights |
 | `lambda_sigma` | `0.02 * nJ` = `nJ / 50` | 108.02 on the corpus |
 | **`phi_0`** | **`prior_mode_phi0(X, y)`** | the paper's rule, **chosen by the author** |
-| `min_weight_share` | 0.05 | component floor when warm-starting |
 | grid | P = 1..5 | `mop_params.json` allows 9 |
 | EM tol / cap | 1e-6 / 5000 | `mop.inference` |
 
@@ -95,8 +94,8 @@ exercise that does not depend on a model-selection criterion.
 
 > **The table below was produced with the prior mode PINNED AT 1, under a note that
 > claimed it was the paper's rule. It is superseded by `selection_facts.json`, produced
-> by `_selection_facts.py` with the paper's `prior_mode_phi0` and warm-start
-> initialisation.** The direction of the conclusion does not change — a fixed
+> by `_selection_facts.py` with the paper's `prior_mode_phi0` and the K-Ridge
+> from-scratch initialisation.** The direction of the conclusion does not change — a fixed
 > dispersion selects 4 states on the corpus and a free dispersion selects 3 — but the
 > numbers below are for a different prior than the one the paper uses, so quote the
 > script rather than this table. The fixed-φ column is the one affected: with the

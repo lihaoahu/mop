@@ -5,10 +5,10 @@ The scheme is recursive in the number of components. ``ridge_init`` supplies
 the starting value for ``P = 1``, a single weighted ridge regression over every
 judgment. ``seed_component`` is the K-Ridge step: given the components already
 present, it places one further component where they explain least, by ridge
-regression on the judgments with the largest residual. ``warm_init`` combines
-the two, carrying a converged fit with ``P - 1`` components over to ``P`` and
-seeding the one component that is new. ``kridge`` is the from-scratch case,
-which uses ``ridge_init`` and then calls ``seed_component`` repeatedly.
+regression on the judgments with the largest residual. ``kridge`` builds all
+components at once with ``ridge_init`` and repeated calls to ``seed_component``,
+then refines them by hard assignment; it is the initialiser the model-selection
+grid uses at every candidate count.
 
 Two response scales are supported:
 
@@ -233,52 +233,6 @@ def seed_component(X, y, u_prev, family=None, weights=None, lambda_reg=1e-10,
     return _component_fit(X, r, w_all, family, lambda_reg)(idx, w_all[idx])
 
 
-def warm_init(X, y, u_prev, phi_prev, pi_prev, family=None, weights=None,
-              lambda_reg=1e-10, deviance=None, min_weight_share=0.0,
-              n_components=None):
-    """Carry a converged fit with ``P - 1`` components over to ``P``.
-
-    The components already present are kept unchanged, one further component is
-    seeded by :func:`seed_component`, its dispersion is set to the mean of the
-    existing ones, and the mixture probabilities are rescaled so that the
-    components carried over share ``1 - 1/P`` of the mass between them.
-
-    ``min_weight_share`` raises any weight below ``min_weight_share / P`` to
-    that level before the rescaling, so that a component cannot start the next
-    round at a weight the following M-step will not move. The default of zero
-    is the rescaling as the manuscript states it.
-
-    ``n_components`` is the size the caller wants the mixture to come back with.
-    By default one component is added; when a target is given and the fit
-    carried over has fewer components than ``n_components - 1``---which happens
-    once components can be removed during a fit---components are seeded until
-    the target is reached, so that candidate ``P`` always starts from ``P``
-    components.
-    """
-    u_prev = np.atleast_2d(np.asarray(u_prev, dtype=np.float64))
-    phi_prev = np.atleast_1d(np.asarray(phi_prev, dtype=np.float64))
-    pi_prev = np.atleast_1d(np.asarray(pi_prev, dtype=np.float64))
-    n_old = u_prev.shape[0]
-    n_new = n_old + 1 if n_components is None else max(int(n_components), n_old)
-
-    u = np.zeros((n_new, X.shape[1]))
-    u[:n_old] = u_prev
-    for q in range(n_old, n_new):
-        u[q] = seed_component(X, y, u[:q], family=family, weights=weights,
-                              lambda_reg=lambda_reg, deviance=deviance)
-
-    phi = np.ones(n_new) * float(np.mean(phi_prev))
-    phi[:n_old] = phi_prev
-
-    pi = np.zeros(n_new)
-    pi[:n_old] = pi_prev * (n_old / n_new)
-    pi[n_old:] = 1.0 / n_new
-    if min_weight_share > 0.0:
-        pi = np.maximum(pi, min_weight_share / n_new)
-        pi = pi / np.sum(pi)
-    return u, phi, pi
-
-
 def kridge(
     X: np.ndarray,
     y: np.ndarray,
@@ -294,10 +248,7 @@ def kridge(
     count. The components are seeded from the judgments farthest from the
     component set, and the assignments are then refined by alternating
     assignment and re-estimation. It is deterministic: the same data and the
-    same count give the same starting point. :func:`warm_init` is an alternative
-    that carries a converged fit forward to a larger count; the grid does not use
-    it, because a carried fit can inherit the local optimum the smaller fit
-    reached.
+    same count give the same starting point.
 
     Args:
         X: design matrix, ``(nJ, nA-1)``

@@ -8,8 +8,6 @@
   "_lambda_sigma_note": "lambda_sigma = 0.02 * nJ, i.e. nJ / 50, with nJ the number of judgments in the fitted subset. This was written as 0.05 when the file was first created, which is a different prior by a factor of 2.5: 1/50 = 0.02, and 0.05 would be nJ/20. The mistake was caught because step7_analyze.py stopped reproducing the case study's recorded output: at 0.05 the corpus pBIC curve put its minimum at K=3 instead of the recorded K=4. Section 2.4 requires lambda_sigma > 2 for the prior mode to exist; with nJ = 5401 this is 108.02.",
   "prior_mode_phi0": "data",
   "_prior_mode_phi0_note": "Scale parameter of the inverse-gamma prior on the dispersion, not a quantity the model estimates. 'data' uses mop.inference.prior_mode_phi0(X, y), the pooled residual scale of the fitted subset, which is what the case study uses. The simulation passes its design dispersion (0.05) explicitly, because there the pooled residual measures the between-component variance rather than the within-component scale the prior is meant to describe.",
-  "min_weight_share": 0.05,
-  "_min_weight_share_note": "floor on a component's share when warm-starting from P-1 to P components, so a component does not begin the next round at a weight the M-step will not move",
   "max_components": 9,
   "_max_components_note": "computational search limit, applied together with the ordinal bound: the grid stops at min(A!, max_components), so a problem with A = 2 alternatives is searched to 2 components and one with A = 4 to 9. A! is the number of strict preference orderings; beyond it at least two components share an ordering by the pigeonhole principle.",
   "selection_criterion": "pBIC",
