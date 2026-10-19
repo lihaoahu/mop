@@ -76,7 +76,9 @@ def comparisons2regression(
         d: 决策主体ID数组
     
     Raises:
-        ValueError: 当决策主体数量与链接函数数量不一致时
+        ValueError: 当决策主体数量与链接函数数量不一致时; 或当某个判断无法变换,
+            或变换后不是有限值时(此前这类判断会被静默记为 0.0, 那是一个合法的
+            观测值, 会把坏数据变成结论)
     """
     if nA is None:
         all_ids = set()
@@ -112,12 +114,18 @@ def comparisons2regression(
         link_func = link_functions[agent_to_idx[pc.agent_id]]
 
         try:
-            y_val = link_func(judgment)
-            if np.isnan(y_val) or np.isinf(y_val):
-                y[k] = 0.0
-            else:
-                y[k] = y_val
-        except Exception:
-            y[k] = 0.0
+            y_val = float(link_func(judgment))
+        except Exception as exc:
+            raise ValueError(
+                f"judgment {k} of comparison ({pc.former_id}, {pc.latter_id}) could not be "
+                f"transformed: {judgment!r} raised {type(exc).__name__}: {exc}"
+            ) from exc
+        if not np.isfinite(y_val):
+            raise ValueError(
+                f"judgment {k} of comparison ({pc.former_id}, {pc.latter_id}) transforms to "
+                f"{y_val}; a non-finite response is not a valid observation. Clip the judgment "
+                f"before the link function or remove the comparison."
+            )
+        y[k] = y_val
 
     return X[:, :nA - 1], y, d

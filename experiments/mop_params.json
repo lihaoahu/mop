@@ -1,5 +1,5 @@
 {
-  "_note": "Single source of truth for the MoP fitting parameters used by every experiment. Before this file existed the same values were copied into four scripts (step7_analyze, step8_balance, simulation/step1, simulation/step4, simulation/_baselines) and the config.json files only documented them, so a change to one copy would silently disagree with the others. Scripts now load this file through experiments/_mop_params.py and none of them may hard-code these values.",
+  "_note": "Single source of truth for the MoP fitting parameters used by every experiment. Before this file existed the same values were copied into five scripts (step7_analyze, simulation/step1, simulation/step4, simulation/_baselines, and the case-study balance script since removed) and the config.json files only documented them, so a change to one copy would silently disagree with the others. Scripts now load this file through experiments/_mop_params.py and none of them may hard-code these values.",
 
   "lambda_u": 1e-6,
   "_lambda_u_note": "ridge on the utilities; small enough not to shrink them",

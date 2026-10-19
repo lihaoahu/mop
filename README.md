@@ -20,9 +20,7 @@ experiments/
         mop_results.json      # SUPERSEDED: the 6-11 artefact, lambda_u=0.1, lambda_pi=30,
                               # n=5408; no code reads it (_common and step7_analyze
                               # both import the path constant and neither uses it)
-        balance_pooled_results.json  # dimension-balanced bootstrap
         step7_analyze.py      # MoP fitting + model selection, all subsets
-        step8_balance.py      # dimension-balanced bootstrap
         _gen_tables.py        # LaTeX for Tables 3, 5, 6 and 8
         _plot_pbic.py         # pBIC against P (figure)
         _plot_dim_distribution.py    # dimension share donut (figure)
@@ -49,10 +47,13 @@ is the oracle at work (step5's own docstring says so). Recomputing the paper's
 holdout numbers from step2's file gives different values, which is why the file
 is marked rather than merely unused.
 
-Two other files here are kept for the record and are read by nothing:
-`balance_results.json`, superseded by `balance_pooled_results.json`, and
-`regenwetter_newinit.txt` at the repository root, the log of an external
-validation removed in 73466ff.
+The dimension-balanced bootstrap is gone, together with its script and its two result
+files. The manuscript stopped reporting it: the controlled simulations establish
+recovery, so a resampling stability check of the case-study count answered a question
+the simulations already answer. One file here is still kept for the record and read by
+nothing -- `mop_results.json`, the 6-11 artefact described above -- and
+`regenwetter_newinit.txt` at the repository root is the log of an external validation
+removed in 73466ff.
 
 ## Parameterisation
 
@@ -93,7 +94,6 @@ output and writes UTF-16, so the numbers are the same but the file is not.
 
 ```bash
 uv run python experiments/case_study/step7_analyze.py       # fits, all subsets
-uv run python experiments/case_study/step8_balance.py --n-bootstrap 100
 uv run python experiments/case_study/_plot_pbic.py          # pBIC figure
 uv run python experiments/case_study/_plot_dim_distribution.py
 uv run python experiments/case_study/_gen_tables.py --json case_study_tables.json
@@ -107,11 +107,7 @@ computed a second time; the committed `analysis_output.txt` is that capture.
 `_gen_tables.py` emits the same fits as LaTeX (Tables 3, 5, 6 and 8), reading
 `run_mop` from `step7_analyze.py`, and caches them in `case_study_tables.json`.
 
-`step8_balance.py` takes about two minutes at 100 replications on the machine it
-was measured on, and its
-`--n-bootstrap` default is 50: the paper reports 100, so the flag is not
-optional. The two plotting scripts read the same fits and write into
-`manuscript/figures/`.
+The two plotting scripts read the same fits and write into `manuscript/figures/`.
 
 ### Controlled simulations (Section 3.1.1)
 

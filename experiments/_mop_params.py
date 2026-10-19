@@ -4,7 +4,7 @@ Why this module exists
 ----------------------
 The same five values were once copied into four experiment scripts --
 
-    step7_analyze.py, step8_balance.py, simulation/step1_simulation.py,
+    step7_analyze.py, simulation/step1_simulation.py,
     simulation/step4_revelatory.py, simulation/_baselines.py
 
 each carrying its own ``lu = 1e-6; lpi = 1; ls = nJ / 50``, and the two

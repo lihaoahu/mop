@@ -105,7 +105,7 @@
     "canonical_types": ["纯电", "插混", "增程", "燃油"],
 
     "mop": {
-        "_note": "the values step7_analyze.py and step8_balance.py actually use; nJ is the number of comparisons in the subset being fitted",
+        "_note": "the values step7_analyze.py actually uses; nJ is the number of comparisons in the subset being fitted",
         "lambda_u": "1e-6",
         "lambda_pi": "1",
         "lambda_sigma": "nJ / 50",
