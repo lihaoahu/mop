@@ -18,7 +18,7 @@ judgment `k` is
 | protocol | log-likelihood contribution | `d²L/dφ²` |
 |---|---|---|
 | binomial | `omega_k [m_k eta_k − n_k log(1+exp eta_k)]` | **`0`** |
-| Gaussian | `−0.5 log(2 pi phi) − 0.5 omega_k (y_k − eta_k)² / phi` | **`−omega_k / phi²`** |
+| Gaussian | `−0.5 log(2 pi phi) − 0.5 omega_k (y_k − eta_k)² / phi` | **`1/(2 phi²) − omega_k (y_k − eta_k)² / phi³`**, negative at the maximum |
 
 The first has no `phi` in it at all under Section 2.3, so its second derivative is
 identically zero: every value of `phi` scores the same, there is no peak, and no amount

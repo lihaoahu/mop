@@ -419,12 +419,29 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
     # worst-explained judgments, the second on the two tails of the residual -- and on opposing
     # preference states the first can start a component between the states and collapse. The
     # fit with the higher penalized log-posterior is kept, so this can only help, never hurt.
-    if u_init is not None and mp_init is not None:
-        starts = [(np.atleast_2d(np.asarray(u_init, dtype=np.float64)),
-                   np.asarray(mp_init, dtype=np.float64))]
-        nP = starts[0][0].shape[0]
+    if u_init is not None:
+        u_start = np.atleast_2d(np.asarray(u_init, dtype=np.float64))
+        if u_start.shape[0] != nP:
+            raise ValueError(
+                f"u_init has {u_start.shape[0]} components but nP={nP}; pass starts for "
+                f"{nP} components, or set nP to match")
+        if mp_init is None:
+            mp_start = np.full(nP, 1.0 / nP)
+        else:
+            mp_start = np.asarray(mp_init, dtype=np.float64).ravel()
+            if mp_start.size != nP:
+                raise ValueError(
+                    f"mp_init has {mp_start.size} entries but nP={nP}")
+            if np.any(mp_start < 0) or not np.isclose(mp_start.sum(), 1.0, atol=1e-8):
+                raise ValueError("mp_init must be non-negative and sum to one")
+        starts = [(u_start, mp_start)]
     else:
         starts = [_seed_winloss(X, y, nP, omega_eff, lam_u_arr[0], u_bar_arr[0])]
+        if mp_init is not None:
+            mp_start = np.asarray(mp_init, dtype=np.float64).ravel()
+            if mp_start.size != nP:
+                raise ValueError(f"mp_init has {mp_start.size} entries but nP={nP}")
+            starts = [(starts[0][0], mp_start)]
         if nP > 1:
             starts.append(_sign_split_seed(X, y, nP, omega_eff, lam_u_arr[0], u_bar_arr[0]))
 
@@ -504,9 +521,13 @@ def pbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None):
 
     ``-2`` times the penalized log-posterior plus ``log(n_eff) * df``, with
     ``df = (A-1) P + 2P - 1`` counting every free utility, the mixture weights
-    (``P - 1``) and the ``P`` structural inconsistencies. Both the criterion and
-    the degrees of freedom are the ones :func:`mop.inference.pbic` uses, so a
-    candidate chosen here is chosen on the same scale as a Gaussian candidate.
+    (``P - 1``) and the ``P`` structural inconsistencies. ``n_eff`` is the number
+    of Bernoulli trials behind the judgments, ``sum_k omega_k``: with ``n_k``
+    trials on judgment ``k`` the data are ``sum_k n_k`` trials, not ``nJ``
+    judgments. For binary data, where ``n_k = 1``, this is ``nJ`` and the
+    criterion is on the same scale as :func:`mop.inference.pbic`; for weighted
+    data the two families count different things, and the Gaussian path keeps its
+    own convention of ``nJ`` after normalising the weights to mean one.
 
     ``lambda_u`` and ``lambda_pi`` default to the values :func:`fit_winloss`
     defaults to. They must be the same values the model was fitted with: the

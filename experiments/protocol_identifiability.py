@@ -30,8 +30,9 @@ in `phi`. At fixed parameters the log-likelihood contribution of judgment `k` is
 
 The first is LINEAR in `phi`, so its second derivative with respect to `phi` is exactly
 zero: every value of `phi` scores identically, there is nothing to maximise, and `phi`
-carries no information. The second has second derivative `-omega_k / phi^2`, strictly
-negative, so it has a peak and `phi` is set by the data.
+carries no information. The second has second derivative
+`1/(2 phi^2) - omega_k (y_k - eta_k)^2 / phi^3`, negative at the maximum, so it has a peak and
+`phi` is set by the data.
 
 So the test is the curvature, `d2 L / d phi2`:
     ~ 0        not identified
