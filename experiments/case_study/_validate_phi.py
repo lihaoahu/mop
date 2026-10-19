@@ -13,11 +13,11 @@ A fourth and fifth check used to run here -- the dispersion's robustness under a
 priors, and the stability of the selected component count under resampling. Both were part
 of the phi comparison; that analysis is finished and its conclusions are in the manuscript
 and in PHI_IDENTIFICATION.md, so the scripts that produced them were removed rather than
-left to be rerun for no reason. The resampling it reported was superseded by
-`_bootstrap_via_mop.py`, which does the same thing through the paper's own fitting function
-and is what the Limitations paragraph cites.
+left to be rerun for no reason. The resampling study was removed from the manuscript
+as well: the controlled simulations establish recovery, so a resampling stability check
+of the case-study count answered a question the simulations already answer.
 
-Run: uv run python experiments/case_study/_validate_phi.py [--skip-bootstrap]
+Run: uv run python experiments/case_study/_validate_phi.py
 """
 from __future__ import annotations
 

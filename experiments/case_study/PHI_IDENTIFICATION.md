@@ -175,14 +175,17 @@ experiment directory look larger than the paper's evidence:
 
   * `_phi_robustness.py` (the phi-hat table under three priors, above),
   * `_phi_summary.py`,
-  * `_bootstrap_pbic.py` (superseded by `_bootstrap_via_mop.py`, which does the same
-    thing through the paper's own fitting function and is what the Limitations
-    paragraph cites),
+  * `_bootstrap_pbic.py` and `_bootstrap_via_mop.py`, the resampling studies of the
+    selected component count. The manuscript stopped reporting them: the controlled
+    simulations establish the recovery, so a resampling stability check on the case
+    study was answering a question the simulations already answer, and it was removed
+    from the paper along with the scripts.
   * `_selection_facts.py` and `_pbic_curve.py` (superseded by
     `_specification_sensitivity.py` and `selection.py`),
   * `_diag_policy_p1.py` and `_diag_step7_params.py`, which diagnosed problems that are
     now fixed.
 
 The tables above are kept as the record of what was found at the time; the numbers the
-manuscript quotes come from `_specification_sensitivity.py`, `_bootstrap_via_mop.py`,
-`protocol_identifiability.py` and `phi_recovery.py`, all of which remain.
+manuscript quotes come from `_specification_sensitivity.py`, `protocol_identifiability.py`
+and `phi_recovery.py`, all of which remain, and from `simulation/step6_binomial.py`, which
+supplies the binomial-protocol results.
