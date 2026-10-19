@@ -7,9 +7,9 @@
   "binomial_curvature_max_abs": 0.0,
   "binomial_linear_in_phi": true,
   "gaussian_curvature": {
-    "0.5": -432080.0,
-    "1.0": -108020.0,
-    "2.0": -27005.0
+    "0.5": -10802.0,
+    "1.0": -2700.5,
+    "2.0": -675.125
   },
   "gaussian_profile": {
     "0.4": -13982.547840919295,

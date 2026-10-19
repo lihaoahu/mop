@@ -83,14 +83,26 @@ def binomial_curvature(omega):
     return np.zeros_like(np.asarray(omega, dtype=float))
 
 
-def gaussian_curvature(omega, phi):
-    """d2/dphi2 of the Gaussian log-likelihood at fixed residuals: ``-omega/phi^2``.
+def gaussian_curvature(omega, phi, r2=None):
+    """d2/dphi2 of the Gaussian log-likelihood: ``1/(2 phi^2) - omega r^2 / phi^3``.
 
-    Every judgment contributes ``-0.5 log(2 pi phi) - 0.5 omega_k r_k^2 / phi``, whose
-    second derivative in `phi` is ``-omega_k / phi^2`` regardless of `r_k`. Strictly
-    negative, so the profile has a peak.
+    Differentiating ``-0.5 log(2 pi phi) - 0.5 omega_k r_k^2 / phi`` twice in phi gives
+
+        d2L/dphi2 = 1/(2 phi^2) - omega_k r_k^2 / phi^3,
+
+    which does depend on the residual: the log term contributes the positive 1/(2 phi^2)
+    and cannot be dropped, as an earlier version of this function did. With ``r2=None``
+    the residuals are taken at the profile's maximum, ``omega_k r_k^2 = phi``, where the
+    per-judgment curvature is ``-1/(2 phi^2)`` and the total is ``-nJ/(2 phi^2)``. That
+    is the value that matters for identification: the likelihood is locally concave at
+    its peak. Far from it the same expression can be positive, which is why the claim is
+    about curvature at the maximum rather than everywhere.
     """
-    return -np.asarray(omega, dtype=float) / np.asarray(phi, dtype=float) ** 2
+    omega = np.asarray(omega, dtype=float)
+    phi = np.asarray(phi, dtype=float)
+    if r2 is None:
+        r2 = phi / omega
+    return 0.5 / phi ** 2 - omega * np.asarray(r2, dtype=float) / phi ** 3
 
 
 def main():
@@ -131,8 +143,9 @@ def main():
         g_curv = gaussian_curvature(omega, phi)
         print(f"   Gaussian  d2L/dphi2 at phi={phi:.2f} : "
               f"per-judgment {g_curv[0]:+.2f}, total {g_curv.sum():+.1f}")
-    print("   -> strictly negative: a genuine maximum exists and phi is set by the")
-    print("      data. Note it does not depend on the residuals, only on phi.")
+    print("   -> negative at the peak (where omega r^2 = phi), so a genuine maximum")
+    print("      exists and phi is set by the data; the value does depend on the")
+    print("      residuals away from the peak, and the log term is part of it.")
 
     print()
     print("   The two are on the same footing -- a second derivative in the same")
@@ -185,7 +198,7 @@ def main():
     print("Conclusion: the binomial protocol's dispersion is not identified -- the")
     print("likelihood is linear in phi, so no data can pin it and Section 2.3 is right")
     print("to fix it at one. The Gaussian protocol's dispersion is identified, with a")
-    print("strictly negative curvature and a profile that moves. The separation the")
+    print("negative curvature at its maximum and a profile that moves. The separation")
     print("paper claims is therefore conditional on the protocol, and this is the")
     print("evidence for that condition.")
 
