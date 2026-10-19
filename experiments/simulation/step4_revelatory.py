@@ -76,10 +76,30 @@ def fit_mop(pairs, nA, max_K=None):
                 n_components=k)
             kw = {"u_init": u_init, "sigma2_init": sigma2_init, "mp_init": mp_init}
 
+        # Chain start plus independent random starts, keeping a start only when it lowers the
+        # criterion by more than one unit (see step7_analyze._fit_with_restarts: the chain alone
+        # stranded the refueling and range fits in local optima).
+        rng = np.random.default_rng(1000 * k + nJ)
+        s2 = float(inference.prior_mode_phi0(X, y))
         result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, **kw)
         bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls, lambda_pi=lpi)
         ll = inference.log_likelihood_from_pc(pcv, result, link_fns)
-
+        best_restart = None
+        for _ in range(4):
+            u0 = rng.normal(0.0, 1.0, (k, X.shape[1]))
+            m0 = rng.dirichlet(np.ones(k))
+            try:
+                r2 = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi,
+                                   lambda_sigma=ls, u_init=u0,
+                                   sigma2_init=np.full(k, s2), mp_init=m0)
+                b2 = inference.pbic(pcv, r2, link_fns, lambda_u=lu, lambda_sigma=ls,
+                                    lambda_pi=lpi)
+            except Exception:
+                continue
+            if best_restart is None or b2 < best_restart[0]:
+                best_restart = (b2, r2, inference.log_likelihood_from_pc(pcv, r2, link_fns))
+        if best_restart is not None and best_restart[0] < bic_val - 1.0:
+            bic_val, result, ll = best_restart
         models[k] = {"pis": result.mixture_probabilities.copy(),
                       "ws": np.array([pr.priority_vector for pr in result.priorities]),
                       "sigma2": np.array([pr.inconsistency_level for pr in result.priorities]),
