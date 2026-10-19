@@ -8,7 +8,9 @@ pairwise comparison data.
 ```
 src/mop/                      # Core library
     mixture_of_priorities.py  # Model definition, Priority, expected_utility
-    inference.py              # EM algorithm, pBIC model selection
+    inference.py              # closed-form EM for the Gaussian variants, pBIC
+    general_fit.py            # direct numerical MAP, for any observation family
+    winloss.py                # binomial family: EM with a numerically solved M-step
     pairwise_comparison.py    # Data representation, design matrix
     initialization.py         # K-Ridge seeding, and the GLM/IRLS variant
     decision.py               # Decision-theoretic ranking extraction
@@ -35,6 +37,7 @@ experiments/
 
 tests/
     audit_parameterisation.py # verifies every distribution convention in use
+    check_general_fit.py      # numerical route vs closed-form EM, on both families
 ```
 
 `step2_holdout.py` writes `holdout_results.json`. Its MoP mean absolute error is

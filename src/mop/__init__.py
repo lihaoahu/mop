@@ -12,6 +12,12 @@ from .winloss import (
     pbic as pbic_winloss,
     log_likelihood_from_pc as log_likelihood_winloss_from_pc,
 )
+from .general_fit import (
+    BinomialResponse,
+    GaussianResponse,
+    fit_map,
+    pbic_map,
+)
 from .mixture_of_priorities import (
     MixtureOfPriorities,
     Priority,

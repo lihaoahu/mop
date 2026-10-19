@@ -24,13 +24,14 @@ empirical support outside the Gaussian variants. This experiment supplies it.
 
 The library this uses
 ----------------------
-``mop.winloss.fit_winloss`` used to rescale ``omega`` to mean one and document the fit as
-invariant to that scale. For a model whose dispersion is free the rescaling is absorbed by phi;
-for the win/loss family phi is fixed at one, so it is not, and the responsibilities soften with the
-scale -- (0, 1) to (0.28, 0.72) on a clear judgment at 30 trials -- so a repeated-comparison fit
-collapsed to a single component. That is fixed in the library: omega is used as given, pBIC counts
-Bernoulli trials rather than judgments, and the EM now starts from both the deviance seeding and a
-sign-split seeding and keeps the better fit. This experiment calls the library directly.
+The binomial protocol is fitted by ``mop.general_fit.fit_map``, the general numerical MAP route:
+the penalised log-posterior is maximised over the utilities and the mixture weights at once by
+L-BFGS-B with analytic gradients, which is the route the manuscript describes for every family
+whose likelihood does not factor into closed-form updates. The Gaussian variants keep their
+closed-form EM (``mop.inference.mop``), and the two routes are checked against each other on
+Gaussian data in ``tests/check_general_fit.py``. ``mop.winloss.fit_winloss`` remains as the
+EM-with-numerical-M-step implementation for callers that want it; its own docstring records the
+omega-rescaling bug that made repeated-comparison fits collapse before it was fixed.
 
 Usage:
     uv run python experiments/simulation/step6_binomial.py
@@ -50,7 +51,7 @@ from scipy.optimize import minimize
 from scipy.special import betaln, expit, gammaln, logsumexp
 
 from mop.pairwise_comparison import PairwiseComparison
-from mop.winloss import fit_winloss, pbic
+from mop.general_fit import BinomialResponse, fit_map, pbic_map
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import lambda_pi, lambda_u, max_components          # noqa: E402
@@ -125,38 +126,9 @@ def generate(pairs, rng, condition="mixture"):
 
 # ── the binomial mixture, from the library ───────────────────────────────────────────────────
 
-def seed_starts(X, y, n, nP, n_starts=4):
-    """Starting points for the mixture: the pooled/sign-split seeds plus jittered copies.
-
-    ``fit_winloss`` seeds itself and runs one EM from its own start plus the sign-split one.
-    On opposing preference states that is sometimes not enough to reach the best mode, so the
-    same restart policy the paper's selection procedure uses is applied here: several starts,
-    keep the fit with the highest penalized log-posterior.
-    """
-    from mop.winloss import _fit_utility_logistic
-
-    u0 = _fit_utility_logistic(X, y, n, np.zeros(X.shape[1]), lambda_u)
-    resid = y - expit(X @ u0)
-    tails = [u0]
-    for mask in (resid > 0, resid < 0):
-        w = mask.astype(float)
-        tails.append(_fit_utility_logistic(X, y, w * n, np.zeros(X.shape[1]), lambda_u)
-                     if w.sum() > X.shape[1] + 2 else u0 + 0.1)
-    u_init = np.vstack((tails * ((nP // len(tails)) + 1))[:nP])
-    rng = np.random.default_rng(4321 + nP)
-    starts = [(u_init.copy(), np.full(nP, 1.0 / nP))]
-    for _ in range(n_starts - 1):
-        starts.append((u_init + rng.normal(0, 0.5, u_init.shape), np.full(nP, 1.0 / nP)))
-    return starts
-
-
-def fit_best(pc, X, y, n, nP):
-    """Best of the requested starts, by penalized log-posterior."""
-    n_starts = 1 if nP == 1 else 4
-    fits = [fit_winloss(pc, nP, lambda_u=lambda_u, lambda_pi=lambda_pi, omega=n,
-                        u_init=u, mp_init=mp)
-            for u, mp in seed_starts(X, y, n, nP, n_starts)]
-    return max(fits, key=lambda m: m.penalized_log_posterior)
+def fit_best(pc, n, nP):
+    """Fit at ``nP`` with the general numerical MAP optimiser."""
+    return fit_map(pc, BinomialResponse(), nP, omega=n)
 
 
 def model_logratios(model):
@@ -218,9 +190,9 @@ def one_replicate(rng, condition="mixture"):
 
     models = {}
     for nP in range(1, min(max_components, A) + 1):
-        models[nP] = fit_best(pc_tr, X[tr], y[tr], n[tr], nP)
-    criteria = {nP: pbic(pc_tr, models[nP], lambda_u=lambda_u, lambda_pi=lambda_pi,
-                         omega=n[tr]) for nP in models}
+        models[nP] = fit_best(pc_tr, n[tr], nP)
+    criteria = {nP: pbic_map(pc_tr, models[nP], BinomialResponse(), omega=n[tr])
+                for nP in models}
     p_hat = min(criteria, key=criteria.get)
 
     cos = None
