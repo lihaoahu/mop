@@ -195,7 +195,10 @@ def _pooled_u(X, y, omega, response, lambda_u, u_bar, weight=None):
     if weight is not None:
         omega = omega * np.asarray(weight, dtype=float)
     if isinstance(response, GaussianResponse):
-        w = omega / np.maximum(omega, 1.0)            # same weights, unit scale for the solve
+        # Var = phi / omega, so the weighted least-squares start uses omega as the weights.
+        # Dividing by max(omega, 1) made every omega >= 1 a weight of one, which silently
+        # dropped the weighting from the start.
+        w = omega
         XtW = X.T * w
         return np.linalg.solve(XtW @ X + lambda_u * np.eye(A1), XtW @ (y - X @ u_bar)) + u_bar
 
@@ -303,6 +306,11 @@ def fit_map(pcvector, response, nP, lambda_u=1e-6, lambda_pi=1.0, lambda_sigma=N
         pi0 = np.full(nP, 1.0 / nP) if pi_init is None else np.asarray(pi_init, dtype=np.float64).ravel()
         if pi0.size != nP:
             raise ValueError(f"pi_init has {pi0.size} entries but nP={nP}")
+        if np.any(pi0 < 0) or not np.isclose(pi0.sum(), 1.0, atol=1e-8):
+            raise ValueError("pi_init must be non-negative and sum to one")
+        if phi_free_init := (response.phi_free and phi_init is not None):
+            if np.ndim(phi_init) != 0:
+                raise ValueError("phi_init must be a scalar")
         phi0 = np.full(nP, 1.0 if not response.phi_free
                         else (1.0 if phi_init is None else float(phi_init)))
         starts = [(u0, pi0, phi0)]
