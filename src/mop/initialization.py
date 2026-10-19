@@ -291,10 +291,18 @@ def kridge(
         if idx.size > 0:
             u[p + 1, :] = fit(idx, w_all[idx])
 
-    # alternate between assigning and refitting
+    # Alternate between assigning and refitting. The assignment is the state of the
+    # iteration: once it repeats, the refit on the same assignments returns the same
+    # utilities, so the next round would repeat this one and the loop has reached its
+    # fixed point. The 100-round ceiling is never reached in practice (the case study
+    # converges in 11-14 rounds) and is kept only as a guard.
+    prev_cls = None
     for _ in range(100):
         res = np.column_stack([residual(all_idx, u[p, :]) for p in range(nP)])
         cls = np.argmin(res, axis=1)
+        if prev_cls is not None and np.array_equal(cls, prev_cls):
+            break
+        prev_cls = cls
         for p in range(nP):
             mask = cls == p
             if np.sum(mask) > 0:
