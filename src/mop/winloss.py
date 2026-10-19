@@ -220,6 +220,31 @@ def _seed_winloss(X, y, nP, omega, lambda_u, u_bar):
     return u, np.full(nP, 1.0 / nP)
 
 
+def _sign_split_seed(X, y, nP, omega, lambda_u, u_bar):
+    """Seed ``nP`` components by the sign of each judgment's residual under the pooled fit.
+
+    :func:`_seed_winloss` places the extra component on the judgments the components so far
+    explain worst, but "worst" is the deviance, which has both tails. With two opposing
+    preference states the two tails are different states, so a component fitted to their union
+    points at neither and the EM can collapse back to one. Splitting the residual by sign
+    separates the tails, which is the configuration two opposing states actually produce.
+    """
+    nJ, nA_minus_1 = X.shape
+    omega = np.asarray(omega, dtype=np.float64)
+
+    u0 = _fit_utility_logistic(X, y, omega, u_bar, lambda_u)
+    resid = y - expit(X @ u0)
+    seeds = [u0]
+    for mask in (resid > 0, resid < 0):
+        w = mask.astype(np.float64)
+        if w.sum() > nA_minus_1 + 2:
+            seeds.append(_fit_utility_logistic(X, y, w * omega, u_bar, lambda_u))
+        else:
+            seeds.append(u0 + 0.1)
+    u = np.vstack((seeds * ((nP // len(seeds)) + 1))[:nP])
+    return u, np.full(nP, 1.0 / nP)
+
+
 def _mixture_weights(gkc, omega, lambda_pi):
     """The Dirichlet-mode update of ``eq:pi_general``.
 
@@ -330,10 +355,14 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
                 f"omega 长度({omega_eff.size})与判断数({nJ})不一致")
         if np.any(omega_eff <= 0):
             raise ValueError("omega 必须为正")
-    # Normalised to mean one, as inference.mop does: the fit is invariant to the
-    # scale of omega, and the normalisation keeps lambda_u comparable between
-    # weighted and unweighted runs.
-    omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
+    # omega is used as given, NOT rescaled to mean one. Rescaling is invariant for
+    # a model whose dispersion is free, because phi absorbs the scale. Here phi is
+    # fixed at one, so the likelihood scale is part of the model: rescaling omega
+    # multiplies the likelihood against a fixed prior, which softens the E-step's
+    # responsibilities. On a clear judgment the responsibilities were (0, 1) at
+    # omega = 30 and (0.28, 0.72) after rescaling, and a repeated-comparison fit
+    # collapsed to a single component. The observation weight n_k is the number of
+    # trials behind judgment k (eq:glm), and nothing licenses dividing it out.
 
     if np.any(y < 0.0) or np.any(y > 1.0):
         raise ValueError(
@@ -349,39 +378,50 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
         if u_bar_arr.ndim == 1:
             u_bar_arr = np.tile(u_bar_arr, (nP, 1))
 
-    # Initialisation. _seed_winloss is the seeding half of the Gaussian
-    # initialiser on the logit scale, so the two families start from the same kind
-    # of solution without paying for kridge's 100 refinement rounds.
+    def run_em(u_start, mp_start):
+        """One EM run from one starting point. Returns (u, mp, pll, n_iter, converged)."""
+        u, mp = u_start, mp_start
+        prev = None
+        n_iter = 0
+        converged = False
+        for n_iter in range(1, max_iter + 1):
+            g = e_gamma_winloss(X, y, u, mp, omega_eff)
+            u_new = m_step_winloss(X, y, g, u_bar_arr, lam_u_arr, omega=omega_eff,
+                                   u_init=u)
+            mp_new = _mixture_weights(g, omega_eff, lambda_pi)
+            pll_tp1 = penalized_log_posterior(X, y, u_new, mp_new, lam_u_arr,
+                                              lambda_pi, u_bar_arr, omega_eff)
+            if not np.isfinite(pll_tp1):
+                break
+            if verbose:
+                print(f"  iter {n_iter:5d}  penalized log-posterior {pll_tp1:.6f}")
+            u, mp = u_new, mp_new
+            # Same relative-change test and normalisation as inference.mop, so the two
+            # families stop on the same criterion.
+            if prev is not None and abs(pll_tp1 - prev) / (abs(pll_tp1) + 0.1) < tol:
+                converged = True
+                break
+            prev = pll_tp1
+        pll = prev if prev is not None else -np.inf
+        return u, mp, pll, n_iter, converged
+
+    # Initialisation. Two starting points are used whenever the caller does not supply one:
+    # the deviance-based seeding of _seed_winloss, and the sign-split seeding of
+    # _sign_split_seed. They differ in where the extra components start -- the first on the
+    # worst-explained judgments, the second on the two tails of the residual -- and on opposing
+    # preference states the first can start a component between the states and collapse. The
+    # fit with the higher penalized log-posterior is kept, so this can only help, never hurt.
     if u_init is not None and mp_init is not None:
-        u = np.atleast_2d(np.asarray(u_init, dtype=np.float64))
-        mp = np.asarray(mp_init, dtype=np.float64)
-        nP = u.shape[0]
+        starts = [(np.atleast_2d(np.asarray(u_init, dtype=np.float64)),
+                   np.asarray(mp_init, dtype=np.float64))]
+        nP = starts[0][0].shape[0]
     else:
-        u, mp = _seed_winloss(X, y, nP, omega_eff, lam_u_arr[0], u_bar_arr[0])
+        starts = [_seed_winloss(X, y, nP, omega_eff, lam_u_arr[0], u_bar_arr[0])]
+        if nP > 1:
+            starts.append(_sign_split_seed(X, y, nP, omega_eff, lam_u_arr[0], u_bar_arr[0]))
 
-    prev = None
-    n_iter = 0
-    converged = False
-    for n_iter in range(1, max_iter + 1):
-        g = e_gamma_winloss(X, y, u, mp, omega_eff)
-        u_new = m_step_winloss(X, y, g, u_bar_arr, lam_u_arr, omega=omega_eff,
-                               u_init=u)
-        mp_new = _mixture_weights(g, omega_eff, lambda_pi)
-
-        pll_tp1 = penalized_log_posterior(X, y, u_new, mp_new, lam_u_arr,
-                                          lambda_pi, u_bar_arr, omega_eff)
-        if not np.isfinite(pll_tp1):
-            break
-        if verbose:
-            print(f"  iter {n_iter:5d}  penalized log-posterior {pll_tp1:.6f}")
-
-        u, mp = u_new, mp_new
-        # Same relative-change test and normalisation as inference.mop, so the
-        # two families stop on the same criterion.
-        if prev is not None and abs(pll_tp1 - prev) / (abs(pll_tp1) + 0.1) < tol:
-            converged = True
-            break
-        prev = pll_tp1
+    results = [run_em(u_s, mp_s) for u_s, mp_s in starts]
+    u, mp, prev, n_iter, converged = max(results, key=lambda r: r[2])
 
     # Utilities to priority vectors, exactly as inference.mop converts them.
     u_clipped = np.clip(u, -50.0, 50.0)
@@ -463,7 +503,6 @@ def pbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None):
                 f"omega 长度({omega_eff.size})与判断数({X.shape[0]})不一致")
         if np.any(omega_eff <= 0):
             raise ValueError("omega 必须为正")
-        omega_eff = omega_eff * (X.shape[0] / float(np.sum(omega_eff)))
 
     u = np.array([np.log(model[p].priority_vector[:nA - 1]
                          / model[p].priority_vector[nA - 1])
@@ -471,6 +510,8 @@ def pbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None):
     pll = penalized_log_posterior(X, y, u, model.mixture_probabilities,
                                   lambda_u, lambda_pi, u_bar, omega_eff)
     df = (nA - 1) * nP + 2 * nP - 1
+    # n_eff counts Bernoulli trials, not judgments: n_k trials behind judgment k means the
+    # data are sum_k n_k trials. This is unchanged from before for binary data, where n_k = 1.
     return -2.0 * pll + np.log(float(np.sum(omega_eff))) * df
 
 
