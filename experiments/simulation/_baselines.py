@@ -17,14 +17,15 @@ from _mop_params import lambda_u, lambda_pi, lambda_sigma_for   # noqa: E402
 EPS = 1e-10
 
 
-def fit_single_k1(pairs, n_alternatives):
+def fit_single_k1(pairs, n_alternatives, s2=None):
     pcv, _, _ = _pairs_to_pcvector(pairs, link="logit")
     nJ = len(pcv)
     lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
-    # φ₀ comes from inference.prior_mode_phi0, which the fit applies itself;
-    # the copy that used to be computed here was never passed anywhere.
+    # s2 is the prior mode on the dispersion. None keeps the data-based value; the
+    # simulation passes its design value so the prior sits on the scale the data are
+    # generated on (see step1_simulation.fit_mop).
     result = inference.mop(pcv, [lambda s: logit(np.clip(s, EPS, 1 - EPS))], 1,
-                           lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls)
+                           lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls, s2=s2)
     return {"mop_result": result}
 
 

@@ -46,7 +46,7 @@ METHODS = ["MoP", "P=1"]
 # MoP fit
 # ═══════════════════════════════════════════════════════════════════
 
-def fit_mop(pairs, n_alternatives, max_K=None):
+def fit_mop(pairs, n_alternatives, max_K=None, s2=None):
     if max_K is None:
         max_K = max_components_for(n_alternatives)
 
@@ -61,7 +61,7 @@ def fit_mop(pairs, n_alternatives, max_K=None):
     X, y, _ = comparisons2regression(pcv, link_fns)
     nJ = len(pcv)
     lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
-    # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
+    # s2 is the prior mode on φ: None for the data-based value, a number to pin it.
 
     best_k, best_bic, best_result = None, np.inf, None
 
@@ -69,9 +69,9 @@ def fit_mop(pairs, n_alternatives, max_K=None):
         # K-Ridge from scratch at every candidate count; deterministic, no warm chain.
         u0, phi0, mp0 = kridge(X, y, k)
         result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls,
-                               u_init=u0, sigma2_init=phi0, mp_init=mp0)
+                               s2=s2, u_init=u0, sigma2_init=phi0, mp_init=mp0)
         bic_val = inference.pbic(pcv, result, link_fns, lambda_u=lu, lambda_sigma=ls,
-                                 lambda_pi=lpi)
+                                 lambda_pi=lpi, s2=s2)
         if bic_val < best_bic:
             best_bic = bic_val; best_k = k; best_result = result
 
@@ -94,16 +94,16 @@ def fit_mop(pairs, n_alternatives, max_K=None):
 # Evaluation
 # ═══════════════════════════════════════════════════════════════════
 
-def evaluate_one(method, pairs, n_alternatives, ground_truth):
+def evaluate_one(method, pairs, n_alternatives, ground_truth, s2=None):
     t0 = time.perf_counter()
     if method == "MoP":
-        state = fit_mop(pairs, n_alternatives)
+        state = fit_mop(pairs, n_alternatives, s2=s2)
         w_est = state["priorities"]
         pi_est = state["pis"]
         w_avg_est = state["weighted_priority"]
         k_est = state["k"]
     else:  # P=1
-        state = fit_single_k1(pairs, n_alternatives)
+        state = fit_single_k1(pairs, n_alternatives, s2=s2)
         w_est = get_priorities_single_k1(state)
         pi_est = np.array([1.0])
         w_avg_est = w_est[0]
@@ -159,7 +159,7 @@ def run_cancellation(trials):
             "w_true_avg": np.average(w_true_mat, axis=0, weights=pi),
         }
         for method in METHODS:
-            trial_results[method].append(evaluate_one(method, pairs, nA, gt))
+            trial_results[method].append(evaluate_one(method, pairs, nA, gt, s2=sigma2))
     agg = _aggregate(trial_results, replicate_1_seed=1000)
     agg.update(n_trials=trials, sigma2=sigma2, n_comparisons=n_comp)
     _print_agg(key, agg)
@@ -192,7 +192,7 @@ def run_general(trials):
                 "w_true_avg": np.average(w_true_mat, axis=0, weights=pi),
             }
             for method in METHODS:
-                trial_results[method].append(evaluate_one(method, pairs, nA, gt))
+                trial_results[method].append(evaluate_one(method, pairs, nA, gt, s2=sigma2))
         agg = _aggregate(trial_results, replicate_1_seed=3000 + K * 1000)
         agg.update(n_trials=trials, sigma2=sigma2, n_comparisons=n_comp, K_true=K)
         all_results[key] = agg
@@ -226,7 +226,7 @@ def run_noise(trials):
             "w_true_avg": w_true_mat[0],
         }
         for method in METHODS:
-            result = evaluate_one(method, pairs, nA, gt)
+            result = evaluate_one(method, pairs, nA, gt, s2=sigma2)
             trial_results[method].append(result)
             if method == "MoP":
                 mop_k_vals.append(result["k_est"])
