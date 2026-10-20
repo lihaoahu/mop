@@ -82,7 +82,11 @@ def run_mop(pairs, trace=None):
 
     prev = None
     models, bic_vals = {}, {}
-    for k in range(1, max_components_for(nA) + 1):
+    # nA is the column count of X, i.e. A - 1. The search cap is stated in terms of
+    # alternatives, so it must receive A. Passing nA capped the case study's grid at
+    # (A-1)! = 6 candidates while the paper reports a search over min(A!, 9) = 9 and
+    # the other experiments (step1/step4) already searched nine.
+    for k in range(1, max_components_for(nA + 1) + 1):
         result, bic_val = _fit_kridge(pcvector, link_functions, k, lu, lpi, ls, X, y)
         models[str(k)] = {**result.to_dict(), "bic": bic_val}
         bic_vals[k] = bic_val
