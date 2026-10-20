@@ -1,16 +1,8 @@
 """Emit the LaTeX tables of section 3.2 (case study).
 
-Every number comes from ``step7_analyze.run_mop``, so the tables and the
-running text quote the same fits and the same hyperparameters. The aggregate
-row is the expected utility defined in section 2 of the manuscript
-(``_common.expected_utility``), not a vote score.
-
 Usage:
     uv run python _gen_tables.py                   # print the LaTeX
     uv run python _gen_tables.py --json out.json   # also dump the raw numbers
-
-The four tables written are tab:pair_distribution, tab:mop_overall,
-tab:dimension_mop and tab:year_overall (Tables 3, 5, 6 and 8 of the EJOR build).
 """
 
 import argparse, json
@@ -22,7 +14,6 @@ from step7_analyze import load_pairs, run_mop
 ABBREV = {"纯电": "BEV", "插混": "PHEV", "增程": "REEV", "燃油": "ICEV"}
 LABELS = [ABBREV[t] for t in T]
 
-# a thousands separator that does not trip LaTeX's math-mode comma spacing
 def thousands(n):
     """5,401 -> 5{,}401 (int) or 18345.8 -> 18{,}345.8 (float, one decimal)."""
     s = f"{n:,.1f}" if isinstance(n, float) else f"{n:,}"
@@ -71,9 +62,6 @@ HEADER = "Component & BEV & PHEV & REEV & ICEV & $\\pi_p$ & $\\phi_p$ \\\\"
 
 
 def table_overall(blk):
-    # The count in the caption is read off the fit rather than written in, so a
-    # fit that selected a different number of components cannot leave the caption
-    # describing a mixture that is not in the table below it.
     n_comp = len(blk["components"])
     word = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five"}.get(n_comp, str(n_comp))
     lines = [

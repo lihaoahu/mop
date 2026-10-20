@@ -1,43 +1,4 @@
-"""Does freeing the structural inconsistency change how many states are selected?
-
-The question this answers
--------------------------
-The paper's claim is that intrinsic variability (carried by the mixture) and
-structural inconsistency (carried by phi_p) are separable, and that the second is
-identifiable for the Gaussian protocols. If that separation has no consequence,
-freeing phi_p changes nothing that matters and the paper has no methodological
-claim. If it does have a consequence, the number of preference states the analyst
-reports is different under the two parameterisations -- which is exactly what the
-case study's "four-component structure" rests on.
-
-So: fit the case-study ratio judgments twice, once with phi_p fixed at one and once
-with phi_p free, over the same grid of component counts, and compare the selected
-count.
-
-Method
-------
-Both fits use the paper's own EM (Section 2, `eq:pi_general` and the Gaussian
-M-step) and differ ONLY in whether phi_p is estimated. The same kridge/warm-start
-initialisation, the same priors on u and pi, the same numerical constants. The
-fixed-phi variant drops the phi terms from the penalized log-posterior, which is
-what setting phi_p = 1 means, rather than fixing phi at one through the prior --
-a fixed value must not carry a prior penalty it can no longer optimise against.
-
-The criterion is reported two ways, because the paper's penalized BIC adds the
-prior terms while an ordinary BIC does not, and a conclusion that depends on which
-one is used would not be worth having:
-
-  pBIC   -2 * penalized log-posterior + log(n) * df   (the paper's eq:pbic)
-  BIC    -2 * observed-data log-likelihood + log(n) * df
-
-df counts (A-1) utilities per component, P-1 mixture weights, and P dispersions
-when phi is free (0 when it is fixed), plus the protocol-specific parameters.
-
-Run:
-    uv run python experiments/case_study/step9_phi_identification.py
-    ... --dim cost          # one dimension
-    ... --grid 1 2 3        # a shorter grid
-"""
+"""Does freeing the structural inconsistency change how many states are selected?"""
 from __future__ import annotations
 
 import argparse
@@ -50,8 +11,6 @@ from scipy.special import logit
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-# experiments/ itself, where _mop_params.py lives: HERE is experiments/case_study,
-# so parents[0] is experiments/ and parents[1] would be revised/.
 sys.path.insert(0, str(HERE.parents[0]))
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
@@ -60,10 +19,6 @@ from mop.inference import prior_mode_phi0                             # noqa: E4
 from mop.initialization import kridge                                 # noqa: E402
 from mop.pairwise_comparison import comparisons2regression            # noqa: E402
 
-# The MoP fitting parameters live in experiments/mop_params.json. This module used to
-# read its own copy in phi_config.json, and the two disagreed on lambda_sigma by a
-# factor of 2.5 (0.05*nJ against the paper's nJ/50 = 0.02*nJ), which silently changed
-# every result here. The shared file is the only source now.
 import _mop_params as _MP                                             # noqa: E402
 
 LAMBDA_U = _MP.lambda_u
@@ -74,7 +29,6 @@ EPS = 1e-10
 CLIP = 50.0
 
 
-# ── data ─────────────────────────────────────────────────────────────────────
 
 def load_pairs(dim_name=None, year=None):
     """The case study's ratio judgments, exactly as step7_analyze loads them."""
@@ -94,7 +48,6 @@ def build_design(pairs):
     return np.asarray(X, dtype=float), np.asarray(y, dtype=float)
 
 
-# ── the EM, with phi_p either estimated or fixed ─────────────────────────────
 
 def _e_step(X, y, u, phi, pi):
     """Allocation posterior, `eq:e_gamma`."""
@@ -110,29 +63,11 @@ def _e_step(X, y, u, phi, pi):
 
 def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
                free_phi):
-    """Penalized log-posterior, the quantity pBIC penalizes (`eq:pbic`).
-
-    ``free_phi`` false evaluates the SAME objective at ``phi = 1``, keeping every
-    term a fixed value still has. That matters for more than tidiness:
-
-      * the dispersion phi_p is not a parameter of the fixed model, but the prior
-        on it does not vanish -- at phi = 1 it is a constant, ``f(1)``;
-      * keeping the constant makes the fixed model *literally* the restriction of
-        the free model to the face ``phi = 1``, so the two are nested and the free
-        maximiser is guaranteed to do at least as well;
-      * dropping the constant instead, which an earlier version did, broke that
-        nesting by about 33 units and made "the free fit must not do worse" a test
-        of nothing. `_audit_params.py` checks the identity exactly.
-
-    The normalising constant of the normal prior on u keeps its phi dependence in
-    the free model and is evaluated at phi = 1 in the fixed one, for the same
-    reason: it is a term of one objective, not a property of one parameterisation.
-    """
+    """Penalized log-posterior, the quantity pBIC penalizes (`eq:pbic`)."""
     from scipy.special import gammaln
     nJ, A1 = X.shape
     nP = u.shape[0]
-    # observed-data log-likelihood
-    means = X @ u.T                                    # (nJ, nP)
+    means = X @ u.T
     comp = (np.log(np.maximum(pi, EPS))[None, :]
             - 0.5 * np.log(2 * np.pi * phi)[None, :]
             - 0.5 * ((y[:, None] - means) ** 2) / phi[None, :])
@@ -141,11 +76,6 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
     total = ll
     a = (lam_sigma - 2.0) / 2.0
     b = lam_sigma * s2 / 2.0
-    # The noninformative limit lam_sigma -> 0 makes the Inverse-Gamma prior improper
-    # (alpha -> -1, so b -> 0 and log b -> -inf). Its normalising terms are then
-    # infinite constants that cancel from any comparison of two fits of the same
-    # model and would otherwise poison the arithmetic, so they are dropped when
-    # lam_sigma is zero. What remains is the same objective minus a constant.
     use_phi_prior = lam_sigma > 0.0
     lg_b = np.log(b) if use_phi_prior else 0.0
     for p in range(nP):
@@ -153,9 +83,6 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
         diff = u[p] - u_bar[p]
         total -= (lam_u / (2.0 * sp2)) * float(np.sum(diff ** 2))
         total -= (A1 / 2.0) * np.log(2.0 * np.pi * sp2 / lam_u)
-        # The Inverse-Gamma density on phi_p. Present in both models: in the free
-        # one it is a function of the parameter, in the fixed one it is the
-        # constant f(1).
         if use_phi_prior:
             total += a * lg_b - gammaln(a) - (a + 1.0) * np.log(sp2) - b / sp2
     total += (lam_pi - 1.0) * float(np.sum(np.log(np.maximum(pi, EPS))))
@@ -166,34 +93,13 @@ def _penalized(X, y, u, phi, pi, lam_u, lam_sigma, lam_pi, s2, u_bar,
 def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
         u_init=None, phi_init=None, pi_init=None, s2=None, u_bar=None,
         max_iter=5000, tol=1e-6, phi_fixed=None):
-    """EM for the Gaussian (ratio) variant, with phi_p estimated or fixed.
-
-    ``free_phi`` False pins every component's dispersion at one; ``phi_fixed`` pins
-    them all at a supplied value instead, which is what a profile over phi needs. The
-    two are separate arguments rather than one so that a call site cannot pin phi at
-    something other than one by accident while believing it is doing the phi = 1
-    comparison.
-    """
+    """EM for the Gaussian (ratio) variant, with phi_p estimated or fixed."""
     nJ, A1 = X.shape
     if s2 is None:
-        # Default to 1, NOT to prior_mode_phi0(X, y).
-        #
-        # This is the prior mode of phi, and fixing phi at one is itself a claim
-        # that one is the prior mode. Letting the free-phi run estimate phi0 from
-        # the data while the fixed-phi run uses the same number would be fine, but
-        # letting the two runs use DIFFERENT phi0 conflates two changes at once:
-        # the parameterisation and the prior. An earlier version of this script did
-        # exactly that -- the fixed run took s2 = var(y) while the free run took
-        # s2 = prior_mode_phi0 -- and the resulting comparison was not a comparison
-        # of the parameterisation at all. See PHI_IDENTIFICATION.md.
         s2 = 1.0
     if lam_sigma is None:
         lam_sigma = LAMBDA_SIGMA_OVER_N * float(nJ)
 
-    # u_bar is built against nP, and u_init can CHANGE nP below. So it is built after
-    # the initialisation block, not before. Building it first meant a call that supplied
-    # a u_init with a different number of rows indexed past the end of u_bar, which is
-    # what a warm start from another component count does.
 
     if u_init is None:
         u0, phi0, pi0 = kridge(X, y, nP)
@@ -228,12 +134,10 @@ def fit(X, y, nP, free_phi, lam_u=LAMBDA_U, lam_pi=LAMBDA_PI, lam_sigma=None,
         g = _e_step(X, y, u, phi, pi)
         sum_g = g.sum(axis=0)
 
-        # mixture weights, `eq:pi_general` (all omega_k = 1 for this protocol)
         pi = (sum_g + lam_pi - 1.0) / (nJ + lam_pi * nP - nP)
         pi = np.maximum(pi, 1e-10)
         pi = pi / pi.sum()
 
-        # utilities: the weighted ridge solve of the Gaussian M-step
         for p in range(nP):
             gp = g[:, p]
             XtWX = X.T @ (X * gp[:, None]) + lam_u * np.eye(A1)
@@ -278,7 +182,6 @@ def criteria(fitres, X, y, A, nP, free_phi):
             "loglik": fitres["ll"], "pll": fitres["pll"]}
 
 
-# ── comparison ───────────────────────────────────────────────────────────────
 
 def compare(pairs, label, grid, verbose=True, s2=1.0):
     X, y = build_design(pairs)
@@ -287,16 +190,11 @@ def compare(pairs, label, grid, verbose=True, s2=1.0):
     out = {"label": label, "n_judgments": int(nJ), "n_alternatives": int(A),
            "grid": list(grid), "fixed_phi": {}, "free_phi": {}}
 
-    # Fixed phi needs a warm start too, otherwise the comparison confounds the
-    # parameterisation with the initialisation. Each family is warm-started
-    # within itself, from the previous component count.
     for tag, free in (("fixed_phi", False), ("free_phi", True)):
         prev = None
         for k in grid:
             kw = {"s2": s2}
             if prev is not None:
-                # Seed the new component where the current mixture explains worst,
-                # the K-Ridge step, then keep the converged components.
                 from mop.initialization import seed_component
                 u_prev = prev["u"]
                 ui = np.vstack([u_prev, seed_component(X, y, u_prev)])
@@ -323,8 +221,6 @@ def compare(pairs, label, grid, verbose=True, s2=1.0):
         for crit in ("pBIC", "BIC"):
             vals = {int(k): v[crit] for k, v in out[tag].items()}
             out[f"{tag}_best_by_{crit}"] = int(min(vals, key=vals.get))
-    # The gap between the best and the runner-up, which is what decides whether the
-    # selection is a finding or a coin toss.
     for tag in ("fixed_phi", "free_phi"):
         for crit in ("pBIC", "BIC"):
             vals = sorted(v[crit] for v in out[tag].values())

@@ -1,23 +1,4 @@
-"""The two case-study numbers Section 3 states from a fit of its own, with a path.
-
-They were quoted in the manuscript without a script that produced them, which is
-why an audit could not trace them. Each function below reproduces one of them
-under the paper's specification (K-Ridge from scratch at every candidate,
-`prior_mode_phi0`, `lambda_sigma = nJ/50`), prints the value the text quotes, and
-returns it for `_paper_claims_check.json`.
-
-  1. Six named dimensions: the 5,238 dimension-labelled judgments less the 798 in
-     the catch-all Other, i.e. 4,440. Section 3.3 reports BEV's expected utility
-     on that subset as -0.050 against the ICEV benchmark.
-
-  2. Fixed versus free dispersion: Section 3.6 reports that with the dispersion
-     fixed at one the same criterion selects three components rather than four.
-     Both parameterisations receive the same prior mode, since fixing phi at one
-     is itself a claim about phi_0 (see PHI_IDENTIFICATION.md).
-
-Run:
-    uv run python experiments/case_study/_check_paper_claims.py
-"""
+"""The two case-study numbers Section 3 states from a fit of its own, with a path."""
 from __future__ import annotations
 
 import json
@@ -42,11 +23,7 @@ OUT = HERE / "_paper_claims_check.json"
 
 
 def load_pairs_with_dimension():
-    """The case study's judgments with their dimension label kept.
-
-    step7_analyze.load_pairs drops the label, which is what the six-dimension
-    subset needs, so the same filter is applied here and the label retained.
-    """
+    """The case study's judgments with their dimension label kept."""
     pairs = []
     with open(ENERGY_PAIRS, encoding="utf-8") as f:
         for line in f:
@@ -94,12 +71,7 @@ def fixed_vs_free_dispersion(grid=(1, 2, 3, 4, 5)):
 
 
 def degenerate_component():
-    """What the near-degenerate component of the four-component fit is made of.
-
-    Section 3.2 calls C2 near-degenerate and attributes it to a single judgment
-    scored at zero. This reports the hard assignments of every component and the
-    score range of each, so the sentence is checkable rather than asserted.
-    """
+    """What the near-degenerate component of the four-component fit is made of."""
     from scipy.special import logit
     from mop import inference
     from mop.pairwise_comparison import PairwiseComparison, comparisons2regression

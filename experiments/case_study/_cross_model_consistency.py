@@ -1,27 +1,5 @@
 """Cross-model consistency of the pairwise extraction (reviewer 2, R-06-02-02).
 
-Compares two extraction files in the schema of `energy_pairs.jsonl` and reports
-how far the second extraction agrees with the first:
-
-  * pair F1: over (former_type, latter_type, dimension) keys, with the scores of
-    repeated keys averaged, so a repeated judgment is one weighted entry rather
-    than an overwritten one;
-  * type-pair F1 and reversed directions: the same match collapsed to
-    (former_type, latter_type), plus how many pairs appear in the opposite
-    orientation in one of the two files;
-  * score agreement: mean absolute difference and Pearson r on the matched keys;
-  * dimension agreement: of the pairs that match on (former_type, latter_type),
-    the share that carry the same dimension label.
-
-Two uses. With a second extraction produced by another model, this is the
-cross-model check. With a re-extraction by the same model, it measures extraction
-stability. A file compared with itself is the self-test (`--self-test`).
-
-The second extraction must come from the same pipeline: same prompt and same
-json_object schema. The pipeline is not in this repository (only its rendered
-prompt is in the supplement), so the second run has to be produced where the
-pipeline lives and its output passed here.
-
 Usage:
     python _cross_model_consistency.py --second path/to/second_extraction.jsonl
     python _cross_model_consistency.py --second energy_pairs.jsonl --self-test
@@ -80,7 +58,6 @@ def compare(a, b):
     tb = {(f, l) for (f, l, _) in kb}
     matched = ka & kb
     reversed_dir = sum(1 for (f, l, _) in kb if (l, f) not in ta and (l, f) in ta)
-    # pairs whose type-level orientation is found only reversed
     reversed_dir = sum(1 for (l, f) in tb if (f, l) in ta and (l, f) not in ta)
     dim_ok = 0
     dim_checked = 0

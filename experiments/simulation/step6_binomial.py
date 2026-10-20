@@ -1,38 +1,5 @@
 """Step 6: the binomial protocol -- mixture of preferences versus one inconsistent preference.
 
-Why this experiment exists
---------------------------
-The manuscript claims that the two sources of variability occupy separate parameters, but that the
-separation is only recoverable where the likelihood leaves the dispersion free. On binary and
-repeated choices it does not: the variance is fixed by the response scale and no dispersion
-parameter exists, so structural inconsistency cannot be estimated separately from the mixture.
-What the data can and cannot decide is the question this experiment measures -- the answer is not
-observational equivalence, which is why the claim in the paper was narrowed to what holds.
-
-Until now that claim rested on the analytic second derivative in phi and on the Gaussian-side
-recovery study, and the third contribution -- one framework across three protocols -- had no
-empirical support outside the Gaussian variants. This experiment supplies it.
-
-  1. Recovery. Repeated binomial choices generated from a two-state mixture. A binomial mixture is
-     fitted for P = 1, ..., 4 and selected by pBIC: does the mixture recover the states and the
-     weights from binary data at all, given that phi is fixed?
-
-  2. Non-identification. The same data fitted by a beta-binomial single-preference model, which is
-     the competing explanation: one preference, executed with inconsistent precision. If the two
-     models predict held-out judgments equally well, the protocol cannot separate them, and the
-     manuscript's claim is measured rather than asserted.
-
-The library this uses
-----------------------
-The binomial protocol is fitted by ``mop.general_fit.fit_map``, the general numerical MAP route:
-the penalised log-posterior is maximised over the utilities and the mixture weights at once by
-L-BFGS-B with analytic gradients, which is the route the manuscript describes for every family
-whose likelihood does not factor into closed-form updates. The Gaussian variants keep their
-closed-form EM (``mop.inference.mop``), and the two routes are checked against each other on
-Gaussian data in ``tests/check_general_fit.py``. ``mop.winloss.fit_winloss`` remains as the
-EM-with-numerical-M-step implementation for callers that want it; its own docstring records the
-omega-rescaling bug that made repeated-comparison fits collapse before it was fixed.
-
 Usage:
     uv run python experiments/simulation/step6_binomial.py
     uv run python experiments/simulation/step6_binomial.py --reps 5      # smoke test
@@ -58,21 +25,17 @@ from _mop_params import lambda_pi, lambda_u, max_components          # noqa: E40
 from _common import cosine_similarity, priority_vector_from_logratios  # noqa: E402
 
 RESULTS = Path(__file__).resolve().parent / "binomial_results.json"
-A = 4                    # alternatives
-N_TRIALS = 30            # trials per repeated comparison
-N_COMPARISONS = 240      # judgments per replicate
+A = 4
+N_TRIALS = 30
+N_COMPARISONS = 240
 TEST_FRACTION = 0.30
 
-# Two preference states with opposite orderings, the binomial analogue of the cancellation
-# scenario: the aggregate ranks the alternatives in the middle and looks like indifference.
-# The separation is set so the two states are distinguishable at N_TRIALS = 30: the strongest
-# pair separates at p = 0.82 against 0.18, about six binomial standard errors.
 U_TRUE = np.array([
-    [1.50, 0.75, -0.75],     # state 1: a > b > c > d
-    [-1.50, -0.75, 0.75],    # state 2: d > c > b > a
+    [1.50, 0.75, -0.75],
+    [-1.50, -0.75, 0.75],
 ])
 PI_TRUE = np.array([0.5, 0.5])
-RHO_BETA_BINOM = 0.30     # intra-class correlation of the reverse condition
+RHO_BETA_BINOM = 0.30
 
 
 def all_pairs(n_alt):
@@ -94,12 +57,7 @@ def _eta(X, u):
 
 
 def generate(pairs, rng, condition="mixture"):
-    """Either a two-state mixture, or one preference executed with inconsistent precision.
-
-    The second condition is the competing explanation and is what makes the comparison a test
-    rather than an illustration: if the beta-binomial wins on data it generated, the two models
-    are distinguishable, and the mixture's count on such data is an upper bound.
-    """
+    """Either a two-state mixture, or one preference executed with inconsistent precision."""
     pc, rows, judgments = [], [], []
     per_pair = N_COMPARISONS // len(pairs)
     u_single = np.array([1.50, 0.75, -0.75])
@@ -124,7 +82,6 @@ def generate(pairs, rng, condition="mixture"):
     return pc, np.array(rows), np.array(judgments)
 
 
-# ── the binomial mixture, from the library ───────────────────────────────────────────────────
 
 def fit_best(pc, n, nP):
     """Fit at ``nP`` with the general numerical MAP optimiser."""
@@ -152,7 +109,6 @@ def mixture_predictive_ll(X, y, n, model):
                            axis=0).sum() + lg.sum())
 
 
-# ── the beta-binomial single-preference baseline ────────────────────────────────────────────────
 
 def _beta_binom_ll(X, y, n, u, rho):
     p = np.clip(expit(_eta(X, u)), 1e-9, 1 - 1e-9)
@@ -196,8 +152,6 @@ def one_replicate(rng, condition="mixture"):
     p_hat = min(criteria, key=criteria.get)
 
     cos = None
-    # Only the mixture condition has a two-state truth to recover; in the reverse condition the
-    # truth is a single preference and a cosine against U_TRUE measures nothing.
     if condition == "mixture" and p_hat > 1:
         est = priority_vector_from_logratios(model_logratios(models[p_hat]))
         truth = priority_vector_from_logratios(U_TRUE)

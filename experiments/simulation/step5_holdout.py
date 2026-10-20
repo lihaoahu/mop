@@ -1,30 +1,5 @@
 """Step 5: Holdout evaluation with the mixture-marginal predictor.
 
-This supersedes the best-match rule of `step2_holdout.py`. That rule scores a
-held-out comparison with the component whose prediction is closest to the
-*observed* value,
-
-    p* = argmin_p | s_j - s_hat_{j,p} |,
-
-which reads the label it is supposed to predict. The MoP column in the original
-holdout table was therefore an oracle selection over P candidate predictions,
-not a forecast, and the improvement it showed does not survive.
-
-Two honest quantities are reported here, both computed from the trained model
-alone:
-
-  log-likelihood   per held-out comparison, using the marginal mixture density
-                   sum_p pi_p * Normal(logit(s_j); x_j' u_p, sigma_p^2). This is
-                   the quantity the model actually defines a likelihood for, so
-                   it is the primary evidence.
-
-  MAE              of the mixture-marginal point prediction sum_p pi_p * s_hat_jp
-                   on the probability scale. Reported for completeness: under a
-                   squared-error criterion the optimal point forecast is the
-                   conditional mean, and a mixture does not reveal which
-                   component generated a held-out comparison, so this quantity
-                   is expected to be near-identical across models.
-
 Usage:
     uv run python experiments/simulation/step5_holdout.py
 """

@@ -1,24 +1,4 @@
-"""The case study's selection sensitivity, recomputed under the paper's own specification.
-
-Three claims were removed from the Limitations paragraph because they came from a script
-that mixed the estimated- and fixed-dispersion specifications. This recomputes them under the
-estimated dispersion only -- which is what `inference.mop` does and therefore what the paper
-reports -- so that each can be restored, corrected, or left out on evidence rather than on
-which script happened to produce it.
-
-The claims:
-
-  1. the selected count depends on the candidate set;
-  2. the penalized criterion and an ordinary BIC disagree on the selected count;
-  3. the selection survives resampling, or does not.
-
-Everything here is `free_phi=True` and `phi_0 = prior_mode_phi0(X, y)`. Nothing is compared
-against a fixed-dispersion value, which is the mistake this file exists to avoid.
-
-Run:
-    uv run python experiments/case_study/_specification_sensitivity.py
-    uv run python experiments/case_study/_specification_sensitivity.py --reps 20
-"""
+"""The case study's selection sensitivity, recomputed under the paper's own specification."""
 from __future__ import annotations
 
 import argparse
@@ -78,7 +58,6 @@ def main():
     print("specification: free_phi = True, phi_0 = prior_mode_phi0(X, y)")
     print(f"parameters: {MP.summary()}\n")
 
-    # ── 1. candidate set, and 2. pBIC against BIC, per slice ──
     print(f"{'slice':<24} {'K-Ridge P':>8} {'no P=2':>8} {'pBIC':>10} {'BIC':>10} "
           f"{'agree':>6}")
     print("-" * 74)
@@ -93,7 +72,6 @@ def main():
         full = curve_kridge(X, y, GRID, s2)
         best_p = min(full, key=lambda k: full[k]["pBIC"])
         best_b = min(full, key=lambda k: full[k]["BIC"])
-        # drop P=2 from the candidate set
         if 2 in GRID and best_p == 2:
             without = curve_kridge(X, y, [k for k in GRID if k != 2], s2)
             best_w = min(without, key=lambda k: without[k]["pBIC"])
@@ -126,7 +104,6 @@ def main():
         if r["kridge_best_pBIC"] == 2 and r["without_P2"] is not None:
             print(f"    {label:<24} -> P={r['without_P2']}")
 
-    # ── 3. resampling ──
     print(f"\nresampling the judgments, {args.reps} replicates, K-Ridge selection each time")
     rng = np.random.default_rng(args.seed)
     pairs = load_pairs()

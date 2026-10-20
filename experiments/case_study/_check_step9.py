@@ -1,16 +1,4 @@
-"""Check the re-implemented Gaussian EM against the paper's own `inference.mop`.
-
-`step9_phi_identification.py` re-implements the Gaussian EM so that phi_p can be
-either estimated or fixed. That is only a useful comparison if the re-implementation
-agrees with the repository's own fit when phi_p is free. This script fits both on a
-slice of the case data and compares the penalized log-posterior, the selected
-component count and the log-likelihood.
-
-If they disagree, the comparison in step9 measures my implementation rather than
-the parameterisation, and step9's output is void.
-
-Run: uv run python experiments/case_study/_check_step9.py
-"""
+"""Check the re-implemented Gaussian EM against the paper's own `inference.mop`."""
 from __future__ import annotations
 
 import sys

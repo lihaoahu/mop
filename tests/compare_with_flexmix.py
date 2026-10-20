@@ -1,16 +1,5 @@
 """Compare the MoP Gaussian-variant fit against flexmix on the same data.
 
-The model is a finite mixture of linear regressions on a pairwise-comparison
-design:
-
-    y_k = x_k^T u_{c_k} + eps_k,   eps_k ~ N(0, phi_{c_k}),
-
-which is what the MoP Gaussian variant reduces to once the response is on the
-transformed scale. flexmix fits the same model by EM under maximum likelihood;
-MoP fits it by EM under a penalised posterior. With the utility prior switched
-off and the dispersion prior made weak, the two should agree to numerical
-tolerance once the component labels are matched.
-
 Usage:
     python tests/compare_with_flexmix.py --write-data      # emit the data and the R script
     Rscript tests/compare_with_flexmix.R                   # fit with flexmix
@@ -37,16 +26,12 @@ MOP_JSON = os.path.join(HERE, "_flexmix_mop.json")
 FMX_JSON = os.path.join(HERE, "_flexmix_flexmix.json")
 R_SCRIPT = os.path.join(HERE, "compare_with_flexmix.R")
 
-# The comparison design: four alternatives, so six ordered pairs; two states,
-# chosen so that neither is empty and neither dispersion sits near zero. The
-# ids run 1..N_ALT and the library takes the largest id as the benchmark, so
-# alternative N_ALT is the reference, as in the manuscript.
 N_ALT = 4
 N_COMP = 2
 PI_TRUE = np.array([0.6, 0.4])
 U_TRUE = np.array([
-    [0.9, -0.4, 0.2],     # state 1
-    [-0.5, 0.7, -0.6],    # state 2
+    [0.9, -0.4, 0.2],
+    [-0.5, 0.7, -0.6],
 ])
 PHI_TRUE = np.array([0.25, 0.16])
 N_OBS = 3000
@@ -56,12 +41,7 @@ PAIRS = [(i, j) for i in range(1, N_ALT + 1) for j in range(i + 1, N_ALT + 1)]
 
 
 def design_matrix():
-    """The six transfer vectors, taken from the library rather than re-derived.
-
-    comparisons2regression infers the alternative count from the largest id it
-    sees, so asking it is the only way to be sure the flexmix side and the MoP
-    side are fitting the identical design.
-    """
+    """The six transfer vectors, taken from the library rather than re-derived."""
     from mop import inference, pairwise_comparison
 
     pcs = [pairwise_comparison.PairwiseComparison(
@@ -113,13 +93,9 @@ def fit_mop():
             pcs.append(pairwise_comparison.PairwiseComparison(
                 former_id=i, latter_id=j, agent_id=1, judgment=float(y)))
 
-    # The identity link: the response is already on the scale the components
-    # are fitted on, so this is the Gaussian variant with g the identity.
     result = inference.mop(pcs, [lambda s: np.asarray(s, dtype=float)], N_COMP,
                            lambda_u=1e-10, lambda_pi=1.0,
                            lambda_sigma=2.0 + 1e-6, s2=0.2)
-    # priority_vector holds the normalised weights w_a = exp(u_a)/sum exp(u_a);
-    # with the benchmark at u_A = 0 the utilities come back as ln(w_a / w_A).
     w = np.array([p.priority_vector for p in result.priorities])
     u = np.log(w[:, :-1] / w[:, [-1]])
     phi = np.array([p.inconsistency_level for p in result.priorities])
@@ -167,8 +143,6 @@ def report(mop_out, fmx):
     u_m = np.array(mop_out["u"])
     u_f = np.array(fmx["u"])
     phi_m = np.array(mop_out["sigma"])
-    # flexmix reports the standard deviation of each gaussian component; the
-    # manuscript's dispersion parameter is that squared.
     phi_f = np.array(fmx["sigma"]) ** 2
     pi_m = np.array(mop_out["prior"])
     pi_f = np.array(fmx["prior"])

@@ -1,10 +1,5 @@
 """Figure: pBIC against the number of mixture components, overall dataset.
 
-The curve is computed from the same fits that step7_analyze.run_mop performs for
-the tables, with the same hyperparameters, so the figure cannot drift from the
-numbers in the text. The values used to be hard-coded, which is how the plotted
-minimum came to sit at a pBIC the text no longer quoted.
-
 Usage:
     uv run python _plot_pbic.py            # K = 1..8, as plotted in the paper
     uv run python _plot_pbic.py --p-max 9
@@ -51,10 +46,6 @@ def main():
     ax.spines["right"].set_visible(False)
     plt.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    # CreationDate is omitted so that regenerating the figure leaves the
-    # committed file unchanged; matplotlib writes the current time into it
-    # otherwise, which made this the one artefact a re-run could never
-    # reproduce byte for byte.
     plt.savefig(OUT, dpi=200, bbox_inches="tight",
                 metadata={"CreationDate": None})
     print(f"  wrote {OUT}")

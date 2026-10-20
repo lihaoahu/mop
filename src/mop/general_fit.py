@@ -1,32 +1,6 @@
 """MAP fitting of the mixture of preferences by direct numerical optimisation.
 
-Two estimation routes exist in this package and they answer the same question.
-
-* :func:`fit_map` here maximises the penalised log-posterior over every parameter at once --
-  utilities, mixture weights and, where the family allows it, the dispersion. It knows nothing
-  about conjugacy, so it applies to any observation family. This is the route for the binomial
-  family and for any protocol whose likelihood does not factor into closed-form updates.
-* :func:`mop.inference.mop` is the Gaussian variant's closed-form iteration: that family is
-  conjugate, the E-step and M-step are analytic, and the iteration is exact and cheaper. It is
-  the route the case study uses.
-
-The two must agree where both apply. With unit observation weights they share the same
-objective, so :func:`fit_map` on Gaussian data is a check on :func:`mop.inference.mop` as much
-as a fitting routine, and the tests compare them.
-
-A note on the weight convention. This module writes the Gaussian likelihood as Eq (2) states
-it, ``Var[y_k] = phi V(mu_k) / omega_k``, so a judgment resting on ``omega_k`` repetitions
-contributes ``-0.5 log(2 pi phi / omega_k) - 0.5 omega_k (y_k - eta_k)^2 / phi``. With
-``omega_k = 1`` this is exactly the density :mod:`mop.inference` uses. For ``omega_k > 1`` that
-module instead multiplies the unit-weight log-density by ``omega_k`` (a frequency weight), which
-is a different model; the two agree only at unit weights, and the difference is stated here
-rather than hidden.
-
 Usage::
-
-    from mop.general_fit import BinomialResponse, fit_map, pbic_map
-    model = fit_map(pcvector, BinomialResponse(), nP=2, omega=trials)
-    criterion = pbic_map(pcvector, model, BinomialResponse(), omega=trials)
 """
 
 from __future__ import annotations
@@ -44,7 +18,6 @@ EPS = 1e-300
 _ETA_CLIP = 30.0
 
 
-# ── observation families ────────────────────────────────────────────────────────────────────────
 
 @dataclass
 class GaussianResponse:
@@ -75,11 +48,7 @@ class GaussianResponse:
 
 @dataclass
 class BinomialResponse:
-    """Repeated binomial choices: ``y = m/n`` is the proportion, ``omega = n`` the trials.
-
-    ``phi`` is fixed at one (Section 2.3), so it is not a parameter, contributes no gradient, and
-    the criterion still counts it among the degrees of freedom.
-    """
+    """Repeated binomial choices: ``y = m/n`` is the proportion, ``omega = n`` the trials."""
 
     name: str = "binomial"
     phi_free: bool = False
@@ -103,7 +72,6 @@ class BinomialResponse:
         return np.zeros_like(np.asarray(eta, dtype=float))
 
 
-# ── the penalised log-posterior, written once ───────────────────────────────────────────────────
 
 def _priors(u, pi, phi, u_bar, lambda_u, lambda_pi, lambda_sigma, s2, phi_free):
     """Log-prior and its derivatives, matching eq:prior in the manuscript."""
@@ -113,7 +81,6 @@ def _priors(u, pi, phi, u_bar, lambda_u, lambda_pi, lambda_sigma, s2, phi_free):
     grad_u = np.zeros_like(u)
     grad_phi = np.zeros(nP)
 
-    # u_p | phi_p ~ N(u_0, phi_p / lambda_u I), eq:u
     for p in range(nP):
         total -= 0.5 * lambda_u * float(np.sum(diff[p] ** 2)) / phi[p]
         grad_u[p] += -lambda_u * diff[p] / phi[p]
@@ -124,12 +91,10 @@ def _priors(u, pi, phi, u_bar, lambda_u, lambda_pi, lambda_sigma, s2, phi_free):
         else:
             total -= 0.5 * A1 * np.log(2.0 * np.pi / lambda_u)
 
-    # pi ~ Dirichlet(lambda_pi), eq:pi
     pi_safe = np.maximum(pi, EPS)
     total += (lambda_pi - 1.0) * float(np.sum(np.log(pi_safe)))
     total += gammaln(nP * lambda_pi) - nP * gammaln(lambda_pi)
 
-    # phi_p ~ InvGamma((lambda_sigma - 2)/2, lambda_sigma phi_0 / 2), eq:phi
     if phi_free:
         alpha = (lambda_sigma - 2.0) / 2.0
         beta = lambda_sigma * s2 / 2.0
@@ -158,7 +123,7 @@ def _objective(theta, X, y, omega, nP, response, u_bar, lambda_u, lambda_pi,
     pi = np.exp(np.concatenate([z, [0.0]]))
     pi /= pi.sum()
 
-    eta = X @ u.T                                    # (nJ, nP)
+    eta = X @ u.T
     ll = response.loglik(y[:, None], eta, omega[:, None], phi[None, :])
     logp = ll + np.log(np.maximum(pi, EPS))[None, :]
     norm = logsumexp(logp, axis=1)
@@ -168,13 +133,11 @@ def _objective(theta, X, y, omega, nP, response, u_bar, lambda_u, lambda_pi,
         u, pi, phi, u_bar, lambda_u, lambda_pi, lambda_sigma, s2, phi_free)
     total += prior
 
-    gamma = np.exp(logp - norm[:, None])              # responsibilities (nJ, nP)
+    gamma = np.exp(logp - norm[:, None])
 
-    # d/d u_pj
     deta = response.dloglik_deta(y[:, None], eta, omega[:, None], phi[None, :])
     grad_u = (gamma * deta).T @ X + grad_u_prior
 
-    # d/d z_q, reference parameterisation (last logit fixed at zero)
     grad_z = gamma[:, :-1].sum(axis=0) - nJ * pi[:-1]
     grad_z += (lambda_pi - 1.0) * (1.0 - nP * pi[:-1])
 
@@ -183,11 +146,10 @@ def _objective(theta, X, y, omega, nP, response, u_bar, lambda_u, lambda_pi,
     if phi_free:
         dphi = response.dloglik_dphi(y[:, None], eta, omega[:, None], phi[None, :])
         grad_phi = (gamma * dphi).sum(axis=0) + grad_phi_prior
-        grad.append(grad_phi * phi)                   # chain rule through log phi
+        grad.append(grad_phi * phi)
     return total, np.concatenate([g for g in grad if g.size])
 
 
-# ── starts ─────────────────────────────────────────────────────────────────────────────────────
 
 def _pooled_u(X, y, omega, response, lambda_u, u_bar, weight=None):
     """One-component start: ridge least squares for Gaussian, ridge logistic for binomial."""
@@ -195,14 +157,10 @@ def _pooled_u(X, y, omega, response, lambda_u, u_bar, weight=None):
     if weight is not None:
         omega = omega * np.asarray(weight, dtype=float)
     if isinstance(response, GaussianResponse):
-        # Var = phi / omega, so the weighted least-squares start uses omega as the weights.
-        # Dividing by max(omega, 1) made every omega >= 1 a weight of one, which silently
-        # dropped the weighting from the start.
         w = omega
         XtW = X.T * w
         return np.linalg.solve(XtW @ X + lambda_u * np.eye(A1), XtW @ (y - X @ u_bar)) + u_bar
 
-    # binomial: damped Newton on the pooled logistic
     u = u_bar.copy()
 
     def neg(u_):
@@ -218,13 +176,7 @@ def _pooled_u(X, y, omega, response, lambda_u, u_bar, weight=None):
 
 
 def _starts(X, y, omega, response, nP, lambda_u, u_bar, phi_init, n_starts):
-    """Deterministic multi-start set: pooled, residual-sign split, then jittered copies.
-
-    The pooled start tiles one component, which is a symmetric point: every component is
-    identical and the EM-equivalent descent can sit there. The sign split gives the first extra
-    components somewhere to go -- two opposing preference states put the judgments in two tails
-    of the residual, and fitting one component per tail starts them apart.
-    """
+    """Deterministic multi-start set: pooled, residual-sign split, then jittered copies."""
     A1 = X.shape[1]
     phi0 = float(phi_init if phi_init is not None else 1.0)
     u_pool = _pooled_u(X, y, omega, response, lambda_u, u_bar)
@@ -251,7 +203,6 @@ def _starts(X, y, omega, response, nP, lambda_u, u_bar, phi_init, n_starts):
     return out
 
 
-# ── the fit ───────────────────────────────────────────────────────────────────────────────────
 
 def fit_map(pcvector, response, nP, lambda_u=1e-6, lambda_pi=1.0, lambda_sigma=None,
             s2=None, u_bar=None, omega=None, u_init=None, pi_init=None, phi_init=None,
@@ -318,10 +269,6 @@ def fit_map(pcvector, response, nP, lambda_u=1e-6, lambda_pi=1.0, lambda_sigma=N
         starts = _starts(X, y, omega, response, nP, lambda_u, u_bar, phi_init, n_starts)
 
     def pack(u, pi, phi):
-        # Reference parameterisation: the last component's logit is fixed at zero, so the free
-        # parameters are log(pi_q / pi_last), not log(pi_q). Writing log(pi_q) here does not
-        # invert to pi under the softmax the objective applies, and the fit then reports a
-        # penalised posterior that does not belong to the parameters it returns.
         logpi = np.log(np.maximum(pi, EPS))
         z = logpi[:-1] - logpi[-1]
         parts = [u.ravel(), z]
@@ -368,15 +315,7 @@ def _unpack(theta, nP, A1, phi_free):
 
 def pbic_map(pcvector, model, response, omega=None, lambda_u=1e-6, lambda_pi=1.0,
              lambda_sigma=None, s2=None, u_bar=None):
-    """Penalised BIC of a :func:`fit_map` fit: ``-2 pll + log(n_eff) df``.
-
-    ``df = (A-1) P + 2P - 1`` counts the utilities, the ``P-1`` free mixture weights and the
-    ``P`` dispersions. The dispersions are counted even when the family fixes them, because they
-    are part of the model rather than removed from it; the binomial family therefore spends ``P``
-    degrees of freedom on a parameter it does not estimate, exactly as :func:`mop.winloss.pbic`
-    does. ``n_eff`` is the number of Bernoulli trials ``sum_k omega_k``, which for unit weights
-    is the number of judgments.
-    """
+    """Penalised BIC of a :func:`fit_map` fit: ``-2 pll + log(n_eff) df``."""
     X, y, _ = comparisons2regression(pcvector, [float])
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)

@@ -1,30 +1,4 @@
-"""Parameter audit for the phi-identification comparison.
-
-Before any result from `step9_phi_identification.py` is quoted, three things have to
-be true, and none of them is obvious by inspection:
-
-1. **Every parameter comes from the config**, not from a literal in a script. This
-   lists what is in force and where each value comes from.
-
-2. **The two parameterisations share a prior.** Fixing phi at one is itself the claim
-   that one is the prior mode. If the fixed run uses one phi_0 and the free run uses
-   another, the comparison changes the parameterisation and the prior at once, and no
-   conclusion about either follows. This checks that the two runs are on the same
-   phi_0, whatever it is set to.
-
-3. **The objectives agree at phi = 1.** With phi_0 shared, fixing phi at one must
-   give exactly the penalized objective the free model takes at phi = 1. This is an
-   identity, not an approximation: it is what makes the free model a superset of the
-   fixed one, and therefore what makes "the free fit must do at least as well" a
-   valid test. An earlier version of this comparison failed this identity.
-
-It also reports the paper's own phi_0 value per slice, because whether phi_0 is
-anywhere near the estimated phi decides how much the prior is doing the work.
-
-Run:
-    uv run python experiments/case_study/_audit_params.py
-    uv run python experiments/case_study/_audit_params.py --mode fixed
-"""
+"""Parameter audit for the phi-identification comparison."""
 from __future__ import annotations
 
 import argparse

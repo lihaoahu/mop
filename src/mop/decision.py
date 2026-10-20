@@ -14,14 +14,13 @@ except ImportError:
 
 
 def likelihood(pc: PairwiseComparison, priority: Priority, link_function):
-    """
-    计算单个比较在给定优先级下的似然
-    
+    """计算单个比较在给定优先级下的似然
+
     Args:
         pc: 成对比较
         priority: 优先级
         link_function: 链接函数
-        
+
     Returns:
         似然值
     """
@@ -39,14 +38,13 @@ def likelihood(pc: PairwiseComparison, priority: Priority, link_function):
 
 
 def responsivity(pc: PairwiseComparison, mop: MixtureOfPriorities, link_function):
-    """
-    计算responsivity（后验概率）
-    
+    """计算responsivity（后验概率）
+
     Args:
         pc: 成对比较
         mop: 混合优先级模型
         link_function: 链接函数
-        
+
     Returns:
         后验概率向量
     """

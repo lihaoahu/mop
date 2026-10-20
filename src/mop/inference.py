@@ -5,7 +5,6 @@
 import numpy as np
 from scipy.stats import norm
 
-# 尝试导入Cython版本
 USE_CYTHON = False
 try:
     from cython_inference import e_gamma_cython, m_step_cython
@@ -33,14 +32,11 @@ def e_gamma(X, y, u, sigma2, mp):
 
     nJ, nP = X.shape[0], len(sigma2)
     
-    # 向量化计算均值: (nJ, nP)
-    means = X @ u.T  # (nJ, nP)
-    stds = np.sqrt(sigma2)  # (nP,)
+    means = X @ u.T
+    stds = np.sqrt(sigma2)
     
-    # 向量化计算对数概率
     log_probs = np.log(mp) + norm.logpdf(y[:, np.newaxis], loc=means, scale=stds)
     
-    # 数值稳定的指数化和归一化
     max_vals = np.max(log_probs, axis=1, keepdims=True)
     gkc = np.exp(log_probs - max_vals)
     row_sums = np.maximum(np.sum(gkc, axis=1, keepdims=True), 1e-300)
@@ -67,19 +63,12 @@ def e_gamma_from_pc(pcvector, mop, link_functions):
 
 
 def log_likelihood(X, y, u, sigma2, mp, omega=None):
-    """对数似然函数（向量化优化版）
-
-    omega: 每个判断的观测权重 ω_k（可空，默认全 1）。与稿件 eq:glm 的
-        Var[y]=φ V(μ)/ω 一致；权重只改变各项的相对贡献，不改变 E 步的
-        责任度 γ（ω_k 在分子分母中相消）。
-    """
+    """对数似然函数（向量化优化版）"""
     nJ, nC = X.shape[0], len(sigma2)
 
-    # 向量化计算
-    means = X @ u.T  # (nJ, nC)
-    stds = np.sqrt(sigma2)  # (nC,)
+    means = X @ u.T
+    stds = np.sqrt(sigma2)
 
-    # 计算每个组件的似然
     probs = mp * norm.pdf(y[:, np.newaxis], loc=means, scale=stds)
     Lk = np.sum(probs, axis=1)
     Lk = np.maximum(Lk, 1e-300)
@@ -108,13 +97,7 @@ def log_likelihood_from_pc(pcvector, mop, link_functions):
 
 
 def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar=None, omega=None):
-    """
-    惩罚对数似然函数 (Eq.10 的对数)，与 manuscript 完全一致
-
-    先验 (Eq.5-7):
-      σ²_p ~ InvGamma((λ_σ-2)/2, λ_σ φ₀/2)
-      u_p | σ²_p ~ N(u₀, λ_u⁻¹ σ²_p I)
-      π ~ Dirichlet(λ_π, ..., λ_π)
+    """惩罚对数似然函数 (Eq.10 的对数)，与 manuscript 完全一致
 
     Args:
         X: 设计矩阵
@@ -137,7 +120,6 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
 
     PLL = log_likelihood(X, y, u, sigma2, mp, omega)
 
-    # 统一为 per-component 数组
     if np.isscalar(lambda_u):
         lambda_u = np.full(nP, lambda_u, dtype=float)
     if np.isscalar(lambda_sigma):
@@ -145,14 +127,12 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     if u_bar.ndim == 1:
         u_bar = np.tile(u_bar, (nP, 1))
 
-    # 1. u 的先验: u_p | σ²_p ~ N(u₀_p, λ_{u,p}⁻¹ σ²_p I) — Eq.(6)
     for p in range(nP):
         sp2 = max(sigma2[p], 1e-300)
         diff = u[p] - u_bar[p]
         PLL -= (lambda_u[p] / (2.0 * sp2)) * np.sum(diff ** 2)
         PLL -= (nA_minus_1 / 2.0) * np.log(2.0 * np.pi * sp2 / lambda_u[p])
 
-    # 2. σ² 的先验: σ²_p ~ InvGamma((λ_{σ,p}-2)/2, λ_{σ,p} φ₀/2) — Eq.(5)
     for p, sp2 in enumerate(sigma2):
         if sp2 < 1e-300:
             continue
@@ -162,7 +142,6 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
         PLL -= (alpha + 1.0) * np.log(sp2)
         PLL -= beta / sp2
 
-    # 3. π 的先验: π ~ Dirichlet(λ_π, ..., λ_π) — Eq.(7)
     valid_mp = mp > 1e-300
     if valid_mp.any():
         PLL += (lambda_pi - 1.0) * np.sum(np.log(mp[valid_mp]))
@@ -172,15 +151,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
 
 
 def bic(pcvector, mop, link_functions):
-    """贝叶斯信息准则 — 未被使用，也不等价于论文的 pBIC。
-
-    Unused: nothing in this repository calls it, and the paper defines only the
-    penalized criterion in `pbic` below. It is kept out of the way rather than
-    deleted so that the difference is visible: this one scores the likelihood
-    alone with the same degrees of freedom, so it is an ordinary BIC, whereas
-    `pbic` evaluates the penalized log-posterior, which already carries the three
-    prior terms. Substituting one for the other would silently drop them.
-    """
+    """贝叶斯信息准则 — 未被使用，也不等价于论文的 pBIC。"""
     nJ = len(pcvector)
     nP = len(mop.mixture_probabilities)
 
@@ -195,16 +166,7 @@ def bic(pcvector, mop, link_functions):
 
 
 def prior_mode_phi0(X, y):
-    """先验众数 φ₀ (manuscript eq:general gci).
-
-    The unbiased residual variance of the single-preference fit,
-    ``SS / (K - p)`` with ``p = A - 1`` free utilities. Defined once, here,
-    because the fit and the pBIC criterion both need it: an earlier version
-    computed it in the scripts as ``SS / (K - p + 1)`` and in the fit as
-    ``SS / K``, so a single run used two different prior modes, neither of
-    them this one. The correct denominator was a third candidate that nothing
-    called.
-    """
+    """先验众数 φ₀ (manuscript eq:general gci)."""
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     n_j, p = X.shape
@@ -218,11 +180,7 @@ def prior_mode_phi0(X, y):
 
 
 def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None, u_bar=None, omega=None):
-    """惩罚贝叶斯信息准则 (Eq.19)
-
-    omega: 每个判断的观测权重 ω_k（可空）。惩罚项用 ln(Σ_k ω_k)，未加权时
-        即 ln(nJ)，与原式一致。
-    """
+    """惩罚贝叶斯信息准则 (Eq.19)"""
     nJ = len(pcvector)
     nP = len(mop.mixture_probabilities)
 
@@ -288,8 +246,6 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA_minus_1 = X.shape[1]
 
-    # 观测权重：归一化到均值 1（见 docstring）。omega=None 时退化为全 1，
-    # 与未加权版本逐位一致。
     if omega is None:
         omega_eff = None
     else:
@@ -302,36 +258,23 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
     use_weighted = omega_eff is not None and not np.allclose(omega_eff, 1.0)
 
-    # The size of the mixture is whatever the caller supplies when initial
-    # values are given, which is the same as the argument unless removal is on.
-    # minprior is off by default, so it normally is; the branch stays so that a
-    # caller who turns removal on need not track the size itself.
     if u_init is not None and sigma2_init is not None and mp_init is not None:
         nP = len(mp_init)
 
-    # 默认先验均值为零向量 — 支持 per-component
     if u_bar is None:
         u_bar = np.zeros(nA_minus_1)
     if np.ndim(u_bar) == 1:
         u_bar = np.tile(u_bar, (nP, 1))
 
-    # 统一 λ 为 per-component 数组
     if np.isscalar(lambda_u):
         lambda_u = np.full(nP, lambda_u, dtype=float)
     if np.isscalar(lambda_sigma):
         lambda_sigma = np.full(nP, lambda_sigma, dtype=float)
 
-    # 清理NaN/Inf
     X = np.nan_to_num(X, nan=0.0, posinf=1e10, neginf=-1e10)
     y = np.nan_to_num(y, nan=0.0, posinf=1e10, neginf=-1e10)
 
-    # 默认参数 — 仅对未指定的参数设默认值。默认值与论文 §2.5 用的那组一致：
-    # λ_u 小到不影响效用、λ_σ = K/50 是论文的经验设置、λ_π = 1 是单纯形上的均匀先验。
-    # λ_σ > 2 是先验众数存在的条件：InvGamma(α=(λ_σ-2)/2, β=λ_σφ₀/2) 的众数是
-    # β/(α+1) = φ₀，只要 α > 0；λ_σ > 4 是均值 β/(α-1) 存在的条件，比众数更强。
-    # 旧的默认值 0.1 使 α = -0.95 < 0，密度根本不可归一，却会静默跑完。
     if s2 is None:
-        # 先验众数 φ₀ —— 与 pbic 用的是同一个定义，见 prior_mode_phi0
         s2 = prior_mode_phi0(X, y)
     if lambda_u is None:
         lambda_u = 1e-6
@@ -340,34 +283,25 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
     if lambda_pi is None:
         lambda_pi = 1
 
-    # 初始化
     if u_init is not None and sigma2_init is not None and mp_init is not None:
         u, sigma2, mp = u_init, sigma2_init, mp_init
     else:
         u, sigma2, mp = kridge(X, y, nP)
 
-    # 检查初始化结果
     if np.any(np.isnan(u)) or np.any(np.isinf(u)):
         u = np.random.randn(nP, nA_minus_1) * 0.1
         sigma2 = np.ones(nP) * s2
         mp = np.ones(nP) / nP
 
-    # 预计算常量
     eye_matrix = np.eye(nA_minus_1)
 
-    # EM迭代
     for t in range(1, 10002):
-        # E步
         gkc = e_gamma(X, y, u, sigma2, mp)
 
-        # 检查NaN
         if np.any(np.isnan(gkc)):
             break
 
-        # M步
         if USE_CYTHON and not use_weighted:
-            # Cython 版 M 步不带观测权重；仅在权重全为 1 时使用它，
-            # 有非均匀权重时走下面的 NumPy 实现。
             u_new, sigma2_new, mp_new = m_step_cython(
                 np.asarray(X, dtype=np.float64),
                 np.asarray(y, dtype=np.float64),
@@ -378,14 +312,10 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 lambda_pi, s2, nP,
             )
         else:
-            # 向量化M步
-            sum_gkc = np.sum(gkc, axis=0)  # (nP,)  — 未加权，供组件移除与诊断用
+            sum_gkc = np.sum(gkc, axis=0)
 
-            # 更新 mp。加权形式见稿件 eq:pi_general：
-            #   π_p = (Σ_k ω_k γ_kp + λ_π − 1) / (Σ_k ω_k + λ_π P − P)
-            # 未加权时 Σ_k ω_k = nJ，退化为原式。
             if use_weighted:
-                sum_wgkc = omega_eff @ gkc          # (nP,)
+                sum_wgkc = omega_eff @ gkc
                 sum_omega = float(np.sum(omega_eff))
                 mp_new = (sum_wgkc + lambda_pi - 1) / (sum_omega + lambda_pi * nP - nP)
             else:
@@ -393,14 +323,10 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
             mp_new = np.maximum(mp_new, 1e-10)
             mp_new = mp_new / np.sum(mp_new)
 
-            # 更新u和sigma2
             u_new = np.zeros_like(u)
             sigma2_new = np.zeros(nP)
 
             for p in range(nP):
-                # 有效权重 = ω_k γ_kp。加权时 ω_k 只乘在数据项上，先验项
-                # （λ_u 与 (A−1)）不受权重影响，这与稿件 eq:glm 的
-                # Var[y]=φV(μ)/ω 及附录的 M 步推导一致。
                 if use_weighted:
                     gkc_w = omega_eff * gkc[:, p]
                     sum_gkc_p = float(np.sum(gkc_w))
@@ -408,7 +334,6 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                     gkc_w = gkc[:, p]
                     sum_gkc_p = sum_gkc[p]
 
-                # 加权矩阵（修正：添加 lambda_u[p] * u_bar[p] 项）
                 XtWX = X.T @ (X * gkc_w[:, np.newaxis]) + lambda_u[p] * eye_matrix
                 Xty_w = X.T @ (y * gkc_w) + lambda_u[p] * u_bar[p]
 
@@ -417,20 +342,6 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                 except np.linalg.LinAlgError:
                     u_new[p, :] = np.linalg.lstsq(XtWX, Xty_w, rcond=None)[0]
 
-                # M-step for the inconsistency variance: the exact maximiser of
-                # the penalized log-posterior that penalized_log_likelihood
-                # evaluates, so that the iteration stays monotone. The
-                # denominator collects one contribution per factor carrying
-                # phi_p:
-                #   sum_gkc[p]        the Gaussian likelihood, n_p observations
-                #   nA_minus_1        the normalising constant of the utility
-                #                     prior, whose density carries
-                #                     phi_p^{-(nA-1)/2}
-                #   lambda_sigma      = 2(alpha+1) with alpha=(lambda_sigma-2)/2
-                #                     from the inverse-Gamma density on phi_p
-                # The numerator carries the utility prior's quadratic term.
-                # An earlier version omitted nA_minus_1, which put this update
-                # off the stationary point; see PARAMETERISATION.md section 3.
                 residuals = y - X @ u_new[p, :]
                 ss_resid = float(np.sum(gkc_w * residuals ** 2))
                 ss_prior_u = lambda_u[p] * float(np.sum((u_new[p] - u_bar[p]) ** 2))
@@ -440,30 +351,15 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                     1e-10
                 )
 
-        # 检查NaN
         if np.any(np.isnan(u_new)) or np.any(np.isnan(sigma2_new)) or np.any(np.isnan(mp_new)):
             break
 
-        # 检查收敛
         pll_t = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar, omega_eff)
         pll_tp1 = penalized_log_likelihood(X, y, u_new, sigma2_new, mp_new, lambda_u, lambda_sigma, lambda_pi, s2, u_bar, omega_eff)
 
         if np.isnan(pll_tp1) or np.isinf(pll_tp1):
             break
 
-        # A component whose weight has fallen below minprior is removed, which
-        # is what flexmix does. minprior is off by default: the paper reports
-        # the components a candidate fits, including a component with a small
-        # weight, since the number of preference states is what is being
-        # inferred and discarding one during the fit would decide it early.
-        # Set it to flexmix's 0.05 to have spent components dropped instead.
-        # Such a component
-        # accounts for too few judgments to be a preference state, so keeping
-        # it only seeds the next candidate from a solution already rejected.
-        # The removal happens here, after the convergence test, because that
-        # test compares the current iterate with the candidate and the two must
-        # have the same shape; resizing first is what made an earlier version
-        # of this change collapse the mixture.
         keep = None
         if minprior > 0:
             keep = np.flatnonzero(mp_new >= minprior)
@@ -479,27 +375,15 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                     lambda_u = np.asarray(lambda_u)[keep]
                 if np.ndim(lambda_sigma) > 0:
                     lambda_sigma = np.asarray(lambda_sigma)[keep]
-                # u_bar was tiled to one row per component above, so it has to
-                # lose the same rows; leaving it long is what made an earlier
-                # version of this change fail on the utility update, where it
-                # is indexed by component.
                 if np.ndim(u_bar) == 2 and np.shape(u_bar)[0] == nP:
                     u_bar = np.asarray(u_bar)[keep]
                 nP = int(keep.size)
 
-        # Relative change in the penalized log-posterior. The 0.1 in the
-        # denominator is the scale normalisation flexmix uses, and the 1e-6 is
-        # its default tolerance: without the normalisation the test tightens as
-        # the log-posterior grows in magnitude, which for these data made a
-        # 1e-10 ratio unreachable and ran the loop to its cap.
         if abs(pll_tp1 - pll_t) / (abs(pll_tp1) + 0.1) < 1e-6:
             break
 
         u, sigma2, mp = u_new, sigma2_new, mp_new
 
-    # 转换为优先级向量
-    # 限制对数优先级比范围，避免 exp 溢出
-    # exp(50) ≈ 5.2e21 已足够覆盖实际优先级比范围
     u_clipped = np.clip(u, -50, 50)
     v = np.hstack([np.exp(u_clipped), np.ones((nP, 1))])
     w = v / np.sum(v, axis=1, keepdims=True)

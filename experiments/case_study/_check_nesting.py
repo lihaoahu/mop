@@ -1,21 +1,4 @@
-"""Check that the free-phi objective dominates the fixed-phi one, at equal P.
-
-Once phi_0 is the same for both, fixing phi at one is the restriction of the free
-model to a face of its parameter space. The penalized objective then satisfies
-
-    penalized(free, phi=1) == penalized(fixed)
-
-exactly, so a correct maximiser of the free objective must reach a value at least as
-high as the fixed one. If it does not, the free-phi fit is at a worse local optimum
-and the comparison is measuring the optimiser rather than the parameterisation.
-
-This was not the case in an earlier version, where the fixed and free runs also used
-different phi_0, and the resulting "freeing phi changes the component count" was
-partly an artefact of that. This script tests the property directly, from a common
-starting point, at each component count.
-
-Run: uv run python experiments/case_study/_check_nesting.py
-"""
+"""Check that the free-phi objective dominates the fixed-phi one, at equal P."""
 from __future__ import annotations
 
 import sys
@@ -32,7 +15,6 @@ from mop.inference import prior_mode_phi0                                # noqa:
 from step9_phi_identification import (build_design, criteria, fit,        # noqa: E402
                                       _penalized, load_pairs)
 
-# phi_0 follows the paper's rule by default. Pass --s2-fixed 1.0 to pin it.
 S2 = None
 
 

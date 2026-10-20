@@ -1,28 +1,4 @@
-"""Parameterisation audit of the MoP codebase.
-
-Distribution parameters are specified differently across implementations, and
-a silent mismatch is the classic source of wrong statistical results. This
-script pins down, and numerically verifies, every convention the project
-relies on. Run it with
-
-    uv run python tests/audit_parameterisation.py
-
-It exits non-zero if any convention fails to reproduce.
-
-Checklist, matching the seven sections printed below
-  1  Gaussian likelihood: is the scale argument sqrt(sigma^2) (std) or sigma^2?
-  2  Inverse-Gamma prior on sigma^2: does the code's log-density match
-     scipy.stats.invgamma with shape=(lambda_s-2)/2, scale=lambda_s*phi_0/2?
-  3  M-step update for sigma^2 vs the strict MAP implied by that prior
-  4  aggregate ranking: expected utility, and the benchmark's zero origin
-  5  transforms: logit/log are natural, expit <-> logit
-  6  synthetic data: noise added on the log-odds scale
-  7  ties encoded as score 0.5 -> logit 0
-
-Two checks this list used to carry are gone with the code they tested: the
-beta-binomial density against scipy, and its analytic gradients against finite
-differences. Both belonged to the module removed in 73466ff.
-"""
+"""Parameterisation audit of the MoP codebase."""
 
 import math
 import sys
@@ -52,8 +28,8 @@ y = np.array([0.7, -1.2, 2.0, 0.1])
 mu = np.array([0.5, -0.9, 1.7, 0.3])
 sigma2 = 0.8
 
-code_std = np.sum(norm.logpdf(y, loc=mu, scale=np.sqrt(sigma2)))       # std convention
-code_var = np.sum(norm.logpdf(y, loc=mu, scale=sigma2))               # var convention
+code_std = np.sum(norm.logpdf(y, loc=mu, scale=np.sqrt(sigma2)))
+code_var = np.sum(norm.logpdf(y, loc=mu, scale=sigma2))
 print(f"   sum logpdf with scale=sqrt(0.8): {code_std:.6f}")
 print(f"   sum logpdf with scale=0.8     : {code_var:.6f}")
 check("src/mop uses scale=sqrt(sigma2)",
@@ -75,8 +51,6 @@ for lam_s, s2bar, sp2 in [(108.0, 0.5, 0.8), (10.0, 0.2, 0.05), (200.0, 1.0, 2.5
           f"code={code:>12.6f}  invgamma.logpdf={ref:>12.6f}  diff={abs(code-ref):.2e}")
     check(f"matches invgamma(shape={alpha}, scale={beta})", abs(code - ref) < 1e-9)
 
-# the same prior read as a Gamma on 1/sigma^2, WITHOUT the Jacobian that turns
-# it into a density in sigma^2, differs; the code must evaluate the latter
 alpha, beta, sp2 = (108.0 - 2) / 2, 108.0 * 0.5 / 2, 0.8
 no_jacobian = alpha * np.log(beta) - gammaln(alpha) - (alpha - 1.0) * np.log(sp2) - beta / sp2
 print(f"\n   dropping the Jacobian gives {no_jacobian:.6f} vs {float(invgamma.logpdf(sp2, alpha, scale=beta)):.6f}")
@@ -93,10 +67,6 @@ from scipy.optimize import minimize_scalar  # noqa: E402
 
 print(f"   {'A':>3} {'n':>7} {'lambda_s':>9} {'closed form':>13} "
       f"{'|grad|/scale':>13} {'numeric argmax':>15} {'rel. err':>10}")
-# A is swept on purpose. The normalising constant of the utility prior carries
-# a factor phi^{-(A-1)/2}, so the denominator must contain d = A - 1; a single
-# A would not expose its absence, which is how an earlier version of this audit
-# passed while the code was wrong.
 for A, n_eff, lam_s, SS, SSU in [(2, 5401, 108.0, 100.0, 0.0),
                                  (4, 5401, 108.0, 100.0, 0.0),
                                  (4, 500, 10.0, 60.0, 1.5),
@@ -107,15 +77,11 @@ for A, n_eff, lam_s, SS, SSU in [(2, 5401, 108.0, 100.0, 0.0),
     s2bar = 0.5
     alpha = (lam_s - 2.0) / 2.0
     beta = lam_s * s2bar / 2.0
-    # denominator: n_p (likelihood) + d (utility-prior normalisation)
-    #              + lambda_s, where lambda_s = 2(alpha+1) comes from the
-    #              inverse-Gamma density on sigma2
     closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + d)
 
-    # each term carries one factor of phi in the posterior density
-    grad = (-0.5 * (n_eff + d) / closed           # likelihood + prior norm.
-            + (SS + SSU) / (2.0 * closed ** 2)    # their quadratic terms
-            - (alpha + 1.0) / closed              # inverse-Gamma density
+    grad = (-0.5 * (n_eff + d) / closed
+            + (SS + SSU) / (2.0 * closed ** 2)
+            - (alpha + 1.0) / closed
             + beta / closed ** 2)
     scale = max(0.5 * (n_eff + d) / closed, (SS + SSU) / (2.0 * closed ** 2), 1.0)
     stationary = abs(grad) / scale
@@ -141,7 +107,6 @@ print("=" * 76)
 print("4. aggregate ranking: expected utility, not a vote score")
 print("=" * 76)
 LAB = ["BEV", "PHEV", "REEV", "ICEV"]
-# the fitted overall mixture of the case study, to full precision
 W = np.array([
     [0.4873485184590911, 0.24785860575773244, 0.17345053406765415, 0.09134234171552226],
     [0.9999999998480964, 4.139519556101162e-11, 1.0506031612582586e-11, 1.0000230260410934e-10],

@@ -13,21 +13,19 @@ except ImportError:
 
 
 def mop_plot(u, w, sigma2):
-    """
-    绘制优先级堆叠条形图
-    
+    """绘制优先级堆叠条形图
+
     Args:
         u: 对数优先级比 (nC x nA-1)
         w: 混合概率 (nC,)
         sigma2: 不一致性水平 (nC,)
-        
+
     Returns:
         fig, ax: 图形对象
     """
     nC, nA_minus_1 = u.shape
     nA = nA_minus_1 + 1
     
-    # 添加最后一列（全为0，因为log(w[n]/w[n]) = 0）
     u_full = np.hstack([u, np.zeros((nC, 1))])
     
     fig, ax = plt.subplots(figsize=(8, 2), dpi=300)
@@ -64,7 +62,6 @@ def mop_plot(u, w, sigma2):
     ax.set_ylim([0, 1])
     ax.set_xticks(centers)
     
-    # 创建x轴标签
     xticklabels = []
     for c in range(nC):
         label = (
@@ -95,16 +92,15 @@ def mop_plot(u, w, sigma2):
 
 
 def mop_hist(w, mp, sigma2, ax=None, legend=True):
-    """
-    绘制优先级直方图
-    
+    """绘制优先级直方图
+
     Args:
         w: 优先级向量矩阵 (nC x nA)
         mp: 混合概率 (nC,)
         sigma2: 不一致性水平 (nC,)
         ax: matplotlib轴对象（可选）
         legend: 是否显示图例
-        
+
     Returns:
         fig, ax: 图形对象
     """
@@ -142,7 +138,6 @@ def mop_hist(w, mp, sigma2, ax=None, legend=True):
             size=8
         )
     
-    # 添加文本注释
     if nC > 1:
         annotation = f"$\\pi_1={round(mp[0] * 100, 2)}\\%$\n$\\sigma^2_1={round(sigma2[0], 2)}$"
     else:

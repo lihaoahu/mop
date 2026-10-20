@@ -11,8 +11,6 @@ from pathlib import Path
 import numpy as np
 from scipy.special import logit
 
-# Fitting parameters come from experiments/mop_params.json, the single source of
-# truth. They used to be hard-coded here and in three other scripts.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
                          max_components)
@@ -28,7 +26,6 @@ EPS = 1e-10
 T = CANONICAL_TYPES
 TYPE_MAP_FULL = {**TYPE_MAP, "燃油": "燃油", "纯电": "纯电", "插混": "插混", "增程": "增程"}
 
-# ── Load data ─────────────────────────────────────────────────────
 
 def load_pairs(dim=None):
     pairs = []
@@ -46,7 +43,6 @@ def load_pairs(dim=None):
     return pairs
 
 
-# ── Fit MoP (same as step1) ───────────────────────────────────────
 
 def fit_mop(pairs, nA, max_K=None):
     if max_K is None:
@@ -59,13 +55,11 @@ def fit_mop(pairs, nA, max_K=None):
     X, y, _ = comparisons2regression(pcv, link_fns)
     nJ = len(pcv)
     lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
-    # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
 
     best_k, best_bic, best_result, best_ll = None, np.inf, None, None
     models = {}
 
     for k in range(1, max_K+1):
-        # K-Ridge from scratch at every candidate count; deterministic, no warm chain.
         u0, phi0, mp0 = kridge(X, y, k)
         result = inference.mop(pcv, link_fns, k, lambda_u=lu, lambda_pi=lpi, lambda_sigma=ls,
                                u_init=u0, sigma2_init=phi0, mp_init=mp0)
@@ -86,7 +80,6 @@ def fit_mop(pairs, nA, max_K=None):
     return best_k, models
 
 
-# ── BT log-likelihood ─────────────────────────────────────────────
 
 def bt_own_log_likelihood(pairs, w):
     """BT's own log-likelihood (Bernoulli on probability scale)."""
@@ -124,7 +117,6 @@ def fit_bt(pairs, nA):
     return w, bt_own_log_likelihood(pairs, w)
 
 
-# ── Revelatory metrics ────────────────────────────────────────────
 
 def component_divergence(ws):
     """Mean pairwise cosine distance between component priority vectors."""
@@ -141,11 +133,8 @@ def component_divergence(ws):
 
 def information_gain(ll_mop, ll_p1, n_params_mop, n_params_p1, n_pairs):
     """AIC-like information gain per comparison."""
-    # LL gain
     ll_gain = ll_mop - ll_p1
-    # Parameter cost
-    delta_params = n_params_mop - n_params_p1  # each extra component: (nA-1) w + 1 pi + 1 sigma2
-    # Net gain per comparison
+    delta_params = n_params_mop - n_params_p1
     net_per_pair = (ll_gain - delta_params) / n_pairs
     return {"ll_gain": float(ll_gain), "delta_params": delta_params,
             "net_per_pair": float(net_per_pair), "bic_gain": float(2*ll_gain - np.log(n_pairs)*delta_params)}
@@ -158,7 +147,6 @@ def analyze(label, pairs, nA=4):
 
     best_k, models = fit_mop(pairs, nA)
 
-    # P=1 is K=1
     p1 = models[1]
     mop = models[best_k]
 
@@ -166,13 +154,10 @@ def analyze(label, pairs, nA=4):
     pis = mop["pis"]
     sigmas = mop["sigma2"]
 
-    # Component divergence
     div = component_divergence(ws)
 
-    # LL gain: MoP(P) vs MoP(1) — nested comparison, same likelihood
     ll_gain = models[best_k]["ll"] - models[1]["ll"]
 
-    # Rankings
     def rank_str(w):
         idx = np.argsort(-w)
         return " > ".join([T[i] for i in idx])
@@ -183,10 +168,8 @@ def analyze(label, pairs, nA=4):
     print(f"  P=1 LL: {models[1]['ll']:.1f}    MoP LL: {models[best_k]['ll']:.1f}    Δℓ: {ll_gain:.1f}")
     print(f"  Component divergence: {div:.4f}")
     print(f"  Components:")
-    # if minprior is on the fitted mixture can be smaller than the candidate P
     for i in range(len(pis)):
         print(f"    C{i+1}: π={pis[i]:.4f}  σ²={sigmas[i]:.4f}  {rank_str(ws[i])}")
-    # Expected utility, the aggregate the manuscript reports
     u_bar = expected_utility(ws, pis)
     print(f"    Expected utility: {rank_str(u_bar)}")
     print(f"  P=1: π=1.0000  σ²={models[1]['sigma2'][0]:.4f}  {rank_str(models[1]['ws'][0])}")
@@ -207,17 +190,12 @@ def analyze(label, pairs, nA=4):
     }
 
 
-# ═══════════════════════════════════════════════════════════════════
-# Main
-# ═══════════════════════════════════════════════════════════════════
 
 def main():
     results = {}
 
-    # Overall
     results["overall"] = analyze("Overall", load_pairs())
 
-    # Per dimension
     for dim in ["cost", "driving_experience", "range", "refueling_convenience",
                 "reliability", "policy", "other"]:
         pairs = load_pairs(dim=dim)
@@ -225,7 +203,6 @@ def main():
         if r:
             results[dim] = r
 
-    # Save
     out_path = SIM_DIR / "revelatory_results.json"
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)

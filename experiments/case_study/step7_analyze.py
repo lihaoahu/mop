@@ -1,9 +1,4 @@
-"""Step 7: MoP 分析（整体 + 七维度 + 年份对比）。
-
-用法:
-    uv run python experiments/case_study/step7_analyze.py              # 全部分析
-    uv run python experiments/case_study/step7_analyze.py --dim cost   # 单维度
-"""
+"""Step 7: MoP 分析（整体 + 七维度 + 年份对比）。"""
 
 import argparse, json, sys
 from pathlib import Path
@@ -13,9 +8,6 @@ from mop import inference, pairwise_comparison
 from mop.initialization import kridge
 from mop.inference import comparisons2regression
 
-# The MoP fitting parameters live in one file, experiments/mop_params.json, read
-# through experiments/_mop_params.py. They used to be hard-coded here (and in four
-# other scripts), while config.json documented them without any script reading it.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from _mop_params import (max_components_for, lambda_u, lambda_pi, lambda_sigma_for,   # noqa: E402
                          max_components, summary)
@@ -45,15 +37,7 @@ def load_pairs(dim_name=None, year=None):
 
 
 def _fit_kridge(pcvector, link_functions, k, lu, lpi, ls, X, y):
-    """Fit ``k`` components from the K-Ridge initialiser, from scratch.
-
-    The initialiser seeds the components on the judgments the current mixture explains least,
-    refines them by alternating assignment and ridge re-estimation, and hands the result to the
-    EM algorithm. It is deterministic: the same data give the same starting point and the same
-    fit, which is what makes the selected count reproducible. The grid does not carry a fit
-    forward from a smaller count; a chained start inherits the local optimum the smaller fit
-    reached, and on this case study that changed the selected count on two dimensions.
-    """
+    """Fit ``k`` components from the K-Ridge initialiser, from scratch."""
     u0, phi0, mp0 = kridge(X, y, k)
     result = inference.mop(pcvector, link_functions, k, lambda_u=lu, lambda_pi=lpi,
                            lambda_sigma=ls, u_init=u0, sigma2_init=phi0, mp_init=mp0)
@@ -63,11 +47,7 @@ def _fit_kridge(pcvector, link_functions, k, lu, lpi, ls, X, y):
 
 
 def run_mop(pairs, trace=None):
-    """MoP 拟合，K 从 1 搜到 mop_params.json 的 max_components。
-
-    trace: 可选 dict；给了就写入 trace["bic_vals"]（每个 K 的 pBIC）和
-    trace["models"]（每个 K 的完整结果），供画图和审计使用。
-    """
+    """MoP 拟合，K 从 1 搜到 mop_params.json 的 max_components。"""
     nJ = len(pairs)
     name_to_id = {t: i + 1 for i, t in enumerate(T)}
     pcvector = [pairwise_comparison.PairwiseComparison(
@@ -78,23 +58,14 @@ def run_mop(pairs, trace=None):
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA = X.shape[1]
     lu, lpi, ls = lambda_u, lambda_pi, lambda_sigma_for(nJ)
-    # φ₀ (Eq. general gci) 由 inference.prior_mode_phi0 定义一次，拟合与 pBIC 共用
 
     prev = None
     models, bic_vals = {}, {}
-    # nA is the column count of X, i.e. A - 1. The search cap is stated in terms of
-    # alternatives, so it must receive A. Passing nA capped the case study's grid at
-    # (A-1)! = 6 candidates while the paper reports a search over min(A!, 9) = 9 and
-    # the other experiments (step1/step4) already searched nine.
     for k in range(1, max_components_for(nA + 1) + 1):
         result, bic_val = _fit_kridge(pcvector, link_functions, k, lu, lpi, ls, X, y)
         models[str(k)] = {**result.to_dict(), "bic": bic_val}
         bic_vals[k] = bic_val
 
-        # If minprior is turned on and a candidate loses a component to it,
-        # raising the candidate further can only reproduce that mixture, so the
-        # search stops there. With the default of no removal the test never
-        # fires and the whole grid is searched.
         if len(result) < k:
             break
 
@@ -109,13 +80,7 @@ def run_mop(pairs, trace=None):
 
 
 def _report(display, n_j, best_k, best):
-    """Print one fit in the form the paper's tables are set from.
-
-    Tables 5, 6 and 8 carry the mixture weight, the inconsistency level and the
-    priority vector of every component, and this script is their only source, so
-    it prints all three rather than the aggregate alone. The component lines are
-    in the canonical type order, which is the column order of those tables.
-    """
+    """Print one fit in the form the paper's tables are set from."""
     pis = best["mixture"]["pis"]
     phis = best["mixture"]["inconsistencies"]
     ws = best["mixture"]["priorities"]
@@ -138,16 +103,13 @@ def main():
         _analyze_one(args.dim, args.dim)
         return
 
-    # 1. 整体
     bk, best, _, n_j = run_mop(load_pairs())
     _report("整体", n_j, bk, best)
 
-    # 2. 维度分解
     print(f"\n{'='*60}\n维度分解\n{'='*60}")
     for dim in DIMS:
         _analyze_one(dim, f"{DIM_LABELS[dim]} ({dim})")
 
-    # 3. 年份对比
     print(f"\n{'='*60}\n年份对比\n{'='*60}")
     for year in ["2025", "2026"]:
         _analyze_one(f"{year}", f"{year}年", year=year)

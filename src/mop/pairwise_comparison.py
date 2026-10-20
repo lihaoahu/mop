@@ -85,13 +85,11 @@ def comparisons2regression(
         for pc in pcvector:
             all_ids.add(pc.former_id)
             all_ids.add(pc.latter_id)
-        # 使用最大ID而非数量，确保设计矩阵有足够的列
         nA = max(all_ids) if all_ids else 0
 
     nJ = len(pcvector)
     d = np.array([pc.agent_id for pc in pcvector])
     
-    # 创建 agent_id 到连续索引的映射，处理不连续的 agent_id
     unique_agents = sorted(set(d))
     agent_to_idx = {agent: idx for idx, agent in enumerate(unique_agents)}
     nE = len(unique_agents)
@@ -110,7 +108,6 @@ def comparisons2regression(
         X[k, pc.latter_id - 1] = -1
 
         judgment = pc.judgment
-        # 使用映射后的索引访问链接函数
         link_func = link_functions[agent_to_idx[pc.agent_id]]
 
         try:

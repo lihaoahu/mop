@@ -1,21 +1,4 @@
-"""Run the parameter gate and, if it fails, preserve everything needed to explain why.
-
-The gate's third check runs `step7_analyze.py` as a subprocess and compares its output to
-`analysis_output.txt`. It has failed intermittently -- three times across many runs, never
-reproducible in isolation, and step7 is deterministic when run on its own (two consecutive
-runs byte-identical). Rather than guess at the cause, this wrapper records enough to settle
-it next time:
-
-  * the gate's stdout and stderr, separately and unbuffered;
-  * step7's stdout, stderr and exit code from an independent run;
-  * sha256 of `analysis_output.txt` and of the normalised step7 output;
-  * the first differing line, if any.
-
-Artifacts go to `_scratch/gate_failure_<timestamp>/` and the path is printed.
-
-Run:
-    uv run python experiments/_gate_diagnose.py
-"""
+"""Run the parameter gate and, if it fails, preserve everything needed to explain why."""
 from __future__ import annotations
 
 import hashlib
@@ -45,11 +28,9 @@ def main():
     scratch = REVISED.parent / "_scratch"
     env = {**os.environ, "PYTHONPATH": str(REVISED / "src")}
 
-    # 1. the gate itself
     gate = subprocess.run([sys.executable, "-u", str(EXPERIMENTS / "_mop_params_check.py")],
                           capture_output=True, text=True, env=env)
 
-    # 2. step7 alone
     s7 = subprocess.run([sys.executable, "-u", str(CASE / "step7_analyze.py")],
                         cwd=str(CASE), capture_output=True, text=True, env=env)
 
@@ -72,9 +53,6 @@ def main():
         f"first difference    : {first_diff}",
     ]
 
-    # Artifacts only when something actually failed. A passing run writing a directory
-    # every time just fills the scratch tree with twelve copies of the same result, which
-    # is what the first version of this script did.
     if gate.returncode != 0 or want != got:
         out = scratch / f"gate_failure_{stamp}"
         out.mkdir(parents=True, exist_ok=True)

@@ -1,13 +1,4 @@
-"""Cross-check the two estimation routes against each other.
-
-The package fits the same model two ways: ``mop.general_fit.fit_map`` maximises the penalised
-log-posterior numerically for any family, and ``mop.inference.mop`` runs the closed-form EM that
-the Gaussian variants admit. They must agree where both apply. This script is that check, and it
-is the reason a disagreement between them is a bug rather than a modelling choice.
-
-Run: uv run python tests/check_general_fit.py
-Exit 0 when every check passes.
-"""
+"""Cross-check the two estimation routes against each other."""
 from __future__ import annotations
 
 import sys

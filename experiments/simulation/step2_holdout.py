@@ -1,9 +1,5 @@
 """Step 2: Holdout prediction — per-dimension CV, best-match for MoP.
 
-MoP predicts K scores (one per component); error is computed against the
-component whose prediction is closest to the true score. P=1 predicts a
-single score.
-
 Usage:
     uv run python experiments/simulation/step2_holdout.py
     uv run python experiments/simulation/step2_holdout.py --min-pairs 200
@@ -106,9 +102,6 @@ def run_cv(pairs, n_folds=5, random_seed=42):
     all_fold_results = {m: {"mse": [], "mae": [], "pearson_r": [],
                              "spearman_rho": [], "accuracy": [], "time_s": []}
                          for m in METHODS}
-    # A fold that raises is skipped, so the number of folds a method actually
-    # contributed has to be recorded: n_folds below is the number requested, and
-    # reporting that alone would let a lost fold pass as a complete run.
     folds_used = {m: 0 for m in METHODS}
 
     for train_idx, test_idx in skf.split(pairs_arr, dims):
@@ -123,7 +116,7 @@ def run_cv(pairs, n_folds=5, random_seed=42):
                 if method == "MoP":
                     state = fit_mop(train_pairs, nA, max_K=4)
                     preds_mat = predict_mop_per_component(state, test_pairs)
-                else:  # P=1
+                else:
                     state = fit_single_k1(train_pairs, nA)
                     preds_mat = predict_single_k1(state, test_pairs).reshape(1, -1)
 
@@ -211,9 +204,6 @@ def main():
                           for dim, dr in dim_results.items()},
     }
     with open(HOLDOUT_RESULTS, "w", encoding="utf-8") as f:
-        # Wall-clock is dropped, as it is from step1's results: it differs on
-        # every run, and keeping it made this the second artefact a re-run could
-        # not reproduce. The timings are still printed above.
         def without_timings(obj):
             if isinstance(obj, dict):
                 return {k: without_timings(v) for k, v in obj.items() if k != "time_s"}

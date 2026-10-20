@@ -1,31 +1,4 @@
-"""
-Initialisation for the EM algorithm.
-
-The scheme is recursive in the number of components. ``ridge_init`` supplies
-the starting value for ``P = 1``, a single weighted ridge regression over every
-judgment. ``seed_component`` is the K-Ridge step: given the components already
-present, it places one further component where they explain least, by ridge
-regression on the judgments with the largest residual. ``kridge`` builds all
-components at once with ``ridge_init`` and repeated calls to ``seed_component``,
-then refines them by hard assignment; it is the initialiser the model-selection
-grid uses at every candidate count.
-
-Two response scales are supported:
-
-* ``family=None`` -- the response ``y`` is already on the transformed scale
-  (``y = g(r)``). The Gaussian family then applies to that response, which
-  gives the Gaussian variants of the manuscript when ``g`` is the logit or the
-  logarithm.
-
-* ``family=Family(...)`` -- ``y`` is the response ``r`` on its own scale, and
-  the same construction is carried out by iteratively reweighted least squares
-  on that scale, with deviance residuals standing in for squared residuals.
-
-The Gaussian family makes the second regime collapse onto the first: its
-variance function is identically one, its response function is the identity, and
-a deviance residual is a squared residual. The two paths are therefore the same
-algorithm, not two algorithms sharing a name.
-"""
+"""Initialisation for the EM algorithm."""
 
 from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
@@ -40,14 +13,7 @@ except ImportError:  # pragma: no cover
 
 @dataclass
 class Family:
-    """Everything the initialiser needs to know about the observation model.
-
-    h        response function, ``h(eta) = E[r | eta]``
-    h_prime  its derivative with respect to eta
-    V        variance function, ``Var[r | eta] = phi * V(h(eta))``
-    loglik   ``loglik(y, mu)``, the log-density of a single response at mean mu,
-             used for the deviance residuals and for the Pearson estimate
-    """
+    """Everything the initialiser needs to know about the observation model."""
 
     h: Callable[[np.ndarray], np.ndarray]
     h_prime: Callable[[np.ndarray], np.ndarray]
@@ -68,11 +34,7 @@ class GaussianFamily(Family):
 
 
 def _irls(X, r, family, weights, lambda_reg, max_iter=25, tol=1e-10):
-    """Weighted ridge fit of u by iteratively reweighted least squares.
-
-    ``weights`` are the observation weights (responsibilities, or binomial
-    trial counts); the IRLS weights from the variance function multiply them.
-    """
+    """Weighted ridge fit of u by iteratively reweighted least squares."""
     _, d = X.shape
     u = np.zeros(d)
     prior_w = np.asarray(weights, dtype=np.float64)
@@ -80,12 +42,6 @@ def _irls(X, r, family, weights, lambda_reg, max_iter=25, tol=1e-10):
     for _ in range(max_iter):
         eta = X @ u
         mu = family.h(eta)
-        # The IRLS weight is 1 / (V(mu) * [g'(mu)]^2), which is h'(eta)^2 / V(mu)
-        # because h' = dmu/deta = 1/g'. Under the logit that is mu(1-mu); taking
-        # 1/V(mu) alone would give 1/(mu(1-mu)) instead, a different fixed point
-        # that does not solve the score equations. The two agree only where
-        # h' = 1, i.e. in the Gaussian variants, which is the only path the
-        # paper's fits take.
         irw = family.h_prime(eta) ** 2 / np.maximum(family.V(mu), 1e-12)
         w = prior_w * irw
         z = eta + (r - mu) / np.maximum(np.abs(family.h_prime(eta)), 1e-12) * np.sign(
@@ -107,7 +63,6 @@ def _irls(X, r, family, weights, lambda_reg, max_iter=25, tol=1e-10):
 
 def _deviance_residuals(r, mu, family):
     """Signed deviance residuals, the GLM analogue of |r - mu|."""
-    # saturated log-likelihood minus fitted log-likelihood, doubled
     dev = 2.0 * (family.loglik(r, r) - family.loglik(r, mu))
     dev = np.maximum(dev, 0.0)
     return np.sign(r - mu) * np.sqrt(dev)
@@ -123,11 +78,7 @@ def _pearson_dispersion(r, mu, family, weights, n_params):
 
 
 def binomial_deviance_residuals(m, n, mu):
-    """Signed deviance residuals for counts.
-
-    ``m`` successes out of ``n`` trials at fitted probability ``mu``. Terms with
-    a zero count contribute nothing, which is the usual convention 0 log 0 = 0.
-    """
+    """Signed deviance residuals for counts."""
     m = np.asarray(m, dtype=np.float64)
     n = np.asarray(n, dtype=np.float64)
     mu = np.clip(np.asarray(mu, dtype=np.float64), 1e-12, 1.0 - 1e-12)
@@ -150,12 +101,7 @@ def _logistic(eta: np.ndarray) -> np.ndarray:
 
 
 def binomial_family() -> Family:
-    """The logistic model for counts, in the language the initialiser expects.
-
-    ``loglik`` is a placeholder: for counts the deviance cannot be written from
-    the proportion alone, so ``kridge`` is given ``binomial_deviance_residuals``
-    explicitly through its ``deviance`` argument.
-    """
+    """The logistic model for counts, in the language the initialiser expects."""
     return Family(
         h=_logistic,
         h_prime=lambda eta: _logistic(eta) * (1.0 - _logistic(eta)),
@@ -195,12 +141,7 @@ def _component_residual(X, r, weights, family, deviance):
 
 
 def ridge_init(X, y, family=None, weights=None, lambda_reg=1e-10):
-    """The ``P = 1`` initialisation: one weighted ridge regression, all judgments.
-
-    With a ``family`` the ridge regression is replaced by its iteratively
-    reweighted least squares counterpart, which is the same fit on the response
-    scale.
-    """
+    """The ``P = 1`` initialisation: one weighted ridge regression, all judgments."""
     nJ = X.shape[0]
     r = np.asarray(y, dtype=np.float64)
     w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
@@ -209,13 +150,7 @@ def ridge_init(X, y, family=None, weights=None, lambda_reg=1e-10):
 
 def seed_component(X, y, u_prev, family=None, weights=None, lambda_reg=1e-10,
                    deviance=None):
-    """The K-Ridge step: one further component, where the fit is worst.
-
-    ``u_prev`` holds the utilities of the components already present, one per
-    row. The ``min(A, K)`` judgments with the largest residual under those
-    components are fitted by ridge regression, so the new component starts
-    where the current mixture explains least.
-    """
+    """The K-Ridge step: one further component, where the fit is worst."""
     nJ, nA_minus_1 = X.shape
     r = np.asarray(y, dtype=np.float64)
     w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
@@ -223,8 +158,6 @@ def seed_component(X, y, u_prev, family=None, weights=None, lambda_reg=1e-10,
     all_idx = np.arange(nJ)
 
     prev = np.atleast_2d(np.asarray(u_prev, dtype=np.float64))
-    # A judgment is badly explained when the component nearest to it is still
-    # far, so the residual is the smallest over the components already present.
     worst = np.min(np.column_stack([residual(all_idx, u) for u in prev]), axis=1)
     n_edge = min(nA_minus_1 + 1, nJ)
     idx = np.where(worst >= np.sort(worst)[-n_edge])[0]
@@ -243,12 +176,6 @@ def kridge(
     deviance: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray]] = None,
 ):
     """Seed ``nP`` components from scratch, then refine them by hard assignment.
-
-    This is the initialiser the model-selection grid uses at every candidate
-    count. The components are seeded from the judgments farthest from the
-    component set, and the assignments are then refined by alternating
-    assignment and re-estimation. It is deterministic: the same data and the
-    same count give the same starting point.
 
     Args:
         X: design matrix, ``(nJ, nA-1)``
@@ -279,11 +206,6 @@ def kridge(
 
     for p in range(nP - 1):
         res = np.column_stack([residual(all_idx, u[q, :]) for q in range(p + 1)])
-        # A judgment is badly explained when the component nearest to it is still
-        # far, so this is the smallest residual over the components present --
-        # the rule Algorithm 2 of the manuscript states. This used max, which
-        # selects the judgment farthest from its *worst* component instead, and
-        # disagreed with seed_component below.
         worst = np.min(res, axis=1)
         n_edge = min(nA_minus_1 + 1, nJ)
         threshold = np.sort(worst)[-n_edge] if n_edge > 0 else np.max(worst)
@@ -291,11 +213,6 @@ def kridge(
         if idx.size > 0:
             u[p + 1, :] = fit(idx, w_all[idx])
 
-    # Alternate between assigning and refitting. The assignment is the state of the
-    # iteration: once it repeats, the refit on the same assignments returns the same
-    # utilities, so the next round would repeat this one and the loop has reached its
-    # fixed point. The 100-round ceiling is never reached in practice (the case study
-    # converges in 11-14 rounds) and is kept only as a guard.
     prev_cls = None
     for _ in range(100):
         res = np.column_stack([residual(all_idx, u[p, :]) for p in range(nP)])
@@ -308,8 +225,6 @@ def kridge(
             if np.sum(mask) > 0:
                 u[p, :] = fit(all_idx[mask], w_all[mask])
 
-    # dispersion: residual mean square on the transformed scale, Pearson on the
-    # response scale
     if family is None:
         phi0 = float(np.sum(w_all * (X @ u[0, :] - r) ** 2) / max(np.sum(w_all), 1.0))
     else:

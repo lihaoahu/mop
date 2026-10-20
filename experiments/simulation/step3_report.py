@@ -80,11 +80,6 @@ def generate_text_report(sim_data, holdout_data):
         for method in ["MoP", "P=1", "BTL"]:
             if method in agg and "cosine_sim" in agg[method]:
                 m = agg[method]
-                # The noise scenario has no single true K, so step1_simulation.py
-                # drops k_accuracy for it. Defaulting that to 0 printed
-                # "K_acc=0.000" in every replicate, which reads as the opposite
-                # of what the scenario shows. kl_pi is absent for the same kind
-                # of reason: a model with no mixture has no weights to compare.
                 ka = f"{m['k_accuracy']:.3f}" if "k_accuracy" in m else "  ---"
                 kl = f"{m['kl_pi']['mean']:.4f}" if "kl_pi" in m else "  ---"
                 lines.append(
@@ -146,9 +141,6 @@ def generate_simulation_tables(sim_data):
             for method in ["MoP", "P=1", "BTL"]:
                 if method in agg and "cosine_sim" in agg[method]:
                     m = agg[method]
-                    # Same rule as the text report: the noise scenario has no
-                    # single true K, so step1_simulation.py drops k_accuracy and
-                    # defaulting it to zero would print the opposite of the data.
                     ka = f"{m['k_accuracy']:.3f}" if "k_accuracy" in m else "---"
                     rows.append([
                         cond if method == "MoP" else "", method,
@@ -179,15 +171,9 @@ def _scenario_table(name, w, pi):
 
 
 def generate_holdout_table(holdout_data):
-    # step2_holdout.py writes {"n_folds", "n_pairs_total", "overall",
-    # "per_dimension"}, not "results"/"n_pairs": reading the old names produced
-    # a table with a header, an empty body and "$n=?$" in the caption.
     results = holdout_data.get("overall", holdout_data.get("results", {}))
     n_folds = holdout_data.get("n_folds", "?")
     n_pairs = holdout_data.get("n_pairs_total", holdout_data.get("n_pairs", "?"))
-    # The wall-clock column is deliberately not printed: it differs on every run,
-    # which made the committed table the one artefact a re-run could never
-    # reproduce. The timings stay in holdout_results.json.
     header = ["Method", "MSE↓", "MAE↓", "Pearson r↑", "Spearman ρ↑"]
     rows = []
     for method in ["MoP", "P=1", "BTL"]:

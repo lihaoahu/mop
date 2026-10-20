@@ -1,56 +1,4 @@
-"""Does the structural inconsistency carry information under each protocol?
-
-The paper's revised thesis is that intrinsic variability and structural inconsistency
-are separable depending on the protocol: identifiable for the Gaussian variants
-(ratio, subjective probability), degenerate for the binomial ones (binary and repeated
-choice), where Section 2.3 fixes `phi_p = 1`. This tests that claim in a way that needs
-no comparison between the two protocols.
-
-Why the first two attempts failed
----------------------------------
-*Attempt 1* compared each protocol's penalized objective against the other's. Their
-objectives are not on a common scale -- one fits `logit(r)`, the other fits counts -- so
-the magnitudes were never comparable.
-
-*Attempt 2* rescaled the observation weights and looked for the likelihood to be
-invariant. It is not invariant in the fitted model, because the L2 ridge on the
-utilities does not rescale with the likelihood: multiplying `omega` by `c` multiplies
-the likelihood by `c` while leaving the ridge fixed, so the penalty's relative influence
-changes and the fit moves. That is a real property of the estimator and it is reported
-below, but it is a confound for the question, not an answer.
-
-The decisive form
------------------
-Do not compare protocols. Ask, inside each one, whether the likelihood has any curvature
-in `phi`. At fixed parameters the log-likelihood contribution of judgment `k` is
-
-    binomial   omega_k [ m_k eta_k - n_k log(1 + exp eta_k) ]        (phi absent)
-
-    Gaussian   -0.5 log(2 pi phi) - 0.5 omega_k (y_k - eta_k)^2 / phi
-
-The first is LINEAR in `phi`, so its second derivative with respect to `phi` is exactly
-zero: every value of `phi` scores identically, there is nothing to maximise, and `phi`
-carries no information. The second has second derivative
-`1/(2 phi^2) - omega_k (y_k - eta_k)^2 / phi^3`, negative at the maximum, so it has a peak and
-`phi` is set by the data.
-
-So the test is the curvature, `d2 L / d phi2`:
-    ~ 0        not identified
-    clearly < 0  identified
-
-and the same number is computed the same way in both protocols. No scale comparison, no
-weight rescaling, and the binomial value is an identity that does not need a fit.
-
-Regularisation is then examined separately, because it does something interesting: it
-DESTROYS the non-identifiability. With an L2 ridge on the utilities the estimator is no
-longer invariant to the likelihood's scale, so `phi` becomes weakly identified through
-the prior rather than by the data. That is worth stating plainly in the paper, and it is
-measured here rather than asserted.
-
-Run:
-    uv run python experiments/protocol_identifiability.py
-    uv run python experiments/protocol_identifiability.py --dim policy
-"""
+"""Does the structural inconsistency carry information under each protocol?"""
 from __future__ import annotations
 
 import argparse
@@ -74,31 +22,12 @@ EPS = 1e-12
 
 
 def binomial_curvature(omega):
-    """d2/dphi2 of the binomial log-likelihood: exactly zero, by linearity.
-
-    The likelihood contribution is ``omega_k [m_k eta_k - n_k log(1+exp eta_k)]``, with
-    no `phi` in it at all under Section 2.3. So the second derivative is identically
-    zero for every judgment and every parameter value. Returned as an array so the
-    caller can confirm numerically what the algebra says.
-    """
+    """d2/dphi2 of the binomial log-likelihood: exactly zero, by linearity."""
     return np.zeros_like(np.asarray(omega, dtype=float))
 
 
 def gaussian_curvature(omega, phi, r2=None):
-    """d2/dphi2 of the Gaussian log-likelihood: ``1/(2 phi^2) - omega r^2 / phi^3``.
-
-    Differentiating ``-0.5 log(2 pi phi) - 0.5 omega_k r_k^2 / phi`` twice in phi gives
-
-        d2L/dphi2 = 1/(2 phi^2) - omega_k r_k^2 / phi^3,
-
-    which does depend on the residual: the log term contributes the positive 1/(2 phi^2)
-    and cannot be dropped, as an earlier version of this function did. With ``r2=None``
-    the residuals are taken at the profile's maximum, ``omega_k r_k^2 = phi``, where the
-    per-judgment curvature is ``-1/(2 phi^2)`` and the total is ``-nJ/(2 phi^2)``. That
-    is the value that matters for identification: the likelihood is locally concave at
-    its peak. Far from it the same expression can be positive, which is why the claim is
-    about curvature at the maximum rather than everywhere.
-    """
+    """d2/dphi2 of the Gaussian log-likelihood: ``1/(2 phi^2) - omega r^2 / phi^3``."""
     omega = np.asarray(omega, dtype=float)
     phi = np.asarray(phi, dtype=float)
     if r2 is None:
@@ -122,8 +51,6 @@ def main():
     label = args.dim or "overall"
     s2 = float(prior_mode_phi0(X, y))
 
-    # The binomial reading of the same judgments, which is what gives the protocol its
-    # observation weight: M repetitions, so omega_k = M.
     m = np.round(expit(y) * args.M)
     omega = np.full(nJ, float(args.M))
 
@@ -131,7 +58,6 @@ def main():
     print(f"  {MP.summary()}")
     print(f"  binomial reading: omega_k = M = {args.M}\n")
 
-    # ── 1. the curvature, which is the whole test ──
     b_curv = binomial_curvature(omega)
     print("1. curvature of the log-likelihood in phi")
     print(f"   binomial  d2L/dphi2 : every entry = 0  "
@@ -153,7 +79,6 @@ def main():
     print("   parameter -- so unlike an objective comparison there is no scale issue:")
     print("   zero against strictly negative is the whole statement.")
 
-    # ── 2. the profile, to show the same thing in fitted terms ──
     print(f"\n2. profile of the penalized objective over phi, {label}, P=2")
     try:
         from step9_phi_identification import fit

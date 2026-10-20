@@ -1,29 +1,4 @@
-"""Recovering the structural inconsistency: the simulation the abstract assumes.
-
-The abstract says MoP "recovers latent structure, isolates noise, and separates the two
-sources where a single dispersion parameter cannot". The first two are supported by
-`experiments/simulation`, but the third is not: that simulation fixes `phi = 0.05`
-throughout (`simulation/config.json`, one value) and never varies or tests the
-dispersion. So the paper claims an experiment it does not have.
-
-This is that experiment, in the smallest form that answers the question. On synthetic
-Gaussian data with a known `phi`:
-
-  1. does the estimator recover the true dispersion?
-  2. does the correct number of preference states survive as `phi` grows, or does a
-     single state start to suffice? A mixture of Gaussians is overdispersed relative to
-     one Gaussian, so a single state should absorb the extra spread -- that is the
-     "isolate vs absorb" behaviour the abstract appeals to, and it is exactly what
-     Section 2.5 concedes for the binomial protocol but claims to avoid here.
-
-Gaussian (the ratio / subjective-probability protocol) is where the claim lives, since
-it is the variant where `phi` is free; the binomial case is handled by
-`protocol_identifiability.py`.
-
-Run:
-    uv run python experiments/phi_recovery.py
-    uv run python experiments/phi_recovery.py --reps 5 --phi 0.5 1.0 2.0 4.0
-"""
+"""Recovering the structural inconsistency: the simulation the abstract assumes."""
 from __future__ import annotations
 
 import argparse
@@ -43,12 +18,9 @@ import _mop_params as MP                                            # noqa: E402
 from mop.pairwise_comparison import comparisons2regression          # noqa: E402
 from mop.pairwise_comparison import PairwiseComparison              # noqa: E402
 
-# Two well-separated preference states, so that is NOT confused by a failure to find
-# the states: what is measured here is the dispersion, not the recovery of u.
-# Utilities in the preference order of the state, A = 4 alternatives.
 ORDERS = [
-    [1.60, 0.80, 0.20, 0.00],     # state 1:  A > B > C > D
-    [0.00, 0.20, 0.80, 1.60],     # state 2:  D > C > B > A  (reversed)
+    [1.60, 0.80, 0.20, 0.00],
+    [0.00, 0.20, 0.80, 1.60],
 ]
 
 
@@ -63,11 +35,7 @@ def make_pairs(n_pairs, weights, rng):
 
 
 def simulate(n_pairs, true_phi, rng):
-    """Synthetic ratio judgments from a two-state mixture with known dispersion.
-
-    The judgment is generated on the log-ratio scale where the Gaussian variant lives:
-    ``y = u_i - u_j + Normal(0, phi)``, so the truth is exact and `phi` is known.
-    """
+    """Synthetic ratio judgments from a two-state mixture with known dispersion."""
     weights = np.array([0.5, 0.5])
     pairs = make_pairs(n_pairs, weights, rng)
     y = np.empty(n_pairs)
@@ -89,11 +57,6 @@ def design(pairs):
 
 def main():
     ap = argparse.ArgumentParser()
-    # The defaults are the configuration behind the ratios quoted in Section 3.1: six replicates
-    # per setting and 2,000 comparisons. They were 10 and 800 here, which a bare run would have
-    # used, and its numbers would not have matched the paper (at phi = 1 the ratio would have been
-    # 0.96 rather than 1.035). A default that does not reproduce the reported result is a
-    # reproducibility defect however good the other configuration is.
     ap.add_argument("--reps", type=int, default=6)
     ap.add_argument("--pairs", type=int, default=2000)
     ap.add_argument("--phi", type=float, nargs="+", default=[0.25, 0.5, 1.0, 2.0, 4.0])
@@ -127,14 +90,12 @@ def main():
         for _ in range(args.reps):
             pairs, y, states, w_true = simulate(nJ, tp, rng)
             X = design(pairs)
-            s2 = 1.0  # the comparison default; prior_mode_phi0 is undefined for the
-                      # free run here because the design is synthetic and balanced
+            s2 = 1.0
 
             r_free = fit(X, y, 2, free_phi=True, s2=s2)
             hats.append(float(np.mean(r_free["phi"])))
             ratios.append(float(np.mean(r_free["phi"])) / tp)
 
-            # Nested selection at P = 2, fixed phi, over the evaluated grid.
             plls = {}
             for g in grid:
                 plls[g] = fit(X, y, 2, free_phi=False, s2=s2, phi_fixed=g)["pll"]
@@ -142,7 +103,6 @@ def main():
             if abs(best_g - tp) < 1e-9:
                 true_phat_best += 1
 
-            # Component count, fixed phi against free phi.
             def best_p(free):
                 out = {}
                 for k in (1, 2, 3):

@@ -1,33 +1,4 @@
-"""One selection procedure for the component count, independent of where the search starts.
-
-Why this exists
----------------
-Three scripts reported the case study's component count and all three agreed, because all
-three initialise every candidate from the K-Ridge rule. The penalized
-objective is multimodal, so that shared habit fixed which local optimum they reached, and
-their agreement was an artefact of the shared procedure rather than evidence. Sweeping the
-grid's starting point exposes it: on the pooled data the free-dispersion search selects
-P=3 from a grid starting at 1 and P=4 from one starting at 4, where the criterion value is
-also lower (18346.1 against 18453.1).
-
-What "the" selection should mean
---------------------------------
-The count that minimises the criterion over the candidate set, taking the best optimum
-found rather than the first one a chain happens to reach. This module makes that explicit:
-
-  1. for each P in the candidate set, fit from the K-Ridge initialisation,
-     K-Ridge initialisation, and (optionally) starts seeded from neighbouring chains;
-  2. keep the fit with the highest penalized objective for that P;
-  3. select the P minimising pBIC (and report BIC alongside).
-
-The result is the best optimum located, and it is reported together with how much the
-answer would have differed under the naive chain, so the sensitivity is visible rather than
-silently resolved.
-
-Run:
-    uv run python experiments/selection.py --report          # every slice
-    uv run python experiments/selection.py --dim cost        # one slice
-"""
+"""One selection procedure for the component count, independent of where the search starts."""
 from __future__ import annotations
 
 import argparse
@@ -63,11 +34,7 @@ SLICES = [("overall", {}),
 
 
 def select_best(X, y, candidate, free_phi, s2):
-    """K-Ridge initialisation at every candidate count, then the lowest pBIC.
-
-    The initialiser is deterministic and independent at each count, so the selected count is
-    reproducible; no fit is carried forward from a smaller count.
-    """
+    """K-Ridge initialisation at every candidate count, then the lowest pBIC."""
     per_p = {}
     for k in candidate:
         u0, phi0, pi0 = kridge(X, y, k)

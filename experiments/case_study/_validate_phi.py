@@ -1,24 +1,4 @@
-"""One command that runs the acceptance checks for the Gaussian fit.
-
-Nothing from `step9_phi_identification.py` should be quoted unless all of these pass. They
-are ordered from cheapest to most expensive so a failure stops early.
-
-  1. parameter audit        every value from the config; the two objectives agree
-                            exactly at phi = 1
-  2. nesting                the free fit must reach a penalized objective at least
-                            as high as the fixed one, from a common start
-  3. implementation         the free-phi branch must reproduce mop.inference
-
-A fourth and fifth check used to run here -- the dispersion's robustness under alternative
-priors, and the stability of the selected component count under resampling. Both were part
-of the phi comparison; that analysis is finished and its conclusions are in the manuscript
-and in PHI_IDENTIFICATION.md, so the scripts that produced them were removed rather than
-left to be rerun for no reason. The resampling study was removed from the manuscript
-as well: the controlled simulations establish recovery, so a resampling stability check
-of the case-study count answered a question the simulations already answer.
-
-Run: uv run python experiments/case_study/_validate_phi.py
-"""
+"""One command that runs the acceptance checks for the Gaussian fit."""
 from __future__ import annotations
 
 import argparse
@@ -50,7 +30,6 @@ def main():
     results = []
     for name, argv in STEPS:
         code, out = run(argv[0], argv[1:])
-        # `_audit_params.py` returns 1 when the identity fails, which is the signal.
         ok = ("PASS" in out and "FAIL" not in out) if name == "parameter audit" else (
             code == 0)
         if name == "nesting":

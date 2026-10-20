@@ -1,24 +1,4 @@
-"""Verify that the externalised MoP parameters still reproduce the paper's output.
-
-The failure this guards against is not hypothetical. `lambda_sigma` was first written
-into `mop_params.json` as `0.05 * nJ` when the paper's rule is `nJ / 50`, i.e.
-`0.02 * nJ`; that is a prior differing by a factor of 2.5, and it moved the case
-study's selected component count from the recorded 4 to 3. Nothing in the code
-complained, because a wrong prior is still a valid prior. The only thing that caught
-it was comparing against the recorded output, so that comparison is now a script.
-
-Three checks, cheapest first:
-
-1. **The coefficient is 1/50.** An arithmetic identity, not a fitted quantity.
-2. **The configs agree.** `mop_params.json` is the single source of truth;
-   `phi_config.json` carries a copy for the reader's convenience, and a copy that
-   disagrees is how the two drifted apart in the first place.
-3. **The corpus fit reproduces the recorded run.** `analysis_output.txt` is the
-   source of every number the case study reports, so a parameter change that alters
-   it is a change to the paper.
-
-Run: uv run python experiments/_mop_params_check.py
-"""
+"""Verify that the externalised MoP parameters still reproduce the paper's output."""
 from __future__ import annotations
 
 import json
@@ -75,7 +55,6 @@ def check_configs_agree():
         ok &= same
         print(f"  {name:<22} phi_config={a!r:<8} mop_params={b!r:<8} "
               f"{'agree' if same else 'DISAGREE'}")
-    # The phi experiment's grid must sit inside the shared maximum.
     if m["max_components"] > MP.max_components:
         print(f"  phi_config max_components {m['max_components']} exceeds "
               f"mop_params {MP.max_components}")
@@ -85,16 +64,7 @@ def check_configs_agree():
 
 
 def check_recorded_output(attempts=2):
-    """The corpus fit must still produce the recorded analysis_output.txt.
-
-    Run more than once on failure. The check runs step7_analyze.py as a subprocess, and it
-    failed intermittently -- three times out of roughly fifteen, always passing when run
-    directly and always passing in batches -- with no difference the environment explains.
-    A check that fails at random is worse than no check, because a real regression would be
-    dismissed as flakiness, so the retry is here and the first failure is reported rather
-    than swallowed: if the second attempt disagrees too, the diff is printed and the check
-    fails for real.
-    """
+    """The corpus fit must still produce the recorded analysis_output.txt."""
     print("\ncheck 3: step7_analyze.py reproduces the recorded output")
     if not RECORDED.exists():
         print(f"  {RECORDED} missing; skipped")
@@ -136,13 +106,7 @@ def check_recorded_output(attempts=2):
 
 
 def check_no_hardcoded():
-    """No script may carry its own copy of the fitting parameters.
-
-    The duplicates are what let the config and the code disagree in the first place, so
-    the absence of duplicates is checked rather than assumed. Three files are allowed
-    to contain the literals and each is listed with its reason; anything else is an
-    error.
-    """
+    """No script may carry its own copy of the fitting parameters."""
     print("\ncheck 4: no script carries its own copy of the parameters")
     import re
 
@@ -156,24 +120,15 @@ def check_no_hardcoded():
         (r"lambda_u\s*=\s*1e-6", "hard-coded lambda_u"),
         (r"lambda_pi\s*=\s*1\b", "hard-coded lambda_pi"),
         (r"lambda_sigma\s*=\s*(?:nJ|\w+)\s*/\s*50", "hard-coded lambda_sigma"),
-        # A bare assignment, i.e. not a keyword argument: `ls = nJ / 50`. Requiring the
-        # name to be preceded by start/whitespace/`;` avoids matching `lambda_sigma=`.
         (r"(?:(?<=^)|(?<=[\s;]))(?:ls|lam_sigma)\s*=\s*[\w.]+\s*/\s*50",
          "hard-coded lambda_sigma"),
         ]
 
     def _in_docstring_or_comment(text, pos):
-        """True when the offset sits in a comment or inside a triple-quoted string.
-
-        Explanatory prose is full of the old values -- the loader's own docstring says
-        what they used to be -- and flagging that would make the check noise rather
-        than a check. Only live code counts.
-        """
+        """True when the offset sits in a comment or inside a triple-quoted string."""
         line_start = text.rfind("\n", 0, pos) + 1
         if text[line_start:pos].lstrip().startswith("#"):
             return True
-        # Count unescaped triple quotes before the position; an odd count means the
-        # position is inside a triple-quoted string.
         return len(re.findall(r'"""', text[:pos])) % 2 == 1
 
     offenders = []

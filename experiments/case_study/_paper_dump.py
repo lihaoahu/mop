@@ -1,15 +1,4 @@
-"""Full MoP detail dump, for inspection.
-
-Not a source for anything in the paper: no table or number in the manuscript
-comes from this script. By default it now runs with the PAPER's parameters, read
-from ``experiments/mop_params.json``, so that running it cannot produce numbers
-that look like the paper's while resting on different hyperparameters. Pass
-``--exploratory`` to use the older ``lambda_u = lambda_sigma = n/100`` setting
-instead, which diverges from the paper's ``lambda_u = 1e-6`` and
-``lambda_sigma = n/50``; that mode prints a banner naming every value it changes.
-The credibility figures it prints sample an approximate posterior. Use
-``step7_analyze.py`` for the paper's fits and ``_gen_tables.py`` for its tables.
-"""
+"""Full MoP detail dump, for inspection."""
 import sys, json, math
 from pathlib import Path
 import numpy as np
@@ -25,7 +14,6 @@ from _mop_params import (lambda_u as PAPER_LAMBDA_U, lambda_pi as PAPER_LAMBDA_P
 
 from _common import ENERGY_PAIRS, TYPE_MAP, T
 
-# Only used under --exploratory; the divisor that produced the old settings.
 D = 100
 EXPLORATORY = False
 EPS = 1e-10
@@ -56,8 +44,6 @@ def run_mop_full(pairs, label=""):
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nA = X.shape[1]
     if EXPLORATORY:
-        # Deliberately NOT the paper's settings. Named individually so a reader of the
-        # output cannot mistake it for the case study's fit.
         lu = lpi = ls = nJ / D
         print(f"    [EXPLORATORY] lambda_u = lambda_pi = lambda_sigma = nJ/{D} "
               f"= {ls:.4f}")
@@ -66,7 +52,6 @@ def run_mop_full(pairs, label=""):
               f"lambda_sigma = {lambda_sigma_for(nJ):.4f}")
     else:
         lu, lpi, ls = PAPER_LAMBDA_U, PAPER_LAMBDA_PI, lambda_sigma_for(nJ)
-    # φ₀ comes from inference.prior_mode_phi0, which the fit and pBIC share
     phi0 = inference.prior_mode_phi0(X, y)
 
     best_k, best_bic, best_result = None, np.inf, None
@@ -81,14 +66,9 @@ def run_mop_full(pairs, label=""):
         if val < best_bic:
             best_bic = val; best_k = k; best_result = result
 
-        # If minprior is turned on and a candidate loses a component to it,
-        # raising the candidate further can only reproduce that mixture, so the
-        # search stops there. With the default of no removal the test never
-        # fires and the whole grid is searched.
         if len(result) < k:
             break
 
-    # Compute credibility via posterior sampling
     nP = best_k
     u_mat = np.zeros((nP, nA))
     for p in range(nP):
@@ -97,7 +77,6 @@ def run_mop_full(pairs, label=""):
     sigma2_arr = np.array([best_result[p].inconsistency_level for p in range(nP)])
     mp_arr = best_result.mixture_probabilities
 
-    # Hard assignment for posterior params
     gkc = inference.e_gamma(X, y, u_mat, sigma2_arr, mp_arr)
     hard = np.argmax(gkc, axis=1)
     credibility = []
@@ -115,21 +94,17 @@ def run_mop_full(pairs, label=""):
         except:
             credibility.append(None)
             continue
-        # Sample from posterior
         modal_rank = tuple(np.argsort(-mp_vec))
         count = 0
         for _ in range(n_samples):
-            # v_p = (lambda_sigma + n_p + A - 3)/2, with A = nA + 1 alternatives
             s2_sample = 1 / np.random.gamma((ls + len(idx_p) + nA - 2)/2,
                                              1/(ls * phi0 / 2 + 1e-10) if ls * phi0 > 0 else 1)
-            # Actually proper sampling requires q_p which is complex. Approximate.
             u_sample = np.random.multivariate_normal(mp_vec, sigma2_arr[p] * Sp)
             rank = tuple(np.argsort(-u_sample))
             if rank == modal_rank:
                 count += 1
         credibility.append(count / n_samples)
 
-    # Weighted ranking
     weighted = np.zeros(len(T))
     for pi, pri in zip(mp_arr, [best_result[p].priority_vector for p in range(nP)]):
         weighted += np.array(pri) * pi

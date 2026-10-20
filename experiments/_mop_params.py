@@ -1,26 +1,4 @@
-"""Load the MoP fitting parameters from the single shared config.
-
-Why this module exists
-----------------------
-The same five values were once copied into four experiment scripts --
-
-    step7_analyze.py, simulation/step1_simulation.py,
-    simulation/step4_revelatory.py, simulation/_baselines.py
-
-each carrying its own ``lu = 1e-6; lpi = 1; ls = nJ / 50``, and the two
-``config.json`` files described those values without any script reading them. A
-change to one copy would therefore have disagreed silently with the others, and the
-config would have gone on describing the old numbers. Both the duplicate literals and
-the unread config are gone: everything comes from ``experiments/mop_params.json``
-through this module.
-
-Usage
------
-    from _mop_params import lambda_u, lambda_pi, lambda_sigma_for, max_components_for
-
-``lambda_sigma`` depends on the number of judgments being fitted, so it is not a
-constant: call ``lambda_sigma_for(nJ)``.
-"""
+"""Load the MoP fitting parameters from the single shared config."""
 from __future__ import annotations
 
 import json
@@ -60,46 +38,18 @@ reference_type: str = _get("reference_type")
 
 
 def max_components_for(n_alternatives: int) -> int:
-    """Upper end of the component search for a problem with ``A`` alternatives.
-
-    A preference state is an ordering of the alternatives, and there are ``A!`` strict
-    orderings. A search beyond that admits components that repeat an ordering, so the grid
-    stops at ``min(A!, max_components)``. For A = 4 this is min(24, 9) = 9, the grid the
-    paper's results were produced with; for A = 2 it is 2, so a binary problem cannot be
-    searched to nine components.
-
-    This is a modelling restriction on what counts as a distinct preference state, not an
-    identification theorem: two components that share an ordering but differ in intensity or
-    dispersion are different parameter points, which is how the noise scenario uses a second
-    component. The cap keeps the search inside the set of ordinally distinct states.
-    """
+    """Upper end of the component search for a problem with ``A`` alternatives."""
     return min(int(max_components), math.factorial(int(n_alternatives)))
 
 
 def lambda_sigma_for(n_judgments: int) -> float:
-    """lambda_sigma = 0.02 * n_judgments, the paper's nJ / 50.
-
-    The coefficient in the config is 0.02, not 0.05, because 1/50 = 0.02. It was
-    first written as 0.05, which is nJ/20 -- a different prior by a factor of 2.5 --
-    and the error was caught only because `step7_analyze.py` stopped reproducing the
-    case study's recorded output: at 0.05 the corpus pBIC curve bottoms out at K = 3
-    where the recorded run has K = 4. _mop_params_check.py now pins the identity
-    against the recorded output so this cannot drift again.
-
-    Section 2.4 needs lambda_sigma > 2 for the prior mode on phi to exist.
-    """
+    """lambda_sigma = 0.02 * n_judgments, the paper's nJ / 50."""
     value = LAMBDA_SIGMA_OVER_N * float(n_judgments)
     return value
 
 
 def resolve_phi0(X, y, override=None):
-    """The prior mode phi_0, as a float.
-
-    ``override`` is the same knob ``step9_phi_identification.py --s2`` exposes: None
-    means use ``prior_mode_phi0`` as configured, a number pins it. Whatever the
-    choice, the caller must pass the SAME value to every model it compares -- fixing
-    phi at one is itself a claim about phi_0.
-    """
+    """The prior mode phi_0, as a float."""
     from mop.inference import prior_mode_phi0 as _pm
     mode = prior_mode_phi0 if override is None else override
     if mode == "data":

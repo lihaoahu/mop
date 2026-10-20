@@ -1,11 +1,5 @@
 """Figure: distribution of dimension-labeled comparisons.
 
-Draws the donut chart and writes manuscript/figures/dim_distribution.pdf. The
-counts come from the same load_pairs the tables use, so the figure and the
-percentages quoted in the text cannot disagree. The previous version of this
-file was drawn from an earlier data snapshot and reported counts totalling
-6,706 against the current 5,238.
-
 Usage:
     uv run python _plot_dim_distribution.py
 """
@@ -38,7 +32,6 @@ def main():
             counts[dim] = n
     total = sum(counts.values())
 
-    # largest first, as the published figure orders them
     items = sorted(counts.items(), key=lambda kv: -kv[1])
     labels = [TITLE.get(d, DIM_LABELS.get(d, d)) for d, _ in items]
     sizes = [n for _, n in items]
@@ -65,7 +58,6 @@ def main():
     )
     plt.tight_layout()
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    # CreationDate omitted: see the note in _plot_pbic.py.
     plt.savefig(OUT, bbox_inches="tight", metadata={"CreationDate": None})
     plt.savefig(OUT.with_suffix(".png"), dpi=200, bbox_inches="tight",
                 metadata={"CreationDate": None})
