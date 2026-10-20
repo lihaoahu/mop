@@ -40,5 +40,40 @@
       },
       "selected_k": 4
     }
+  },
+  "degenerate_component": {
+    "n": 5401,
+    "selected_k": 4,
+    "components": [
+      {
+        "component": 1,
+        "pi": 0.37231382148241843,
+        "n_hard": 2344,
+        "score_min": 0.05,
+        "score_max": 0.95
+      },
+      {
+        "component": 2,
+        "pi": 0.000539602771971868,
+        "n_hard": 1,
+        "score_min": 0.0,
+        "score_max": 0.0
+      },
+      {
+        "component": 3,
+        "pi": 0.3747658410025373,
+        "n_hard": 2458,
+        "score_min": 0.05,
+        "score_max": 0.95
+      },
+      {
+        "component": 4,
+        "pi": 0.25238073474307243,
+        "n_hard": 598,
+        "score_min": 0.05,
+        "score_max": 0.95
+      }
+    ],
+    "n_scores_exactly_zero": 1
   }
 }
