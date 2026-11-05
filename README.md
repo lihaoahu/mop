@@ -60,7 +60,6 @@ results do not depend on the number of workers.
 python -m pytest tests -q                # 16 tests
 python tests/audit_parameterisation.py   # distribution conventions
 python tests/check_general_fit.py        # numerical MAP against the closed-form EM
-python tests/check_curvature_fd.py       # the proposition's second derivative
 python tests/audit_laplace.py            # analytic curvature against finite differences
 ```
 

@@ -12,9 +12,10 @@ python experiments/run_all.py --quick         # smoke test; numbers differ
 ```
 
 The run needs the environment of `pyproject.toml` (`uv sync`). It ends by
-checking every table cell against its artifact, re-running the three convention
-audits in `tests/`, and running the test suite, so a green run means the
-manuscript and the artifacts agree as well as the artifacts reproducing.
+checking every table cell against its artifact, re-running the convention audit
+and the estimator cross-check in `tests/`, and running the test suite, so a green
+run means the manuscript and the artifacts agree as well as the artifacts
+reproducing.
 
 ## What the paper reports, and where it comes from
 
@@ -64,7 +65,7 @@ common/       paths, parameters, the reference EM, the P=1 model, metrics,
               synthetic data, replicate-level parallelism
 validation/   Section 3.1: recovery, separability, dispersion, binomial
 case_study/   Section 3.2: corpus, estimator, tables, bootstrap, holdout,
-              specification, Laplace, curvature, audit, table check
+              specification, curvature, audit, table check
 results/      one JSON per stage; these are what the manuscript is checked against
 ```
 
@@ -100,5 +101,5 @@ the prompts, so the extraction is documented even where it is not rerun.
 About half an hour on fourteen cores. `recovery` (500 replicates x 5
 conditions) is 17 minutes of it and `separability` (1,000 x 8 cells) five;
 `binomial` and `bootstrap` are a minute or two each, and every other stage is
-under a minute. The table check, the three audits and the test suite add ten
+under a minute. The table check, the two audits and the test suite add ten
 seconds.

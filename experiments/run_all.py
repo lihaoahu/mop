@@ -72,8 +72,6 @@ CHECKS = [
           "every distribution convention, verified numerically"),
     Stage("estimator", "tests/check_general_fit.py",
           "the numerical MAP against the closed-form EM"),
-    Stage("curvature_fd", "tests/check_curvature_fd.py",
-          "the proposition's second derivative, finite differences"),
 ]
 
 

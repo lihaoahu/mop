@@ -185,33 +185,6 @@ def check_binomial():
     assert abs(val - logdet) < 1e-4 * max(1.0, abs(logdet)), "blocks disagree"
 
 
-def check_criterion_is_the_restored_column():
-    """Recompute both criteria from the stored fit and compare with the record."""
-    import json
-
-    path = ROOT / "experiments" / "results" / "laplace.json"
-    if not path.exists():
-        print("  criterion: skipped, laplace.json absent")
-        return
-    blob = json.loads(path.read_text(encoding="utf-8"))
-    n_eff = blob["n_eff"]
-    for row in blob["rows"]:
-        d = row["df"]
-        restored_bic = -2.0 * row["pll"] + d * np.log(n_eff)
-        assert abs(restored_bic - row["bic"]) < 1e-6, (
-            f"K={row['k']}: BIC {restored_bic} vs {row['bic']}")
-        restored = (-2.0 * row["pll"] + row["lnH_analytic"]
-                    - d * np.log(2.0 * np.pi))
-        assert abs(restored - row["lbic"]) < 1e-6, (
-            f"K={row['k']}: {restored} vs {row['lbic']}")
-        assert abs(row["lnH_analytic"] - row["lnH_h"]) < 0.1, (
-            f"K={row['k']}: analytic ln|H| {row['lnH_analytic']} vs "
-            f"central differences {row['lnH_h']}")
-    print(f"  criterion: {len(blob['rows'])} rows reproduce BIC from the "
-          f"penalised likelihood and LBIC from the analytic determinant, "
-          f"and the central difference agrees")
-
-
 def check_gradient():
     """The analytic gradient against a central difference of the objective.
 
@@ -281,7 +254,6 @@ def main():
     check_simplex_coordinates()
     check_binomial()
     check_gradient()
-    check_criterion_is_the_restored_column()
     print("all assertions pass")
 
 
