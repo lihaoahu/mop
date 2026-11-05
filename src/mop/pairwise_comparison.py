@@ -1,6 +1,5 @@
-"""
-成对比较数据结构
-"""
+"""Pairwise judgments and the design matrix they imply."""
+
 
 from dataclasses import dataclass
 from typing import Any, List
@@ -9,7 +8,7 @@ import numpy as np
 
 @dataclass
 class PairwiseComparison:
-    """成对比较数据结构"""
+    """One judgment: alternatives ``former_id`` and ``latter_id``, the judge, and the response."""
     former_id: int
     latter_id: int
     agent_id: int
@@ -20,10 +19,10 @@ class PairwiseComparison:
 
 
 def pairwise_comparisons_extractor(R: np.ndarray, agent: int = 1) -> List[PairwiseComparison]:
-    """从判断矩阵提取成对比较信息"""
+    """Read the upper triangle of a judgment matrix, skipping unrecorded pairs."""
     n_row, n_col = R.shape
     if n_row != n_col:
-        raise ValueError("非方阵！")
+        raise ValueError("judgment matrix must be square")
 
     nA = n_row
     prvector = []
@@ -42,7 +41,7 @@ def pairwise_comparisons_extractor(R: np.ndarray, agent: int = 1) -> List[Pairwi
 
 
 def pairwise_comparisons_extractor_multi(Rs: List[np.ndarray]) -> List[PairwiseComparison]:
-    """从多个判断矩阵提取成对比较信息"""
+    """Same, one judge per matrix."""
     if not Rs:
         return []
 
@@ -60,25 +59,11 @@ def comparisons2regression(
     link_functions: List,
     nA: int = None
 ):
-    """
-    将比较数据转换为回归问题格式（优化版）
-    
-    Args:
-        pcvector: 成对比较对象列表
-        link_functions: 响应变换列表，每个决策主体一个。注意这是论文的 g（把判断
-            送到响应尺度），不是 GLM 的连接函数；连接函数是均值函数的逆，即论文的
-            h^{-1}。名字沿用历史 API，语义从论文 2.1 节可定义。
-        nA: 备选方案数量，如果为None则自动推断
-    
-    Returns:
-        X: 设计矩阵 (nJ x nA-1)
-        y: 响应变量
-        d: 决策主体ID数组
-    
-    Raises:
-        ValueError: 当决策主体数量与链接函数数量不一致时; 或当某个判断无法变换,
-            或变换后不是有限值时(此前这类判断会被静默记为 0.0, 那是一个合法的
-            观测值, 会把坏数据变成结论)
+    """Design matrix, response and judge index for the mixed linear predictor.
+
+    ``link_functions`` holds one response transform per judge: the paper's ``g``, which maps
+    a judgment onto the response scale. Raises if a judgment has no finite transform rather
+    than substituting a default.
     """
     if nA is None:
         all_ids = set()
@@ -96,7 +81,7 @@ def comparisons2regression(
 
     if len(link_functions) != nE:
         raise ValueError(
-            f"决策主体数量({nE})与链接函数数量({len(link_functions)})不一致"
+            f"{nE} judges but {len(link_functions)} link functions; one transform per judge is needed"
         )
 
     X = np.zeros((nJ, nA), dtype=int)

@@ -1,19 +1,14 @@
-"""Initialisation for the EM algorithm."""
+"""Deterministic initialisation for the EM algorithm."""
 
 from dataclasses import dataclass
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 import numpy as np
-
-try:
-    from .pairwise_comparison import comparisons2regression
-except ImportError:  # pragma: no cover
-    from pairwise_comparison import comparisons2regression
 
 
 @dataclass
 class Family:
-    """Everything the initialiser needs to know about the observation model."""
+    """What the initialiser needs from an observation model."""
 
     h: Callable[[np.ndarray], np.ndarray]
     h_prime: Callable[[np.ndarray], np.ndarray]
@@ -23,7 +18,7 @@ class Family:
 
 @dataclass
 class GaussianFamily(Family):
-    """The Gaussian family for an already-transformed response."""
+    """Gaussian family for a response already on the transformed scale."""
 
     h: Callable = staticmethod(lambda eta: eta)
     h_prime: Callable = staticmethod(lambda eta: np.ones_like(eta))
@@ -34,7 +29,7 @@ class GaussianFamily(Family):
 
 
 def _irls(X, r, family, weights, lambda_reg, max_iter=25, tol=1e-10):
-    """Weighted ridge fit of u by iteratively reweighted least squares."""
+    """Weighted ridge fit of ``u`` by iteratively reweighted least squares."""
     _, d = X.shape
     u = np.zeros(d)
     prior_w = np.asarray(weights, dtype=np.float64)
@@ -62,7 +57,7 @@ def _irls(X, r, family, weights, lambda_reg, max_iter=25, tol=1e-10):
 
 
 def _deviance_residuals(r, mu, family):
-    """Signed deviance residuals, the GLM analogue of |r - mu|."""
+    """Signed deviance residuals, the GLM analogue of ``r - mu``."""
     dev = 2.0 * (family.loglik(r, r) - family.loglik(r, mu))
     dev = np.maximum(dev, 0.0)
     return np.sign(r - mu) * np.sqrt(dev)
@@ -90,7 +85,7 @@ def binomial_deviance_residuals(m, n, mu):
 
 
 def _logistic(eta: np.ndarray) -> np.ndarray:
-    """Numerically stable logistic; exp(-eta) overflows for large eta."""
+    """Logistic function, written so that ``exp(-eta)`` cannot overflow."""
     eta = np.asarray(eta, dtype=np.float64)
     out = np.empty_like(eta)
     pos = eta >= 0
@@ -101,7 +96,7 @@ def _logistic(eta: np.ndarray) -> np.ndarray:
 
 
 def binomial_family() -> Family:
-    """The logistic model for counts, in the language the initialiser expects."""
+    """The logistic model for counts, in the form the initialiser expects."""
     return Family(
         h=_logistic,
         h_prime=lambda eta: _logistic(eta) * (1.0 - _logistic(eta)),
@@ -128,7 +123,7 @@ def _component_fit(X, r, weights, family, lambda_reg):
 
 
 def _component_residual(X, r, weights, family, deviance):
-    """Return ``residual(idx, u)``: what 'large residual' means on this scale."""
+    """Return ``residual(idx, u)``: the residual that decides where the next component goes."""
     def residual(idx, u_p):
         eta = X[idx] @ u_p
         if family is None:
@@ -141,7 +136,7 @@ def _component_residual(X, r, weights, family, deviance):
 
 
 def ridge_init(X, y, family=None, weights=None, lambda_reg=1e-10):
-    """The ``P = 1`` initialisation: one weighted ridge regression, all judgments."""
+    """``P = 1`` start: one weighted ridge regression over all judgments."""
     nJ = X.shape[0]
     r = np.asarray(y, dtype=np.float64)
     w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
@@ -150,7 +145,7 @@ def ridge_init(X, y, family=None, weights=None, lambda_reg=1e-10):
 
 def seed_component(X, y, u_prev, family=None, weights=None, lambda_reg=1e-10,
                    deviance=None):
-    """The K-Ridge step: one further component, where the fit is worst."""
+    """K-Ridge step: add one component where the current fit is worst."""
     nJ, nA_minus_1 = X.shape
     r = np.asarray(y, dtype=np.float64)
     w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)
@@ -175,25 +170,7 @@ def kridge(
     weights: Optional[np.ndarray] = None,
     deviance: Optional[Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray]] = None,
 ):
-    """Seed ``nP`` components from scratch, then refine them by hard assignment.
-
-    Args:
-        X: design matrix, ``(nJ, nA-1)``
-        y: response. ``g(r_k)`` when ``family`` is None, ``r_k`` otherwise.
-        nP: number of components
-        lambda_reg: ridge penalty
-        family: an observation model; None means the response is already
-            transformed.
-        weights: per-observation weights (e.g. binomial trial counts). Ones if
-            not given.
-        deviance: ``deviance(y, mu, weights)`` returning signed deviance
-            residuals, needed when the response is a count.
-
-    Returns:
-        u: ``(nP, nA-1)`` utility vectors
-        phi: ``(nP,)`` dispersion levels
-        mp: ``(nP,)`` mixture weights
-    """
+    """Seed ``nP`` components from scratch, then refine them by hard assignment."""
     nJ, nA_minus_1 = X.shape
     r = np.asarray(y, dtype=np.float64)
     w_all = np.ones(nJ) if weights is None else np.asarray(weights, dtype=np.float64)

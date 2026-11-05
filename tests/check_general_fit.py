@@ -1,4 +1,5 @@
-"""Cross-check the two estimation routes against each other."""
+"""The two estimation routes against each other."""
+
 from __future__ import annotations
 
 import sys
@@ -53,7 +54,7 @@ def gaussian_agreement():
     lam_s = nJ / 50.0
     s2 = float(inference.prior_mode_phi0(X, y))
 
-    em = inference.mop(pc, [float], 2, lambda_u=1e-6, lambda_sigma=lam_s, lambda_pi=1.0, s2=s2)
+    em = inference.fit_mixture(pc, [float], 2, lambda_u=1e-6, lambda_sigma=lam_s, lambda_pi=1.0, s2=s2)
     u_em = _u(em)
     sig_em = np.array([em[p].inconsistency_level for p in range(2)])
     pll_em = inference.penalized_log_likelihood(

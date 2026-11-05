@@ -1,7 +1,10 @@
-"""MAP fitting of the mixture of preferences by direct numerical optimisation.
+"""Direct MAP fitting of the mixture, for any observation family.
 
-Usage::
+One optimiser over ``(u, phi, pi)`` with analytic derivatives, used where no
+closed-form M step exists.
 """
+
+
 
 from __future__ import annotations
 
@@ -11,6 +14,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.special import expit, gammaln, logsumexp
 
+from . import criteria as _criteria
 from .mixture_of_priorities import MixtureOfPriorities, Priority
 from .pairwise_comparison import comparisons2regression
 
@@ -21,7 +25,7 @@ _ETA_CLIP = 30.0
 
 @dataclass
 class GaussianResponse:
-    """Gaussian judgments already on the transformed scale ``y = h(r)`` (Eq 2)."""
+    """Gaussian judgments on the transformed scale ``y = h(r)``."""
 
     name: str = "gaussian"
     phi_free: bool = True
@@ -44,6 +48,21 @@ class GaussianResponse:
     def dloglik_dphi(y, eta, omega, phi):
         eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
         return -0.5 / phi + 0.5 * omega * (y - eta) ** 2 / phi ** 2
+
+    @staticmethod
+    def d2loglik_deta2(y, eta, omega, phi):
+        eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
+        return -omega / phi
+
+    @staticmethod
+    def d2loglik_dphi2(y, eta, omega, phi):
+        eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
+        return 0.5 / phi ** 2 - omega * (y - eta) ** 2 / phi ** 3
+
+    @staticmethod
+    def d2loglik_deta_dphi(y, eta, omega, phi):
+        eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
+        return -omega * (y - eta) / phi ** 2
 
 
 @dataclass
@@ -71,10 +90,24 @@ class BinomialResponse:
     def dloglik_dphi(y, eta, omega, phi):
         return np.zeros_like(np.asarray(eta, dtype=float))
 
+    @staticmethod
+    def d2loglik_deta2(y, eta, omega, phi):
+        eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
+        mu = expit(eta)
+        return -omega * mu * (1.0 - mu)
+
+    @staticmethod
+    def d2loglik_dphi2(y, eta, omega, phi):
+        return np.zeros_like(np.asarray(eta, dtype=float))
+
+    @staticmethod
+    def d2loglik_deta_dphi(y, eta, omega, phi):
+        return np.zeros_like(np.asarray(eta, dtype=float))
+
 
 
 def _priors(u, pi, phi, u_bar, lambda_u, lambda_pi, lambda_sigma, s2, phi_free):
-    """Log-prior and its derivatives, matching eq:prior in the manuscript."""
+    """Log-prior and its derivatives."""
     nP, A1 = u.shape
     diff = u - u_bar
     total = 0.0
@@ -96,7 +129,10 @@ def _priors(u, pi, phi, u_bar, lambda_u, lambda_pi, lambda_sigma, s2, phi_free):
     total += gammaln(nP * lambda_pi) - nP * gammaln(lambda_pi)
 
     if phi_free:
-        alpha = (lambda_sigma - 2.0) / 2.0
+        # InvGamma(lambda_sigma/2, lambda_sigma * phi0/2): lambda_sigma is the
+        # strength, phi0 the scale, the mode is lambda_sigma*phi0/(lambda_sigma+2)
+        # and the density tends to phi^-1 as lambda_sigma -> 0.
+        alpha = lambda_sigma / 2.0
         beta = lambda_sigma * s2 / 2.0
         for p in range(nP):
             total += alpha * np.log(beta) - gammaln(alpha)
@@ -120,7 +156,9 @@ def _objective(theta, X, y, omega, nP, response, u_bar, lambda_u, lambda_pi,
     else:
         phi = np.ones(nP)
 
-    pi = np.exp(np.concatenate([z, [0.0]]))
+    # shifted softmax: the shift cancels in the normalisation and keeps exp finite
+    z_full = np.concatenate([z, [0.0]])
+    pi = np.exp(z_full - z_full.max())
     pi /= pi.sum()
 
     eta = X @ u.T
@@ -152,7 +190,7 @@ def _objective(theta, X, y, omega, nP, response, u_bar, lambda_u, lambda_pi,
 
 
 def _pooled_u(X, y, omega, response, lambda_u, u_bar, weight=None):
-    """One-component start: ridge least squares for Gaussian, ridge logistic for binomial."""
+    """One-component start by weighted ridge (Gaussian) or ridge logistic (binomial)."""
     A1 = X.shape[1]
     if weight is not None:
         omega = omega * np.asarray(weight, dtype=float)
@@ -176,7 +214,7 @@ def _pooled_u(X, y, omega, response, lambda_u, u_bar, weight=None):
 
 
 def _starts(X, y, omega, response, nP, lambda_u, u_bar, phi_init, n_starts):
-    """Deterministic multi-start set: pooled, residual-sign split, then jittered copies."""
+    """Deterministic starts: pooled fit, residual-sign split, then jittered copies."""
     A1 = X.shape[1]
     phi0 = float(phi_init if phi_init is not None else 1.0)
     u_pool = _pooled_u(X, y, omega, response, lambda_u, u_bar)
@@ -207,23 +245,10 @@ def _starts(X, y, omega, response, nP, lambda_u, u_bar, phi_init, n_starts):
 def fit_map(pcvector, response, nP, lambda_u=1e-6, lambda_pi=1.0, lambda_sigma=None,
             s2=None, u_bar=None, omega=None, u_init=None, pi_init=None, phi_init=None,
             n_starts=6, max_iter=5000, tol=1e-9):
-    """Maximise the penalised log-posterior directly, for any observation family.
+    """Maximise the penalised log-posterior and return the fitted mixture.
 
-    Args:
-        pcvector: comparisons. For :class:`GaussianResponse` the judgment is already on the
-            transformed scale; for :class:`BinomialResponse` it is the outcome or its proportion.
-        response: :class:`GaussianResponse` or :class:`BinomialResponse`.
-        nP: number of mixture components.
-        lambda_sigma, s2: required when ``response.phi_free``, ignored otherwise. ``s2`` is the
-            prior mode ``phi_0``; ``lambda_sigma`` the Inverse-Gamma influence parameter.
-        omega: observation weights (trials for the binomial family, unit weights by default).
-        u_init, pi_init, phi_init: optional start; when omitted a pooled fit plus jittered
-            copies are used, and the best of them is kept.
-        n_starts: how many starts to try when no start is supplied.
-
-    Returns:
-        :class:`~mop.mixture_of_priorities.MixtureOfPriorities` with ``converged``,
-        ``n_iter`` and ``penalized_log_posterior`` set.
+    ``s2`` and ``lambda_sigma`` are required when ``response.phi_free`` and ignored
+    otherwise; ``omega`` carries the trial counts for the binomial family.
     """
     X, y, _ = comparisons2regression(pcvector, [float])
     X = np.asarray(X, dtype=np.float64)
@@ -259,7 +284,7 @@ def fit_map(pcvector, response, nP, lambda_u=1e-6, lambda_pi=1.0, lambda_sigma=N
             raise ValueError(f"pi_init has {pi0.size} entries but nP={nP}")
         if np.any(pi0 < 0) or not np.isclose(pi0.sum(), 1.0, atol=1e-8):
             raise ValueError("pi_init must be non-negative and sum to one")
-        if phi_free_init := (response.phi_free and phi_init is not None):
+        if response.phi_free and phi_init is not None:
             if np.ndim(phi_init) != 0:
                 raise ValueError("phi_init must be a scalar")
         phi0 = np.full(nP, 1.0 if not response.phi_free
@@ -313,9 +338,47 @@ def _unpack(theta, nP, A1, phi_free):
     return u, pi, phi
 
 
+def lbic_map(pcvector, model, response, omega=None, lambda_u=1e-6, lambda_pi=1.0,
+             lambda_sigma=None, s2=None, u_bar=None, phi_shared=False):
+    """Laplace approximation of the marginal likelihood for a :func:`fit_map` fit."""
+    from .laplace import ln_det_hessian
+
+    X, y, _ = comparisons2regression(pcvector, [float])
+    X = np.asarray(X, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    nJ, A1 = X.shape
+    nP = len(model.mixture_probabilities)
+    if omega is None:
+        omega = np.ones(nJ)
+    omega = np.asarray(omega, dtype=np.float64).ravel()
+
+    u = np.array([np.log(np.asarray(model[p].priority_vector[:A1], dtype=np.float64)
+                         / np.asarray(model[p].priority_vector[A1], dtype=np.float64))
+                  for p in range(nP)])
+    pi = np.asarray(model.mixture_probabilities, dtype=np.float64)
+    phi = np.array([model[p].inconsistency_level for p in range(nP)], dtype=np.float64)
+    logpi = np.log(np.maximum(pi, EPS))
+    theta = np.concatenate([
+        u.ravel(), logpi[:-1] - logpi[-1],
+        (np.log(phi) if response.phi_free else np.array([])),
+    ])
+    if u_bar is None:
+        u_bar = np.zeros(A1)
+    pll, _ = _objective(theta, X, y, omega, nP, response,
+                        np.asarray(u_bar, dtype=np.float64),
+                        lambda_u, lambda_pi, lambda_sigma, s2)
+    df = _criteria.degrees_of_freedom(A1 + 1, nP, bool(response.phi_free))
+    lnH = ln_det_hessian(X, y, u, phi, pi, response, omega=omega,
+                         u_bar=np.asarray(u_bar, dtype=np.float64),
+                         lambda_u=lambda_u, lambda_pi=lambda_pi,
+                         lambda_sigma=lambda_sigma, s2=s2,
+                         phi_shared=phi_shared)
+    return _criteria.lbic(pll, lnH, df)
+
+
 def pbic_map(pcvector, model, response, omega=None, lambda_u=1e-6, lambda_pi=1.0,
-             lambda_sigma=None, s2=None, u_bar=None):
-    """Penalised BIC of a :func:`fit_map` fit: ``-2 pll + log(n_eff) df``."""
+             lambda_sigma=None, s2=None, u_bar=None, profile_utilities=True):
+    """Penalised BIC of a :func:`fit_map` fit, with the utility prior profiled out."""
     X, y, _ = comparisons2regression(pcvector, [float])
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
@@ -340,5 +403,16 @@ def pbic_map(pcvector, model, response, omega=None, lambda_u=1e-6, lambda_pi=1.0
         u_bar = np.zeros(A1)
     pll, _ = _objective(theta, X, y, omega, nP, response, np.asarray(u_bar, dtype=np.float64),
                         lambda_u, lambda_pi, lambda_sigma, s2)
-    df = (A1) * nP + 2 * nP - 1
-    return -2.0 * pll + np.log(n_eff) * df
+    df = _criteria.degrees_of_freedom(A1 + 1, nP, bool(response.phi_free))
+    u_log_prior = (_criteria.log_prior_utilities(
+        u, phi, lambda_u, np.asarray(u_bar, dtype=np.float64))
+        if profile_utilities else 0.0)
+    return _criteria.pbic(pll, n_eff, df, u_log_prior)
+
+
+def bic_map(pcvector, model, response, omega=None, lambda_u=1e-6, lambda_pi=1.0,
+            lambda_sigma=None, s2=None, u_bar=None):
+    """``-2 pll + d ln(omega.sum())`` for a :func:`fit_map` fit."""
+    return pbic_map(pcvector, model, response, omega=omega, lambda_u=lambda_u,
+                    lambda_pi=lambda_pi, lambda_sigma=lambda_sigma, s2=s2,
+                    u_bar=u_bar, profile_utilities=False)

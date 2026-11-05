@@ -1,11 +1,12 @@
-"""混合优先级模型数据结构"""
+"""Fitted mixture: components, and the aggregate they imply."""
+
 import numpy as np
 from dataclasses import dataclass
 
 
 @dataclass
 class Priority:
-    """单个优先级组件"""
+    """One component: a preference state, its weight and its dispersion."""
     priority_vector: np.ndarray
     inconsistency_level: float
 
@@ -14,7 +15,7 @@ class Priority:
 
 
 class MixtureOfPriorities:
-    """混合优先级模型"""
+    """A fitted mixture of preferences."""
 
     def __init__(self, priorities: list[Priority], mixture_probabilities: np.ndarray):
         self.priorities = priorities
@@ -45,12 +46,12 @@ class MixtureOfPriorities:
 
 
 def distance(priority_a: Priority, priority_b: Priority) -> float:
-    """两个优先级向量之间的欧氏距离"""
+    """Euclidean distance between two utility vectors."""
     return float(np.linalg.norm(priority_a.priority_vector - priority_b.priority_vector))
 
 
 def expected_utility(priorities, mixture_probabilities, floor=1e-300):
-    """Aggregate ranking: the expected utility of each alternative."""
+    """Expected utility of each alternative under the fitted weights."""
     out = None
     for pri, pi in zip(priorities, mixture_probabilities):
         w = np.asarray(getattr(pri, "priority_vector", pri), dtype=float)

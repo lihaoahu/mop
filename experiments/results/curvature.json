@@ -1,0 +1,51 @@
+{
+ "n": 5401,
+ "A": 4,
+ "K": 4,
+ "lambda_sigma": 108.02,
+ "components": [
+  {
+   "component": 1,
+   "pi": 0.3724716723460162,
+   "phi": 0.8053693971131971,
+   "n_eff": 2011.723834576266,
+   "complete_data_term": -1637.8960517455191,
+   "missing_info_term": 871.4387650271732,
+   "second_derivative": -766.4572867183459,
+   "concave": true
+  },
+  {
+   "component": 2,
+   "pi": 0.0005274757418408215,
+   "phi": 1.7720184244634694,
+   "n_eff": 2.510396177176142,
+   "complete_data_term": -18.396271087347706,
+   "missing_info_term": 0.1857947944444912,
+   "second_derivative": -18.210476292903216,
+   "concave": true
+  },
+  {
+   "component": 3,
+   "pi": 0.3760120665255736,
+   "phi": 0.5621438963011463,
+   "n_eff": 2031.3076391544103,
+   "complete_data_term": -3392.8616335123484,
+   "missing_info_term": 1767.0603238613455,
+   "second_derivative": -1625.8013096510028,
+   "concave": true
+  },
+  {
+   "component": 4,
+   "pi": 0.2509887853865693,
+   "phi": 0.8200066812397026,
+   "n_eff": 1355.458130092114,
+   "complete_data_term": -1091.949881391904,
+   "missing_info_term": 641.8503346431175,
+   "second_derivative": -450.09954674878645,
+   "concave": true
+  }
+ ],
+ "min": -1625.8013096510028,
+ "max": -18.210476292903216,
+ "all_concave": true
+}

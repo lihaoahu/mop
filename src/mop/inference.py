@@ -1,37 +1,22 @@
+"""Closed-form EM for the Gaussian variants of the mixture.
+
+Used where the M step is available in closed form: normal utilities, inverse-Gamma
+dispersions and a Dirichlet on the weights. The general families are fitted by
+``mop.general_fit``.
 """
-统计推断 - EM算法
-"""
+
 
 import numpy as np
 from scipy.stats import norm
 
-USE_CYTHON = False
-try:
-    from cython_inference import e_gamma_cython, m_step_cython
-    USE_CYTHON = True
-except ImportError:
-    pass
-
+from . import criteria as _criteria
 from .pairwise_comparison import comparisons2regression
 from .mixture_of_priorities import MixtureOfPriorities, Priority
 from .initialization import kridge
 
 
 def e_gamma(X, y, u, sigma2, mp):
-    """
-    E步：计算隐变量 γ_kc 的期望（向量化优化版）
-    """
-    if USE_CYTHON:
-        return e_gamma_cython(
-            np.asarray(X, dtype=np.float64),
-            np.asarray(y, dtype=np.float64),
-            np.asarray(u, dtype=np.float64),
-            np.asarray(sigma2, dtype=np.float64),
-            np.asarray(mp, dtype=np.float64)
-        )
-
-    nJ, nP = X.shape[0], len(sigma2)
-    
+    """Posterior allocation of each judgment to each component."""
     means = X @ u.T
     stds = np.sqrt(sigma2)
     
@@ -46,7 +31,7 @@ def e_gamma(X, y, u, sigma2, mp):
 
 
 def e_gamma_from_pc(pcvector, mop, link_functions):
-    """E步：从成对比较数据计算"""
+    """Same, from pairwise comparisons and their link functions."""
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nP = len(mop.mixture_probabilities)
     nA = X.shape[1] + 1
@@ -63,9 +48,7 @@ def e_gamma_from_pc(pcvector, mop, link_functions):
 
 
 def log_likelihood(X, y, u, sigma2, mp, omega=None):
-    """对数似然函数（向量化优化版）"""
-    nJ, nC = X.shape[0], len(sigma2)
-
+    """Observed-data log-likelihood, weighted by ``omega`` when given."""
     means = X @ u.T
     stds = np.sqrt(sigma2)
 
@@ -80,7 +63,7 @@ def log_likelihood(X, y, u, sigma2, mp, omega=None):
 
 
 def log_likelihood_from_pc(pcvector, mop, link_functions):
-    """从成对比较数据计算对数似然"""
+    """Same, from pairwise comparisons."""
     X, y, _ = comparisons2regression(pcvector, link_functions)
     nP = len(mop.mixture_probabilities)
     nA = X.shape[1] + 1
@@ -97,20 +80,7 @@ def log_likelihood_from_pc(pcvector, mop, link_functions):
 
 
 def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar=None, omega=None):
-    """惩罚对数似然函数 (Eq.10 的对数)，与 manuscript 完全一致
-
-    Args:
-        X: 设计矩阵
-        y: 响应变量
-        u: 对数优先级比矩阵 (nP x nA-1)
-        sigma2: 不一致性水平 σ²
-        mp: 混合概率 π
-        lambda_u: u 先验的精度系数
-        lambda_sigma: σ² 先验的影响参数 (manuscript 中的 λ_σ)
-        lambda_pi: π 先验的 Dirichlet 浓度参数
-        s2: 先验方差模式 φ₀ (manuscript 中的 φ_0)
-        u_bar: u 的先验均值向量 u₀ (nA-1,)，默认为零向量
-    """
+    """Penalised log-posterior: likelihood plus the priors on ``u``, ``phi`` and ``pi``."""
     from scipy.special import gammaln
     nP = len(sigma2)
     nA_minus_1 = u.shape[1]
@@ -136,7 +106,7 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     for p, sp2 in enumerate(sigma2):
         if sp2 < 1e-300:
             continue
-        alpha = (lambda_sigma[p] - 2.0) / 2.0
+        alpha = lambda_sigma[p] / 2.0
         beta = lambda_sigma[p] * s2 / 2.0
         PLL += alpha * np.log(beta) - gammaln(alpha)
         PLL -= (alpha + 1.0) * np.log(sp2)
@@ -150,23 +120,8 @@ def penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda
     return PLL
 
 
-def bic(pcvector, mop, link_functions):
-    """贝叶斯信息准则 — 未被使用，也不等价于论文的 pBIC。"""
-    nJ = len(pcvector)
-    nP = len(mop.mixture_probabilities)
-
-    all_ids = set()
-    for pr in pcvector:
-        all_ids.add(pr.former_id)
-        all_ids.add(pr.latter_id)
-    nA = len(all_ids)
-
-    LL = log_likelihood_from_pc(pcvector, mop, link_functions)
-    return -2 * LL + np.log(nJ) * ((nA - 1) * nP + 2 * nP - 1)
-
-
 def prior_mode_phi0(X, y):
-    """先验众数 φ₀ (manuscript eq:general gci)."""
+    """Prior mode ``phi_0`` from a pooled least-squares fit."""
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     n_j, p = X.shape
@@ -179,8 +134,9 @@ def prior_mode_phi0(X, y):
     return max(ss / max(n_j - p, 1), 1e-10)
 
 
-def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None, u_bar=None, omega=None):
-    """惩罚贝叶斯信息准则 (Eq.19)"""
+def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None,
+         u_bar=None, omega=None, profile_utilities=True):
+    """``pbic`` with the utility prior profiled out of the criterion."""
     nJ = len(pcvector)
     nP = len(mop.mixture_probabilities)
 
@@ -188,7 +144,7 @@ def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=No
     if s2 is None:
         s2 = prior_mode_phi0(X, y)
     nA = X.shape[1] + 1
-    df = (nA - 1) * nP + 2 * nP - 1
+    df = _criteria.degrees_of_freedom(nA, nP, phi_free=True)
 
     u = np.zeros((nP, nA - 1))
     sigma2 = np.array([mop[p].inconsistency_level for p in range(nP)])
@@ -205,42 +161,109 @@ def pbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=No
         omega_eff = np.asarray(omega, dtype=float).ravel()
         if omega_eff.size != nJ:
             raise ValueError(
-                f"omega 长度({omega_eff.size})与判断数({nJ})不一致")
+                f"omega has {omega_eff.size} entries, expected one per judgment ({nJ})")
         if np.any(omega_eff <= 0):
-            raise ValueError("omega 必须为正")
+            raise ValueError("omega must be positive")
         omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
         n_eff = float(np.sum(omega_eff))
 
     PLL = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar, omega_eff)
-    return -2 * PLL + np.log(n_eff) * df
+    u_log_prior = (_criteria.log_prior_utilities(u, sigma2, lambda_u, u_bar)
+                   if profile_utilities else 0.0)
+    return _criteria.pbic(PLL, n_eff, df, u_log_prior)
 
 
-def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
+def _polish(X, y, u, sigma2, mp, lambda_u, lambda_sigma, lambda_pi, s2, u_bar,
+            omega, max_steps=60, grad_tol=1e-9):
+    """Finish the mode with Newton steps; returns ``(u, sigma2, mp, info)``. EM stops on the change in the objective, which is not enough near a boundary weight."""
+    from .general_fit import GaussianResponse
+    from .laplace import polish_mode
+
+    def log_posterior(uu, ph, pp):
+        return penalized_log_likelihood(X, y, uu, ph, pp, lambda_u, lambda_sigma,
+                                        lambda_pi, s2, u_bar, omega)
+
+    return polish_mode(log_posterior, u, sigma2, mp, X, y, GaussianResponse(),
+                       omega=omega, u_bar=u_bar, lambda_u=lambda_u,
+                       lambda_pi=lambda_pi, lambda_sigma=lambda_sigma, s2=s2,
+                       max_steps=max_steps, grad_tol=grad_tol)
+
+
+def _fitted_arrays(pcvector, mop, link_functions, lambda_u, lambda_sigma,
+                   lambda_pi, s2, u_bar, omega):
+    """The fitted mode as arrays, its log-posterior, the parameter count and the judgment count."""
+    nJ = len(pcvector)
+    nP = len(mop.mixture_probabilities)
+
+    X, y, _ = comparisons2regression(pcvector, link_functions)
+    if s2 is None:
+        s2 = prior_mode_phi0(X, y)
+    nA = X.shape[1] + 1
+    df = _criteria.degrees_of_freedom(nA, nP, phi_free=True)
+
+    u = np.zeros((nP, nA - 1))
+    sigma2 = np.array([mop[p].inconsistency_level for p in range(nP)])
+    mp = mop.mixture_probabilities
+
+    for p in range(nP):
+        w = mop[p].priority_vector
+        u[p, :] = np.log(w[:nA - 1] / w[nA - 1])
+
+    if omega is None:
+        omega_eff = None
+    else:
+        omega_eff = np.asarray(omega, dtype=float).ravel()
+        if omega_eff.size != nJ:
+            raise ValueError(
+                f"omega has {omega_eff.size} entries, expected one per judgment ({nJ})")
+        if np.any(omega_eff <= 0):
+            raise ValueError("omega must be positive")
+        omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
+
+    PLL = penalized_log_likelihood(X, y, u, sigma2, mp, lambda_u, lambda_sigma,
+                                   lambda_pi, s2, u_bar, omega_eff)
+    return X, y, u, sigma2, mp, PLL, df, s2, omega_eff, nJ
+
+
+def bic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None,
+        u_bar=None, omega=None):
+    """``-2 pll + d ln n`` at the fitted mode."""
+    X, y, u, sigma2, mp, PLL, df, s2, omega_eff, nJ = _fitted_arrays(
+        pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi,
+        s2, u_bar, omega)
+    return _criteria.bic(PLL, nJ, df)
+
+
+def lbic(pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi, s2=None,
+         u_bar=None, omega=None):
+    """Laplace approximation at the fitted mode; ``inf`` when the fit has no interior mode."""
+    from .general_fit import GaussianResponse
+    from .laplace import ln_det_hessian
+
+    info = getattr(mop, "_polish", None)
+    if info is not None and not info.get("converged", True):
+        return float("inf")
+
+    X, y, u, sigma2, mp, PLL, df, s2, omega_eff, _ = _fitted_arrays(
+        pcvector, mop, link_functions, lambda_u, lambda_sigma, lambda_pi,
+        s2, u_bar, omega)
+    lnH = ln_det_hessian(X, y, u, sigma2, mp, GaussianResponse(),
+                         omega=omega_eff, u_bar=u_bar, lambda_u=lambda_u,
+                         lambda_pi=lambda_pi, lambda_sigma=lambda_sigma, s2=s2)
+    return _criteria.lbic(PLL, lnH, df)
+
+
+def fit_mixture(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         lambda_pi=None, s2=None, u_bar=None,
-        u_init=None, sigma2_init=None, mp_init=None, minprior=0.0, omega=None):
-    """
-    EM算法主函数 - 估计混合优先级模型
+        u_init=None, sigma2_init=None, mp_init=None, minprior=0.0, omega=None,
+        em_tol=1e-6, em_max_iter=10002, polish=True):
+    """Fit the mixture by EM and return the estimated model.
 
-    Args:
-        pcvector: 成对比较对象列表
-        link_functions: 链接函数列表
-        nP: 优先级组件数量
-        lambda_u: u的L2正则系数
-        lambda_sigma: sigma2 的 inverse-Gamma 先验系数
-        lambda_pi: mp的Dirichlet先验系数
-        s2: 先验方差模式
-        u_bar: u 的先验均值向量 u₀ (nA-1,)，默认为零向量
-        u_init, sigma2_init, mp_init: 可选自定义初始值
-        minprior: 权重低于此值的组件在拟合中被移除；默认 0.0 即不移除。
-            flexmix 的这一阈值是 0.05。论文报告候选实际拟合出的组件，
-            包括权重很小的那些，因为组件数正是待推断的量。
-        omega: 每个判断的观测权重 ω_k（长度 nJ，可空）。与稿件一致：
-            ratio 与主观概率判断取 1，重复选择取试验次数 n_k。**必须由协议
-            显式给定，不自动推断**。内部归一化到均值 1，此时加权与未加权
-            目标只差一个常数 −Σω_k·ln(Σω_k)，M 步与 pBIC 因此不受影响。
-
-    Returns:
-        MixtureOfPriorities: 估计的混合优先级模型
+    ``omega`` holds the observation weight of each judgment: 1 for ratio and probability
+    judgments, the trial count for repeated choices. It is required by the protocol, not
+    inferred, and is scaled to mean 1 internally, which leaves the M step and the
+    criterion unchanged. ``minprior`` drops components below that weight, as flexmix
+    does at 0.05; the paper keeps them, since the count is the quantity being inferred.
     """
     nJ = len(pcvector)
     X, y, _ = comparisons2regression(pcvector, link_functions)
@@ -252,9 +275,9 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
         omega_eff = np.asarray(omega, dtype=float).ravel()
         if omega_eff.size != nJ:
             raise ValueError(
-                f"omega 长度({omega_eff.size})与判断数({nJ})不一致")
+                f"omega has {omega_eff.size} entries, expected one per judgment ({nJ})")
         if np.any(omega_eff <= 0):
-            raise ValueError("omega 必须为正")
+            raise ValueError("omega must be positive")
         omega_eff = omega_eff * (nJ / float(np.sum(omega_eff)))
     use_weighted = omega_eff is not None and not np.allclose(omega_eff, 1.0)
 
@@ -295,61 +318,50 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
 
     eye_matrix = np.eye(nA_minus_1)
 
-    for t in range(1, 10002):
+    for t in range(1, int(em_max_iter) + 2):
         gkc = e_gamma(X, y, u, sigma2, mp)
 
         if np.any(np.isnan(gkc)):
             break
 
-        if USE_CYTHON and not use_weighted:
-            u_new, sigma2_new, mp_new = m_step_cython(
-                np.asarray(X, dtype=np.float64),
-                np.asarray(y, dtype=np.float64),
-                np.asarray(gkc, dtype=np.float64),
-                np.asarray(u_bar[0] if u_bar.ndim > 1 else u_bar, dtype=np.float64),
-                float(lambda_u[0]) if np.ndim(lambda_u) > 0 else float(lambda_u),
-                float(lambda_sigma[0]) if np.ndim(lambda_sigma) > 0 else float(lambda_sigma),
-                lambda_pi, s2, nP,
-            )
+        sum_gkc = np.sum(gkc, axis=0)
+
+        if use_weighted:
+            sum_wgkc = omega_eff @ gkc
+            sum_omega = float(np.sum(omega_eff))
+            mp_new = (sum_wgkc + lambda_pi - 1) / (sum_omega + lambda_pi * nP - nP)
         else:
-            sum_gkc = np.sum(gkc, axis=0)
+            mp_new = (sum_gkc + lambda_pi - 1) / (nJ + lambda_pi * nP - nP)
+        mp_new = np.maximum(mp_new, 1e-10)
+        mp_new = mp_new / np.sum(mp_new)
 
+        u_new = np.zeros_like(u)
+        sigma2_new = np.zeros(nP)
+
+        for p in range(nP):
             if use_weighted:
-                sum_wgkc = omega_eff @ gkc
-                sum_omega = float(np.sum(omega_eff))
-                mp_new = (sum_wgkc + lambda_pi - 1) / (sum_omega + lambda_pi * nP - nP)
+                gkc_w = omega_eff * gkc[:, p]
+                sum_gkc_p = float(np.sum(gkc_w))
             else:
-                mp_new = (sum_gkc + lambda_pi - 1) / (nJ + lambda_pi * nP - nP)
-            mp_new = np.maximum(mp_new, 1e-10)
-            mp_new = mp_new / np.sum(mp_new)
+                gkc_w = gkc[:, p]
+                sum_gkc_p = sum_gkc[p]
 
-            u_new = np.zeros_like(u)
-            sigma2_new = np.zeros(nP)
+            XtWX = X.T @ (X * gkc_w[:, np.newaxis]) + lambda_u[p] * eye_matrix
+            Xty_w = X.T @ (y * gkc_w) + lambda_u[p] * u_bar[p]
 
-            for p in range(nP):
-                if use_weighted:
-                    gkc_w = omega_eff * gkc[:, p]
-                    sum_gkc_p = float(np.sum(gkc_w))
-                else:
-                    gkc_w = gkc[:, p]
-                    sum_gkc_p = sum_gkc[p]
+            try:
+                u_new[p, :] = np.linalg.solve(XtWX, Xty_w)
+            except np.linalg.LinAlgError:
+                u_new[p, :] = np.linalg.lstsq(XtWX, Xty_w, rcond=None)[0]
 
-                XtWX = X.T @ (X * gkc_w[:, np.newaxis]) + lambda_u[p] * eye_matrix
-                Xty_w = X.T @ (y * gkc_w) + lambda_u[p] * u_bar[p]
-
-                try:
-                    u_new[p, :] = np.linalg.solve(XtWX, Xty_w)
-                except np.linalg.LinAlgError:
-                    u_new[p, :] = np.linalg.lstsq(XtWX, Xty_w, rcond=None)[0]
-
-                residuals = y - X @ u_new[p, :]
-                ss_resid = float(np.sum(gkc_w * residuals ** 2))
-                ss_prior_u = lambda_u[p] * float(np.sum((u_new[p] - u_bar[p]) ** 2))
-                sigma2_new[p] = max(
-                    (lambda_sigma[p] * s2 + ss_resid + ss_prior_u)
-                    / (lambda_sigma[p] + sum_gkc_p + nA_minus_1),
-                    1e-10
-                )
+            residuals = y - X @ u_new[p, :]
+            ss_resid = float(np.sum(gkc_w * residuals ** 2))
+            ss_prior_u = lambda_u[p] * float(np.sum((u_new[p] - u_bar[p]) ** 2))
+            sigma2_new[p] = max(
+                (lambda_sigma[p] * s2 + ss_resid + ss_prior_u)
+                / (lambda_sigma[p] + 2.0 + sum_gkc_p + nA_minus_1),
+                1e-10
+            )
 
         if np.any(np.isnan(u_new)) or np.any(np.isnan(sigma2_new)) or np.any(np.isnan(mp_new)):
             break
@@ -379,14 +391,26 @@ def mop(pcvector, link_functions, nP, lambda_u=None, lambda_sigma=None,
                     u_bar = np.asarray(u_bar)[keep]
                 nP = int(keep.size)
 
-        if abs(pll_tp1 - pll_t) / (abs(pll_tp1) + 0.1) < 1e-6:
+        if abs(pll_tp1 - pll_t) / (abs(pll_tp1) + 0.1) < em_tol:
             break
 
         u, sigma2, mp = u_new, sigma2_new, mp_new
+
+    polish_info = None
+    if polish:
+        u, sigma2, mp, polish_info = _polish(
+            X, y, np.asarray(u, dtype=float), np.asarray(sigma2, dtype=float),
+            np.asarray(mp, dtype=float), lambda_u, lambda_sigma, lambda_pi, s2,
+            u_bar, omega_eff)
+        nP = int(len(mp))
 
     u_clipped = np.clip(u, -50, 50)
     v = np.hstack([np.exp(u_clipped), np.ones((nP, 1))])
     w = v / np.sum(v, axis=1, keepdims=True)
 
     priorities = [Priority(w[i, :], sigma2[i]) for i in range(nP)]
-    return MixtureOfPriorities(priorities, mp)
+    result = MixtureOfPriorities(priorities, mp)
+    # reported by ``to_dict``; the M step does not use it
+    result._log_likelihood = float(log_likelihood(X, y, u, sigma2, mp, omega_eff))
+    result._polish = polish_info
+    return result

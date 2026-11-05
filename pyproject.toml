@@ -1,28 +1,16 @@
 [project]
 name = "mop"
 version = "0.1.0"
-description = "Mixture of Preferences - model, inference, and case study"
+description = "Mixture of Preferences: model, inference, and the case study of the paper"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Hao Li", email = "lihaoahu@126.com" }]
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
     "scikit-learn",
 ]
-
-[project.optional-dependencies]
-# Needed only to crawl the platform and extract judgments again. The analysis
-# scripts never import these, so they are out of the default environment.
-collection = [
-    "article-crawler",
-    "pairwise-comparison-filter",
-    "pairwise-comparisons",
-    "dashscope>=1.25.21",
-]
-
-[tool.uv.sources]
-article-crawler = { path = "../../ArticleCrawler" }
-pairwise-comparison-filter = { path = "../../PairwiseComparisonExtractor" }
-pairwise-comparisons = { path = "../../PairwiseComparisons" }
 
 [build-system]
 requires = ["hatchling"]
@@ -36,3 +24,13 @@ dev = [
     "pytest>=7.0.0",
     "ruff>=0.15.14",
 ]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+ignore = ["E731"]
+
+[tool.ruff.lint.per-file-ignores]
+"experiments/**" = ["E402"]
+"tests/**" = ["E402"]

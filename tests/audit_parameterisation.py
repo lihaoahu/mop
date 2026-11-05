@@ -1,4 +1,5 @@
-"""Parameterisation audit of the MoP codebase."""
+"""Distribution conventions, checked numerically."""
+
 
 import math
 import sys
@@ -42,7 +43,7 @@ print("=" * 76)
 print("2. Inverse-Gamma prior on sigma^2 (penalized_log_likelihood)")
 print("=" * 76)
 for lam_s, s2bar, sp2 in [(108.0, 0.5, 0.8), (10.0, 0.2, 0.05), (200.0, 1.0, 2.5)]:
-    alpha = (lam_s - 2.0) / 2.0
+    alpha = lam_s / 2.0
     beta = lam_s * s2bar / 2.0
     code = (alpha * np.log(beta) - gammaln(alpha)
             - (alpha + 1.0) * np.log(sp2) - beta / sp2)
@@ -51,13 +52,49 @@ for lam_s, s2bar, sp2 in [(108.0, 0.5, 0.8), (10.0, 0.2, 0.05), (200.0, 1.0, 2.5
           f"code={code:>12.6f}  invgamma.logpdf={ref:>12.6f}  diff={abs(code-ref):.2e}")
     check(f"matches invgamma(shape={alpha}, scale={beta})", abs(code - ref) < 1e-9)
 
-alpha, beta, sp2 = (108.0 - 2) / 2, 108.0 * 0.5 / 2, 0.8
+alpha, beta, sp2 = 108.0 / 2, 108.0 * 0.5 / 2, 0.8
 no_jacobian = alpha * np.log(beta) - gammaln(alpha) - (alpha - 1.0) * np.log(sp2) - beta / sp2
 print(f"\n   dropping the Jacobian gives {no_jacobian:.6f} vs {float(invgamma.logpdf(sp2, alpha, scale=beta)):.6f}")
 print("   -> the code evaluates a density in sigma^2, which is the inverse-Gamma")
 print("      prior eq:prior1 of sections/02_model.tex")
 check("code PLL is NOT the Jacobian-free version",
       abs(no_jacobian - float(invgamma.logpdf(sp2, alpha, scale=beta))) > 1e-6)
+
+print()
+print("=" * 76)
+print("2b. the dispersion prior is written in one strength, and lambda_s -> 0")
+print("    gives the scale-invariant prior phi^-1")
+print("=" * 76)
+# The density on phi is InvGamma(lambda_s/2, lambda_s*phi0/2); the penalty is
+# -2 log f.  At lambda_s -> 0 both parameters vanish and the density tends to
+# phi^-1, whose penalty 2 log phi is what the limit of the family must return.
+phi0 = 0.5
+for lam_s in [1e-1, 1e-3, 1e-6, 1e-9]:
+    a, b = lam_s / 2.0, lam_s * phi0 / 2.0
+    pen = -2.0 * (a * np.log(b) - gammaln(a) - (a + 1.0) * np.log(sp2) - b / sp2)
+    print(f"   lambda_s={lam_s:>8.0e}  -2 log f(phi=0.8)={pen:>9.4f}  "
+          f"2 log phi + c={2 * np.log(sp2):>7.4f}  (c={pen - 2 * np.log(sp2):>10.4f})")
+a, b = 1e-9 / 2.0, 1e-9 * phi0 / 2.0
+pen_lo = -2.0 * (a * np.log(b) - gammaln(a) - (a + 1.0) * np.log(sp2) - b / sp2)
+# Compare against a second phi to show the constant is phi-free.
+pen_lo2 = -2.0 * (a * np.log(b) - gammaln(a) - (a + 1.0) * np.log(2.0) - b / 2.0)
+check("at lambda_s=1e-9 the penalty difference between two phi equals 2 log of their ratio",
+      abs((pen_lo - pen_lo2) - 2.0 * (np.log(sp2) - np.log(2.0))) < 1e-6)
+modes = []
+for lam in np.logspace(-3, 3, 13):
+    aa, bb = lam / 2.0, lam * phi0 / 2.0
+    modes.append((bb / (aa + 1.0)) - lam * phi0 / (lam + 2.0))
+check("the mode is lambda_s*phi0/(lambda_s+2), which tends to phi0 from below",
+      max(abs(m) for m in modes) < 1e-12,
+      f"(largest deviation {max(abs(m) for m in modes):.2e})")
+below = [lam * phi0 / (lam + 2.0) for lam in np.logspace(-3, 3, 13)]
+check("the mode never exceeds phi0 and closes on it as lambda_s grows",
+      all(m < phi0 for m in below) and below[-1] > 0.99 * phi0,
+      f"(smallest {below[0]:.4f}, largest {below[-1]:.4f}, phi0 {phi0})")
+print("   -> the prior family is InvGamma(lambda_s/2, lambda_s*phi0/2): one strength,")
+print("      one scale, with the non-informative case as its limit rather than")
+print("      outside it.  A separate parameter (lambda_s - 2) would move the")
+print("      strength away from the published eq:prior1.")
 
 print()
 print("=" * 76)
@@ -75,9 +112,9 @@ for A, n_eff, lam_s, SS, SSU in [(2, 5401, 108.0, 100.0, 0.0),
                                  (10, 30, 0.6, 12.0, 0.4)]:
     d = A - 1
     s2bar = 0.5
-    alpha = (lam_s - 2.0) / 2.0
+    alpha = lam_s / 2.0
     beta = lam_s * s2bar / 2.0
-    closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + d)
+    closed = (SS + SSU + lam_s * s2bar) / (n_eff + lam_s + 2.0 + d)
 
     grad = (-0.5 * (n_eff + d) / closed
             + (SS + SSU) / (2.0 * closed ** 2)
@@ -108,13 +145,13 @@ print("4. aggregate ranking: expected utility, not a vote score")
 print("=" * 76)
 LAB = ["BEV", "PHEV", "REEV", "ICEV"]
 W = np.array([
-    [0.4873485184590911, 0.24785860575773244, 0.17345053406765415, 0.09134234171552226],
-    [0.9999999998480964, 4.139519556101162e-11, 1.0506031612582586e-11, 1.0000230260410934e-10],
-    [0.09086025461190401, 0.4074870027660522, 0.39698678206075183, 0.10466596056129206],
-    [0.10053462225970854, 0.13627269214855534, 0.3316377366205375, 0.43155494897119856],
+    [0.48746562416654876, 0.24831471480888193, 0.17291524546981799, 0.09130441554751245],
+    [0.99999999984848710, 4.111843651851059e-11, 1.0392161788702088e-11, 1.0000230260414840e-10],
+    [0.10058533980272644, 0.13622706284967825, 0.33152089611182883, 0.43166670123576650],
+    [0.09077519739440112, 0.40647662648766858, 0.39833819403220472, 0.10440998208572555],
 ])
-PI = np.array([0.37237417147496743, 0.000539782896867043,
-               0.25234737997290985, 0.37473866565525576])
+PI = np.array([0.3721368125778466, 0.00054534455592411,
+               0.37501627879612803, 0.25230156407010135])
 PRINTED = np.array([0.054, 0.282, 0.475, 0.000])
 
 u_bar = expected_utility(W, PI)
@@ -159,8 +196,9 @@ print()
 print("=" * 76)
 print("6. synthetic data: noise variance lives on the log-odds scale")
 print("=" * 76)
-sys.path.insert(0, str(ROOT / "experiments" / "simulation"))
-from _common import generate_synthetic_pairs, priority_vector_from_logratios  # noqa: E402
+sys.path.insert(0, str(ROOT / "experiments"))
+from common.generate import generate_synthetic_pairs            # noqa: E402
+from common.metrics import priority_vector_from_logratios      # noqa: E402
 
 u_true = np.array([[2.0, 1.0, 0.5]])
 w_true = priority_vector_from_logratios(u_true)

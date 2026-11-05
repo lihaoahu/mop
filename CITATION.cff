@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "Mixture of Preferences: identification and a scalable estimator for pairwise comparisons"
+message: "If you use this code, please cite the paper."
+authors:
+  - family-names: Li
+    given-names: Hao
+    email: lihaoahu@126.com
+version: 0.1.0
+date-released: 2026-11-05
+license: MIT

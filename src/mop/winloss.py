@@ -1,10 +1,13 @@
-"""Win/loss observation models for the mixture of preferences."""
+"""Win/loss observation family: binomial responses with or without a free dispersion."""
+
+
 from __future__ import annotations
 
 import numpy as np
 from scipy.optimize import minimize
 from scipy.special import expit, gammaln
 
+from . import criteria as _criteria
 from .initialization import binomial_deviance_residuals
 from .mixture_of_priorities import MixtureOfPriorities, Priority
 from .pairwise_comparison import comparisons2regression
@@ -16,13 +19,13 @@ _ETA_CLIP = 30.0
 
 
 def binom_logpdf(y, eta, omega=1.0):
-    """Binomial log-density of a proportion ``y = m / n``, up to an eta-free term."""
+    """Binomial log-density of a proportion ``y = m / n``, up to a term that does not involve ``eta``."""
     eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
     return omega * (y * eta - np.logaddexp(0.0, eta))
 
 
 def dlogpdf_deta(y, eta, omega=1.0):
-    """``d/d eta`` of :func:`binom_logpdf`, i.e. ``omega * (y - logistic(eta))``."""
+    """Derivative of :func:`binom_logpdf` with respect to ``eta``, i.e. ``omega * (y - logistic(eta))``."""
     eta = np.clip(eta, -_ETA_CLIP, _ETA_CLIP)
     return omega * (y - expit(eta))
 
@@ -47,7 +50,7 @@ def e_gamma_winloss(X, y, u, mp, omega=None):
 
 
 def _fit_utility_logistic(X, y, w, u_bar, lambda_u, u_init=None):
-    """Maximise ``sum_k w_k [y_k eta_k - log(1 + exp(eta_k))] - (lambda_u/2)||u - u_bar||^2``."""
+    """Maximise the weighted binomial log-likelihood of one component's utilities, with an L2 penalty."""
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     w = np.asarray(w, dtype=np.float64)
@@ -70,7 +73,7 @@ def _fit_utility_logistic(X, y, w, u_bar, lambda_u, u_init=None):
 
 
 def m_step_winloss(X, y, gkc, u_bar, lambda_u, omega=None, u_init=None):
-    """One M-step: re-fit every component's utilities under the new allocations."""
+    """One M step: re-fit every component's utilities under the current allocation."""
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     nJ, nP = gkc.shape
@@ -93,7 +96,7 @@ def m_step_winloss(X, y, gkc, u_bar, lambda_u, omega=None, u_init=None):
 
 
 def _seed_winloss(X, y, nP, omega, lambda_u, u_bar):
-    """Starting values for ``P`` components: one pooled fit plus K-ridge seeding."""
+    """Starting values for ``P`` components: one pooled fit plus K-ridge seeds."""
     nJ, nA_minus_1 = X.shape
     omega = np.asarray(omega, dtype=np.float64)
 
@@ -114,7 +117,7 @@ def _seed_winloss(X, y, nP, omega, lambda_u, u_bar):
 
 
 def _sign_split_seed(X, y, nP, omega, lambda_u, u_bar):
-    """Seed ``nP`` components by the sign of each judgment's residual under the pooled fit."""
+    """Seed components by the sign of each judgment's residual under the pooled fit."""
     nJ, nA_minus_1 = X.shape
     omega = np.asarray(omega, dtype=np.float64)
 
@@ -132,7 +135,7 @@ def _sign_split_seed(X, y, nP, omega, lambda_u, u_bar):
 
 
 def _mixture_weights(gkc, omega, lambda_pi):
-    """The Dirichlet-mode update of ``eq:pi_general``."""
+    """Dirichlet-mode update of the weights."""
     nP = gkc.shape[1]
     sum_w = float(np.sum(omega))
     mp = (omega @ gkc + lambda_pi - 1.0) / (sum_w + lambda_pi * nP - nP)
@@ -142,7 +145,7 @@ def _mixture_weights(gkc, omega, lambda_pi):
 
 
 def penalized_log_posterior(X, y, u, mp, lambda_u, lambda_pi, u_bar=None, omega=None):
-    """Penalized log-posterior of the win/loss mixture."""
+    """Penalised log-posterior of the win/loss mixture."""
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     u = np.atleast_2d(np.asarray(u, dtype=np.float64))
@@ -178,39 +181,7 @@ def penalized_log_posterior(X, y, u, mp, lambda_u, lambda_pi, u_bar=None, omega=
 def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
                 omega=None, u_init=None, mp_init=None, max_iter=2000, tol=1e-5,
                 verbose=False):
-    """EM for the win/loss family, mirroring :func:`mop.inference.mop`.
-
-    Args:
-        pcvector: comparisons whose ``judgment`` is the outcome: ``1`` if
-            ``former_id`` was preferred, ``0`` otherwise, or the proportion for a
-            repeated comparison.
-        nP: number of mixture components.
-        lambda_u: precision of the Normal prior on ``u_p``.
-        lambda_pi: Dirichlet concentration of the prior on ``pi``.
-        u_bar: prior mean ``u_0`` of the utilities, shape ``(A-1,)`` or
-            ``(nP, A-1)``.
-        omega: observation weight ``omega_k`` per comparison, length ``nJ``.
-            ``n_k`` for a repeated comparison, ones for binary choices. It is
-            used as given and is not rescaled: ``n_k`` is the number of trials
-            behind judgment ``k``, and dividing it out would change the model,
-            because ``phi`` is fixed at one here and cannot absorb the scale.
-        u_init, mp_init: optional starting values.
-        max_iter, tol: iteration cap and relative tolerance on the penalized
-            log-posterior, using the same normalisation as
-            :func:`mop.inference.mop`. The defaults were set from measurement on
-            the SUSHI win/loss data rather than by eye: there, ``tol=1e-10``
-            needs more than 700 iterations and, at ``P = 3``, thousands without
-            reaching it, while the fitted quantities are stable well before that.
-            A caller who wants a fully converged fit should lower ``tol`` and
-            raise ``max_iter`` and check ``model.converged``.
-
-    Returns:
-        :class:`~mop.mixture_of_priorities.MixtureOfPriorities` whose components
-        carry ``inconsistency_level = 1``, since ``phi_p`` is fixed at one for
-        this family. ``model.converged`` and ``model.n_iter`` report whether the
-        iteration actually reached ``tol``; a fit that did not is approximate and
-        should be reported as such.
-    """
+    """EM for the win/loss family, mirroring :func:`mop.inference.fit_mixture`."""
     nJ = len(pcvector)
     X, y, _ = comparisons2regression(pcvector, [float])
     X = np.asarray(X, dtype=np.float64)
@@ -223,9 +194,9 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
         omega_eff = np.asarray(omega, dtype=np.float64).ravel()
         if omega_eff.size != nJ:
             raise ValueError(
-                f"omega 长度({omega_eff.size})与判断数({nJ})不一致")
+                f"omega has {omega_eff.size} entries, expected one per judgment ({nJ})")
         if np.any(omega_eff <= 0):
-            raise ValueError("omega 必须为正")
+            raise ValueError("omega must be positive")
 
     if np.any(y < 0.0) or np.any(y > 1.0):
         raise ValueError(
@@ -330,7 +301,7 @@ def fit_winloss(pcvector, nP, lambda_u=1e-6, lambda_pi=1.0, u_bar=None,
 
 
 def log_likelihood(X, y, u, mp, omega=None):
-    """Observed-data log-likelihood of the fitted win/loss mixture."""
+    """Observed-data log-likelihood of the fitted mixture."""
     X = np.asarray(X, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
     u = np.atleast_2d(np.asarray(u, dtype=np.float64))
@@ -346,7 +317,7 @@ def log_likelihood(X, y, u, mp, omega=None):
 
 
 def log_likelihood_from_pc(pcvector, model, omega=None):
-    """Observed-data log-likelihood of a fitted model, from the comparisons."""
+    """Observed-data log-likelihood, from the comparisons."""
     X, y, _ = comparisons2regression(pcvector, [float])
     nA = X.shape[1] + 1
     u = np.array([np.log(model[p].priority_vector[:nA - 1]
@@ -355,8 +326,9 @@ def log_likelihood_from_pc(pcvector, model, omega=None):
     return log_likelihood(X, y, u, model.mixture_probabilities, omega)
 
 
-def pbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None):
-    """Penalized BIC of ``eq:pbic``, for the win/loss family."""
+def pbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None,
+         profile_utilities=True):
+    """Penalised BIC for the win/loss family."""
     X, y, _ = comparisons2regression(pcvector, [float])
     nA = X.shape[1] + 1
     nP = len(model.mixture_probabilities)
@@ -367,30 +339,67 @@ def pbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None):
         omega_eff = np.asarray(omega, dtype=np.float64).ravel()
         if omega_eff.size != X.shape[0]:
             raise ValueError(
-                f"omega 长度({omega_eff.size})与判断数({X.shape[0]})不一致")
+                f"omega has {omega_eff.size} entries, expected one per judgment ({X.shape[0]})")
         if np.any(omega_eff <= 0):
-            raise ValueError("omega 必须为正")
+            raise ValueError("omega must be positive")
 
     u = np.array([np.log(model[p].priority_vector[:nA - 1]
                          / model[p].priority_vector[nA - 1])
                   for p in range(nP)])
     pll = penalized_log_posterior(X, y, u, model.mixture_probabilities,
                                   lambda_u, lambda_pi, u_bar, omega_eff)
-    df = (nA - 1) * nP + 2 * nP - 1
-    return -2.0 * pll + np.log(float(np.sum(omega_eff))) * df
+    df = _criteria.degrees_of_freedom(nA, nP, phi_free=False)
+    u_log_prior = (_criteria.log_prior_utilities(u, 1.0, lambda_u, u_bar)
+                   if profile_utilities else 0.0)
+    return _criteria.pbic(pll, float(np.sum(omega_eff)), df, u_log_prior)
+
+
+def lbic(pcvector, model, lambda_u=1e-6, lambda_pi=1.0, u_bar=None, omega=None):
+    """Laplace approximation of the marginal likelihood for the win/loss family."""
+    from .general_fit import BinomialResponse
+    from .laplace import ln_det_hessian
+
+    X, y, _ = comparisons2regression(pcvector, [float])
+    nA = X.shape[1] + 1
+    nP = len(model.mixture_probabilities)
+
+    if omega is None:
+        omega_eff = np.ones(X.shape[0])
+    else:
+        omega_eff = np.asarray(omega, dtype=np.float64).ravel()
+        if omega_eff.size != X.shape[0]:
+            raise ValueError(
+                f"omega has {omega_eff.size} entries, expected one per judgment ({X.shape[0]})")
+        if np.any(omega_eff <= 0):
+            raise ValueError("omega must be positive")
+
+    u = np.array([np.log(model[p].priority_vector[:nA - 1]
+                         / model[p].priority_vector[nA - 1])
+                  for p in range(nP)])
+    pll = penalized_log_posterior(X, y, u, model.mixture_probabilities,
+                                  lambda_u, lambda_pi, u_bar, omega_eff)
+    df = _criteria.degrees_of_freedom(nA, nP, phi_free=False)
+    lnH = ln_det_hessian(X, y, u, np.ones(nP), model.mixture_probabilities,
+                         BinomialResponse(), omega=omega_eff, u_bar=u_bar,
+                         lambda_u=lambda_u, lambda_pi=lambda_pi)
+    return _criteria.lbic(pll, lnH, df)
 
 
 def select_n_components(pcvector, candidates=(1, 2, 3, 4, 5), omega=None,
                         lambda_u=1e-6, lambda_pi=1.0, **kwargs):
-    """Fit each candidate ``P`` and return the one with the lowest pBIC."""
+    """Fit each candidate count and return the one with the lowest criterion."""
+    from .general_fit import BinomialResponse, bic_map
+
     models, criteria = {}, {}
     for nP in candidates:
         try:
             model = fit_winloss(pcvector, nP, lambda_u=lambda_u,
                                 lambda_pi=lambda_pi, omega=omega, **kwargs)
             models[nP] = model
-            criteria[nP] = pbic(pcvector, model, lambda_u, lambda_pi,
-                                kwargs.get("u_bar"), omega)
+            criteria[nP] = bic_map(pcvector, model, BinomialResponse(),
+                                   omega=omega, lambda_u=lambda_u,
+                                   lambda_pi=lambda_pi,
+                                   u_bar=kwargs.get("u_bar"))
         except Exception as exc:                                  # noqa: BLE001
             models[nP] = None
             criteria[nP] = None

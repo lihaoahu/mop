@@ -1,144 +1,78 @@
-# MoP — Mixture of Preferences
+# Mixture of Preferences
 
-Bayesian mixture model for discovering latent preference components from
-pairwise comparison data.
+Code for *Separating Intrinsic Variability from Structural Inconsistency in Pairwise
+Comparisons: Identification and a Scalable Mixture-of-Preferences Estimator*.
 
-## Structure
+The model estimates, from pairwise comparisons, how many preference states a population
+occupies, what each one ranks, and how inconsistently each is executed. Intrinsic
+variability enters through the mixture, structural inconsistency through a
+component-specific dispersion. The dispersion is identified only where the variance
+function leaves it free, which is why the same code fits ratio judgments, subjective
+probability judgments and repeated choices under one selection criterion.
+
+## Layout
 
 ```
-src/mop/                      # Core library
-    mixture_of_priorities.py  # Model definition, Priority, expected_utility
-    inference.py              # closed-form EM for the Gaussian variants, pBIC
-    general_fit.py            # direct numerical MAP, for any observation family
-    winloss.py                # binomial family: EM with a numerically solved M-step
-    pairwise_comparison.py    # Data representation, design matrix
-    initialization.py         # K-Ridge from-scratch initializer (deterministic), and the GLM/IRLS variant
-    decision.py               # Decision-theoretic ranking extraction
-    visualization.py          # Ternary plot, priority bar charts
+src/mop/                   the model
+    pairwise_comparison.py     judgments, design matrix
+    mixture_of_priorities.py   components, expected utility
+    inference.py               closed-form EM, Gaussian variants
+    winloss.py                 binomial family
+    general_fit.py             direct MAP, any observation family
+    criteria.py                BIC and the profiled variant
+    initialization.py          K-Ridge start
+    laplace.py                 analytic curvature, Newton polish
 
-experiments/
-    case_study/               # Section 3.2: Chinese EV energy type preferences
-        energy_pairs.jsonl    # the filtered corpus: 2,328 items (1,925 text, 403 video)
-        mop_results.json      # SUPERSEDED: the 6-11 artefact, lambda_u=0.1, lambda_pi=30,
-                              # n=5408; no code reads it (_common and step7_analyze
-                              # both import the path constant and neither uses it)
-        step7_analyze.py      # MoP fitting + model selection, all subsets
-        _gen_tables.py        # LaTeX for Tables 3, 5, 6 and 8
-        _plot_pbic.py         # pBIC against P (figure)
-        _plot_dim_distribution.py    # dimension share donut (figure)
-        _paper_dump.py        # full result dump, for inspection
-
-    simulation/               # Section 3.1.1: controlled simulations
-        step1_simulation.py   # cancellation, general, noise scenarios
-        step2_holdout.py      # SUPERSEDED: oracle selection, see the note below
-        step3_report.py       # text summary of the above
-        step4_revelatory.py   # log-likelihood gain, component count
-        step5_holdout.py      # 5-fold CV, marginal log-likelihood (as reported)
-        step6_binomial.py     # binomial protocol: recovery, and a beta-binomial baseline
-
-    phi_recovery.py           # dispersion recovery on synthetic Gaussian data
-    protocol_identifiability.py  # curvature of the likelihood in phi, per protocol
-    selection.py              # unified model selection, free and fixed dispersion
-
-tests/
-    audit_parameterisation.py # verifies every distribution convention in use
-    check_general_fit.py      # numerical route vs closed-form EM, on both families
+experiments/               one stage per artifact; see experiments/README.md
+    validation/                simulation studies (Section 3.1)
+    case_study/                the application (Section 3.2)
+    common/                    shared fitting, generation, metrics, parallelism
+    results/                   the JSON each stage writes
+tests/                     criterion identities, scoring rules, cross-checks
+PARAMETERISATION.md        distribution conventions, and how they are verified
 ```
 
-`step2_holdout.py` writes `holdout_results.json`. Its MoP mean absolute error is
-0.0764 against its own single-component baseline of 0.2456; the paper reports
-0.2462 against 0.2456, from `step5_holdout.py`. Those are not two estimates of
-one quantity: step2 scores a held-out comparison with whichever component
-predicts it best, which reads the label it is supposed to predict, so its MoP
-column is an oracle selection rather than a forecast and its apparent advantage
-is the oracle at work (step5's own docstring says so). Recomputing the paper's
-holdout numbers from step2's file gives different values, which is why the file
-is marked rather than merely unused.
-
-The dimension-balanced bootstrap is gone, together with its script and its two result
-files. The manuscript stopped reporting it: the controlled simulations establish
-recovery, so a resampling stability check of the case-study count answered a question
-the simulations already answer. One file here is still kept for the record and read by
-nothing -- `mop_results.json`, the 6-11 artefact described above -- and
-`regenwetter_newinit.txt` at the repository root is the log of an external validation
-removed in 73466ff.
-
-## Parameterisation
-
-Distribution parameters differ across libraries (`scale` is a standard
-deviation in `scipy.stats.norm`, "Gamma" may be shape-rate or shape-scale
-elsewhere). Every convention this project relies on is documented in
-[`PARAMETERISATION.md`](PARAMETERISATION.md) and verified numerically by
-`tests/audit_parameterisation.py`, which exits non-zero if any of them fails to
-reproduce.
-
-## Requirements
-
-Python 3.10+, dependencies in `pyproject.toml`. Install with:
+## Install
 
 ```bash
-uv sync
+uv sync                      # or: pip install -e .
 ```
 
-The `collection` extra carries the crawling and extraction dependencies needed
-only to rebuild the corpus from the platform; the analysis scripts do not
-import them, so the default environment is small.
+Python 3.10 or newer; numpy, scipy and scikit-learn are the only runtime dependencies.
 
-## Reproducing results
-
-Every committed result file and printed table reproduces byte for byte from the
-scripts below; wall-clock timings are printed but deliberately not stored, which
-is what makes that true.
-
-One exception is worth knowing before re-capturing it.
-`experiments/case_study/analysis_output.txt` is the capture of
-`step7_analyze.py`'s stdout, and how it is captured matters: the redirect has to
-pass the bytes through. With `PYTHONIOENCODING=utf-8` and a shell redirect that
-does not re-encode, the file comes back identical (4019 bytes, verified with
-`cmd /c "... > analysis_output.txt"`); PowerShell's `>` decodes the child's
-output and writes UTF-16, so the numbers are the same but the file is not.
-
-### Case study (Section 3.2)
+## Reproduce
 
 ```bash
-uv run python experiments/case_study/step7_analyze.py       # fits, all subsets
-uv run python experiments/case_study/_plot_pbic.py          # pBIC figure
-uv run python experiments/case_study/_plot_dim_distribution.py
-uv run python experiments/case_study/_gen_tables.py --json case_study_tables.json
+python experiments/run_all.py --list         # the stages
+python experiments/run_all.py                # all of them, about 30 minutes
+python experiments/run_all.py --only holdout # one stage
+python experiments/run_all.py --quick        # smoke test, numbers differ
 ```
 
-`step7_analyze.py` prints the tables: for every fit — overall, the seven
-dimensions and both years — it reports each component's mixture weight, its
-inconsistency level and its priority vector, then the aggregate. It is the
-source of Tables 5, 6 and 8, so the values are read off its output rather than
-computed a second time; the committed `analysis_output.txt` is that capture.
-`_gen_tables.py` emits the same fits as LaTeX (Tables 3, 5, 6 and 8), reading
-`run_mop` from `step7_analyze.py`, and caches them in `case_study_tables.json`.
+Each stage writes one JSON under `experiments/results/`. The run ends by comparing
+every printed table cell against its artifact and by running the test suite, so a green
+run means the manuscript and the artifacts agree. Replicates draw their own seeds, so the
+results do not depend on the number of workers.
 
-The two plotting scripts read the same fits and write into `manuscript/figures/`.
-
-### Controlled simulations (Section 3.1.1)
+## Tests
 
 ```bash
-uv run python experiments/simulation/step1_simulation.py --trials 500
-uv run python experiments/simulation/step2_holdout.py
-uv run python experiments/simulation/step5_holdout.py       # as reported
-uv run python experiments/simulation/step4_revelatory.py
-uv run python experiments/simulation/step3_report.py
-uv run python experiments/simulation/step6_binomial.py      # 100 replicates, both conditions
-uv run python experiments/phi_recovery.py                   # 6 replicates, 2,000 comparisons
-uv run python experiments/protocol_identifiability.py
+python -m pytest tests -q                # 16 tests
+python tests/audit_parameterisation.py   # distribution conventions
+python tests/check_general_fit.py        # numerical MAP against the closed-form EM
+python tests/check_curvature_fd.py       # the proposition's second derivative
+python tests/audit_laplace.py            # analytic curvature against finite differences
 ```
 
-`phi_recovery.py` defaults to the configuration behind the ratios quoted in Section 3.1 --
-six replicates per setting and 2,000 comparisons -- so a bare run reproduces them.
+## Data
 
-The 500-trial simulation runs for roughly 35 minutes at the stopping tolerance
-in use. `step2_holdout.py` reports point-prediction metrics and is not the
-source of the holdout table, which comes from `step5_holdout.py`.
+`experiments/case_study/energy_pairs.jsonl` holds the corpus: 5,401 cross-energy-type
+judgments on four vehicle energy types, extracted from platform discourse on Dongchedi.
+Each line records the two alternatives, the direction, the judged probability, the
+evaluation dimension, the article it came from and a verbatim citation. The crawler and
+the extraction prompts are documented in the paper's supplement; the extraction itself
+needs the LLM API and is not part of this package.
 
-### Self-checks
+## Licence
 
-```bash
-uv run python tests/audit_parameterisation.py
-```
+MIT, see `LICENSE`.

@@ -1,0 +1,30 @@
+{
+  "experiment": {
+    "name": "simulation",
+    "description": "Validation of Section 3.1: cancellation, random mixtures, and a homogeneous population with noise"
+  },
+  "simulation": {
+    "_note": "One design for every condition of Table 1 and of the dispersion curve: four alternatives, a Gaussian response on the log-odds scale with dispersion sigma2, n_comparisons judgments per replicate. The stopping rule and the priors are not here; they live in config/mop_params.json.",
+    "n_trials": 500,
+    "n_alternatives": 4,
+    "sigma2": 0.05,
+    "n_comparisons": 500,
+    "scenarios": {
+      "cancellation": {
+        "description": "Opposite preferences cancel: the one-component model reads indifference, the mixture recovers both"
+      },
+      "general": {
+        "description": "Random ground truth; the mixture is never worse and is better where the truth has more than one component",
+        "K_values": [
+          1,
+          2,
+          4
+        ]
+      },
+      "noise": {
+        "description": "A fifth of the judgments are uniform noise; the mixture isolates them in a low-weight component",
+        "noise_fraction": 0.2
+      }
+    }
+  }
+}

@@ -1,0 +1,118 @@
+{
+    "experiment": {
+        "name": "case_study",
+        "description": "Chinese consumer vehicle energy-type preferences: a two-stage LLM pipeline produces the corpus, the mixture of Section 2 analyses it"
+    },
+
+    "data": {
+        "platform": "dongchedi",
+        "keywords": ["燃油", "电动", "增程", "插混", "纯电"],
+        "total_retrieved": 6705,
+        "page_types": { "text_article": 4981, "video_article": 1724 },
+        "years_covered": ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", "2026"]
+    },
+
+    "_note": "Sections below this line document how the corpus was produced. No script in the repository reads them: the analysis starts at case_study/energy_pairs.jsonl. The three keys the code does read are energy_type_mapping, canonical_types and stage2_llm.dimensions, through common/paths.py.",
+
+    "stage1_transformer": {
+        "model_name": "hfl/chinese-roberta-wwm-ext",
+        "model_path": "models/classifier-exp5-v2",
+        "model_path_note": "a local artifact of the extraction pipeline, not part of this repository",
+        "architecture": {
+            "encoder": "RoBERTa-wwm-ext (12 layers, 768 hidden, Chinese whole-word masking)",
+            "head": "Dropout(0.1) → Linear(768→64) → GELU → Dropout(0.1) → Linear(64→1) → sigmoid",
+            "input": "title [SEP] content",
+            "max_length": 512
+        },
+        "training": {
+            "dataset": "training_data.jsonl",
+            "n_train": 2012,
+            "n_val": 252,
+            "n_test": 252,
+            "label_distribution": { "positive_pct": 59.2, "negative_pct": 40.8 },
+            "epochs": 5,
+            "learning_rate": 1e-5,
+            "batch_size": 8,
+            "optimizer": "AdamW",
+            "device": "cuda"
+        },
+        "inference": {
+            "batch_size": 64,
+            "threshold": 0.5
+        },
+        "evaluation": {
+            "threshold": 0.5,
+            "accuracy": 0.7262,
+            "precision": 0.6733,
+            "recall": 0.9784,
+            "f1": 0.7977,
+            "auc_roc": 0.8784
+        }
+    },
+
+    "stage2_llm": {
+        "model": "deepseek-v4-flash",
+        "api_url": "https://api.deepseek.com",
+        "response_format": "json_object",
+        "temperature": 0.0,
+        "detection_threshold": 0.0,
+        "workers": 8,
+        "max_content_length": 3000,
+        "energy_types": ["ice", "bev", "hev", "phev", "erev", "fcev"],
+        "dimensions": [
+            "cost",
+            "driving_experience",
+            "range",
+            "refueling_convenience",
+            "reliability",
+            "policy",
+            "other"
+        ],
+        "dimension_labels": {
+            "cost": "成本 — purchase price, fuel/charging cost, maintenance",
+            "driving_experience": "驾驶体验 — NVH, acceleration, engine noise, driving quality",
+            "range": "续航 — range capability, range anxiety, long-distance suitability",
+            "refueling_convenience": "补能便利 — charging/refueling speed, infrastructure, home charging",
+            "reliability": "可靠性 — technology maturity, durability, repair convenience",
+            "policy": "政策 — license plate, tax exemption, road access",
+            "other": "其他 — safety, smart features, design, brand, space"
+        },
+        "scoring_rubric": {
+            "description": "Fine-grained scores, 0.48–0.52 reserved for explicit ties",
+            "step": "0.05–0.10 per dimension advantage",
+            "range_0_00_0_10": "latter dominates across nearly all dimensions",
+            "range_0_15_0_30": "latter clearly better on most dimensions",
+            "range_0_35_0_45": "latter slightly better overall",
+            "range_0_48_0_52": "ONLY when article explicitly says tie/too close",
+            "range_0_55_0_65": "former slightly better overall",
+            "range_0_70_0_85": "former clearly better on most dimensions",
+            "range_0_90_1_00": "former dominates across nearly all dimensions"
+        }
+    },
+
+    "energy_type_mapping": {
+        "ice": "燃油",
+        "bev": "纯电",
+        "hev": "燃油",
+        "phev": "插混",
+        "erev": "增程",
+        "fcev": "氢能",
+        "燃油": "燃油",
+        "纯电": "纯电",
+        "混动": "燃油",
+        "插混": "插混",
+        "增程": "增程",
+        "油混": "燃油"
+    },
+
+    "canonical_types": ["纯电", "插混", "增程", "燃油"],
+
+    "files": {
+        "_note": "energy_pairs.jsonl is committed and is where the analysis starts. The rest are inputs of the extraction pipeline that produced it; a fresh checkout will not have them.",
+        "energy_pairs": "experiments/case_study/energy_pairs.jsonl",
+        "article_ids": "data/article_ids.jsonl",
+        "article_details": "data/article_details.jsonl",
+        "transcripts": "data/transcript/",
+        "training_data": "training_data.jsonl"
+    }
+}
