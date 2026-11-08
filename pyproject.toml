@@ -4,13 +4,22 @@ version = "0.1.0"
 description = "Mixture of Preferences: model, inference, and the case study of the paper"
 readme = "README.md"
 license = { file = "LICENSE" }
-authors = [{ name = "Hao Li", email = "lihaoahu@126.com" }]
+authors = [
+    { name = "Hao Li", email = "lihaoahu@126.com" },
+    { name = "Pan Zheng", email = "zhengpan_2021@163.com" },
+    { name = "Jie Wu", email = "jacky012@ustc.edu.cn" },
+    { name = "Ligang Zhou", email = "shuiqiaozlg@126.com" },
+]
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
     "scikit-learn",
 ]
+
+[project.urls]
+Homepage = "https://github.com/lihaoahu/mop"
+Repository = "https://github.com/lihaoahu/mop"
 
 [build-system]
 requires = ["hatchling"]

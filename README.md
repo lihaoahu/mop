@@ -3,6 +3,8 @@
 Code for *Separating Intrinsic Variability from Structural Inconsistency in Pairwise
 Comparisons: Identification and a Scalable Mixture-of-Preferences Estimator*.
 
+<https://github.com/lihaoahu/mop>
+
 The model estimates, from pairwise comparisons, how many preference states a population
 occupies, what each one ranks, and how inconsistently each is executed. Intrinsic
 variability enters through the mixture, structural inconsistency through a
@@ -35,6 +37,8 @@ PARAMETERISATION.md        distribution conventions, and how they are verified
 ## Install
 
 ```bash
+git clone https://github.com/lihaoahu/mop
+cd mop
 uv sync                      # or: pip install -e .
 ```
 
@@ -65,12 +69,28 @@ python tests/audit_laplace.py            # analytic curvature against finite dif
 
 ## Data
 
-`experiments/case_study/energy_pairs.jsonl` holds the corpus: 5,401 cross-energy-type
-judgments on four vehicle energy types, extracted from platform discourse on Dongchedi.
-Each line records the two alternatives, the direction, the judged probability, the
-evaluation dimension, the article it came from and a verbatim citation. The crawler and
-the extraction prompts are documented in the paper's supplement; the extraction itself
-needs the LLM API and is not part of this package.
+`experiments/case_study/energy_pairs.jsonl` holds the corpus: 2,328 articles and videos
+carrying 6,706 extracted comparisons, which the loader reduces to the 5,401
+cross-energy-type judgments on four vehicle energy types that the paper fits. Each line
+records one article and, under `comparison_pairs`, the judgments drawn from it: the two
+alternatives, the direction, the judged probability, the evaluation dimension and a
+verbatim citation. The crawler and the extraction prompts are documented in the paper's
+supplement; the extraction itself needs the LLM API and is not part of this package.
+
+## Citation
+
+Cite the paper, not the code; `CITATION.cff` carries the same entry.
+
+```bibtex
+@article{li2026separating,
+  title   = {Separating Intrinsic Variability from Structural Inconsistency in Pairwise
+             Comparisons: Identification and a Scalable Mixture-of-Preferences Estimator},
+  author  = {Li, Hao and Zheng, Pan and Wu, Jie and Zhou, Ligang},
+  journal = {INFORMS Journal on Computing},
+  year    = {2026},
+  note    = {Manuscript submitted for review}
+}
+```
 
 ## Licence
 
