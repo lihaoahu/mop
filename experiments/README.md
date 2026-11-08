@@ -47,8 +47,8 @@ Online supplement.
 | 25 of 35 dimension-fold comparisons | `case_study/holdout.py` | `results/holdout.json` |
 | the degenerate component (T2, S6) | `case_study/audit.py` | `results/audit.json` |
 
-Two figures are drawn from these artifacts and compute nothing themselves: the
-BIC curve reads `results/bic_curve.json` and the separability figure reads
+Two figures only read these artifacts: the BIC curve reads
+`results/bic_curve.json` and the separability figure reads
 `results/separability.json`. Both are typeset in the paper's source tree, which
 is not part of this package.
 
@@ -69,7 +69,7 @@ case_study/   Section 3.2: corpus, estimator, tables, bootstrap, holdout,
 results/      one JSON per stage; these are what the manuscript is checked against
 ```
 
-Three rules the code follows, each of which was a bug before it was a rule:
+Three rules the code follows:
 
 * **One estimator.** Every case-study number goes through `case_study/estimator.py`
   with the priors of `config/mop_params.json` and a K-Ridge start from scratch at
@@ -78,7 +78,7 @@ Three rules the code follows, each of which was a bug before it was a rule:
 * **Replicates are seeded individually**, `base + 1000003 * r`, so `--jobs 1` and
   `--jobs 14` produce the same artifact and a referee can rerun replicates 100–140.
 * **Artifacts carry no wall-clock time.** Fits are timed and printed, never stored,
-  which is what makes "byte for byte" true.
+  so two runs of a stage give identical files.
 
 ## When a number changes
 

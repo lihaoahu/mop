@@ -1,8 +1,8 @@
 """Gaussian log-ratio mixtures with the dispersion free, shared or pinned.
 
-The three restrictions differ only in how many dispersions are estimated; the
-likelihood, the prior and the criterion are the same, which is what makes the
-comparison in Section 3.2 meaningful.
+The three restrictions differ only in how many dispersions are estimated. The
+likelihood, the prior and the criterion are the same in all three, so the
+comparison in Section 3.2 is like for like.
 """
 
 from __future__ import annotations
