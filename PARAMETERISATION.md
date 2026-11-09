@@ -4,13 +4,7 @@ Statistical code fails quietly when the same symbol means different things in
 different libraries: `scale` is a standard deviation in `scipy.stats.norm` but
 a variance in some other toolkits, and "Gamma" is shape-rate in some places and
 shape-scale in others. This file records every convention the project depends
-on and how each one was verified. Re-run the audit at any time:
-
-```bash
-python tests/audit_parameterisation.py
-```
-
-It must print `ALL CONVENTIONS VERIFIED` and exit with status 0.
+on and where in the code each one is imposed.
 
 ## Summary
 
@@ -125,16 +119,11 @@ reader who drops it is fitting a different prior.
 The omission of `A - 1` is invisible at large `n`: for the case study the two
 denominators differ by about 0.15%, and refitting moves `pi` in the fourth
 decimal. Where a component's effective sample size is small -- `K = 1` fits,
-near-empty components, small-`A` simulation cells -- it is not.
-
-`tests/audit_parameterisation.py` checks the update against a numerical
-maximiser, and sweeps `A` across the test cases. It is worth recording why that
-sweep matters: the first two versions of this audit passed while the code was
-wrong, because the audit built its own objective function and reproduced the
-same omission. An audit that restates the implementation's assumption cannot
-test it. The section now varies `A`, which is the only parameter that exposes a
-missing `A - 1`, and its `closed form` line is the implementation's formula
-rather than a restatement of it.
+near-empty components, small-`A` simulation cells -- it is not. `A` is the
+parameter that exposes it, and it is the one to vary when the update is checked
+against a numerical maximiser: a check that builds its own objective function
+reproduces whatever the implementation assumed, so it agrees with a wrong
+update as readily as with a right one.
 
 ### 4. The dispersion is weakly identified, so its reported precision is limited
 
@@ -201,10 +190,10 @@ suppressing it.
 
 ### 6. The noninformative limit keeps two terms
 
-`tests/` and the appendix both used to state that MAP reduces to maximum
-likelihood as the priors flatten. That holds for the utility vectors and the
-mixture weights but not for the dispersion. Two factors of the posterior carry
-`phi_p` however weak the priors are:
+It is natural to expect MAP to reduce to maximum likelihood as the priors
+flatten. That holds for the utility vectors and the mixture weights but not for
+the dispersion. Two factors of the posterior carry `phi_p` however weak the
+priors are:
 
 - the normalising constant `|lambda_u^-1 phi_p I|^{-1/2}` of the conditional
   utility prior, which contributes `-(A-1)/2 * log phi_p` at every `lambda_u`,

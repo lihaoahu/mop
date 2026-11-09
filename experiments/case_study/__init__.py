@@ -10,6 +10,5 @@
 ``curvature``  the second derivative that identifies the dispersion
 ``claims``     the refit on the six named dimensions
 ``audit``      what the low-weight component is made of
-``tables_check``  every printed number against its artifact
 """
 

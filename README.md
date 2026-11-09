@@ -30,8 +30,7 @@ experiments/               one stage per artifact; see experiments/README.md
     case_study/                the application (Section 3.2)
     common/                    shared fitting, generation, metrics, parallelism
     results/                   the JSON each stage writes
-tests/                     criterion identities, scoring rules, cross-checks
-PARAMETERISATION.md        distribution conventions, and how they are verified
+PARAMETERISATION.md        distribution conventions the code relies on
 ```
 
 ## Install
@@ -53,19 +52,9 @@ python experiments/run_all.py --only holdout # one stage
 python experiments/run_all.py --quick        # smoke test, numbers differ
 ```
 
-Each stage writes one JSON under `experiments/results/`. The run ends by comparing
-every printed table cell against its artifact and by running the test suite, so a green
-run means the manuscript and the artifacts agree. Replicates draw their own seeds, so the
-results do not depend on the number of workers.
-
-## Tests
-
-```bash
-python -m pytest tests -q                # 16 tests
-python tests/audit_parameterisation.py   # distribution conventions
-python tests/check_general_fit.py        # numerical MAP against the closed-form EM
-python tests/audit_laplace.py            # analytic curvature against finite differences
-```
+Each stage writes one JSON under `experiments/results/`. Those files are what the paper
+reports from: every table cell and every number in the text is read off one of them.
+Replicates draw their own seeds, so the results do not depend on the number of workers.
 
 ## Data
 

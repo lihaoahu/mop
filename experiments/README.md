@@ -2,7 +2,8 @@
 
 Every number in the paper comes from this directory. One command regenerates
 all of them; each stage writes one artifact under `results/` and is named after
-what it produces, so a reader who wants to check one table runs one stage.
+what it produces, so a reader who wants the numbers behind one table runs one
+stage.
 
 ```bash
 python experiments/run_all.py --list          # the stages
@@ -11,11 +12,9 @@ python experiments/run_all.py --only holdout  # one table
 python experiments/run_all.py --quick         # smoke test; numbers differ
 ```
 
-The run needs the environment of `pyproject.toml` (`uv sync`). It ends by
-checking every table cell against its artifact, re-running the convention audit
-and the estimator cross-check in `tests/`, and running the test suite, so a green
-run means the manuscript and the artifacts agree as well as the artifacts
-reproducing.
+The run needs the environment of `pyproject.toml` (`uv sync`). Stages are
+independent and write only their own artifact, so a stage can be rerun on its
+own without disturbing the rest.
 
 ## What the paper reports, and where it comes from
 
@@ -52,11 +51,6 @@ Two figures only read these artifacts: the BIC curve reads
 `results/separability.json`. Both are typeset in the paper's source tree, which
 is not part of this package.
 
-`case_study/tables_check.py` reads the `.tex` files and the artifacts side by
-side and compares 317 numeric cells at the precision the tables print, plus
-relations between columns (the heaviest component, the holdout delta, and the
-count of dimension-fold comparisons the mixture wins).
-
 ## Layout
 
 ```
@@ -65,8 +59,8 @@ common/       paths, parameters, the reference EM, the P=1 model, metrics,
               synthetic data, replicate-level parallelism
 validation/   Section 3.1: recovery, separability, dispersion, binomial
 case_study/   Section 3.2: corpus, estimator, tables, bootstrap, holdout,
-              specification, curvature, audit, table check
-results/      one JSON per stage; these are what the manuscript is checked against
+              specification, curvature, claims, audit
+results/      one JSON per stage, and the numbers the paper reports
 ```
 
 Three rules the code follows:
@@ -82,9 +76,9 @@ Three rules the code follows:
 
 ## When a number changes
 
-Change it in the artifact's stage, rerun that stage, then run
-`python experiments/case_study/tables_check.py`. If a table cell disagrees with
-the artifact the check fails and names the cell; do not edit the artifact.
+Change it in the artifact's stage and rerun that stage. The other stages read
+the corpus and their own configuration only, so the edit does not propagate
+into an artifact that was not rerun.
 
 ## Not in this package
 
@@ -105,5 +99,4 @@ the prompts, so the extraction is documented even where it is not rerun.
 About half an hour on fourteen cores. `recovery` (500 replicates x 5
 conditions) is 17 minutes of it and `separability` (1,000 x 8 cells) five;
 `binomial` and `bootstrap` are a minute or two each, and every other stage is
-under a minute. The table check, the two audits and the test suite add ten
-seconds.
+under a minute.
