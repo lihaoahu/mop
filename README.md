@@ -30,7 +30,6 @@ experiments/               one stage per artifact; see experiments/README.md
     case_study/                the application (Section 3.2)
     common/                    shared fitting, generation, metrics, parallelism
     results/                   the JSON each stage writes
-PARAMETERISATION.md        distribution conventions the code relies on
 ```
 
 ## Install
