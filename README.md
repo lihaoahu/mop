@@ -66,21 +66,6 @@ a verbatim citation. The crawled page text and the comments are not redistribute
 crawler and the extraction prompts are documented in the paper's supplement; the
 extraction itself needs the LLM API and is not part of this package.
 
-## Citation
-
-Cite the paper, not the code.
-
-```bibtex
-@article{li2026separating,
-  title   = {Separating Intrinsic Variability from Structural Inconsistency in Pairwise
-             Comparisons: Identification and a Scalable Mixture-of-Preferences Estimator},
-  author  = {Li, Hao and Zheng, Pan and Wu, Jie and Zhou, Ligang},
-  journal = {INFORMS Journal on Computing},
-  year    = {2026},
-  note    = {Manuscript submitted for review}
-}
-```
-
 ## Licence
 
 MIT, see `LICENSE`.
