@@ -89,7 +89,11 @@ the artifact the check fails and names the cell; do not edit the artifact.
 ## Not in this package
 
 The corpus starts at `case_study/energy_pairs.jsonl`: 5,401 cross-energy-type
-judgments with their dimension labels, extracted from 2,328 items. The two stages
+judgments with their dimension labels, extracted from 2,328 items. A line holds
+the item's `article_id`, `url`, `title`, `page_type` and `publish_time`, and under
+`comparison_pairs` the judgments read from it: the two alternatives, their energy
+types, the dimension, the judged probability and the sentence the judgment came
+from. The crawled text and the comments are not redistributed. The two stages
 that produce it — the crawler and the classifier-plus-LLM extractor — are
 separate projects with their own dependencies and are not imported by anything
 here. `config/case_study.json` records their configuration and the classifier's

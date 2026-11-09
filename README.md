@@ -72,10 +72,11 @@ python tests/audit_laplace.py            # analytic curvature against finite dif
 `experiments/case_study/energy_pairs.jsonl` holds the corpus: 2,328 articles and videos
 carrying 6,706 extracted comparisons, which the loader reduces to the 5,401
 cross-energy-type judgments on four vehicle energy types that the paper fits. Each line
-records one article and, under `comparison_pairs`, the judgments drawn from it: the two
-alternatives, the direction, the judged probability, the evaluation dimension and a
-verbatim citation. The crawler and the extraction prompts are documented in the paper's
-supplement; the extraction itself needs the LLM API and is not part of this package.
+records one item's identity and, under `comparison_pairs`, the judgments drawn from it:
+the two alternatives, the direction, the judged probability, the evaluation dimension and
+a verbatim citation. The crawled page text and the comments are not redistributed. The
+crawler and the extraction prompts are documented in the paper's supplement; the
+extraction itself needs the LLM API and is not part of this package.
 
 ## Citation
 
