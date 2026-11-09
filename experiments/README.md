@@ -33,8 +33,7 @@ Main text. `T#` and `F#` are the table and figure numbers of the manuscript.
 | bootstrap 51.0 / 28.0 / 13.0 / 8.0 | `case_study/bootstrap.py` | `results/bootstrap.json` |
 | the count of 4 is a criterion's number | `case_study/dim_curves.py` | `results/dim_curves.json` |
 | curvature -18 to -1,626 | `case_study/curvature.py` | `results/curvature.json` |
-| 8 units of BIC, 18,347.8 pinned | `case_study/specification.py` | `results/specification.json` |
-| -0.050 on the six named dimensions | `case_study/claims.py` | `results/claims.json` |
+| -0.049 on the six named dimensions | `case_study/claims.py` | `results/claims.json` |
 
 Online supplement.
 
@@ -42,9 +41,9 @@ Online supplement.
 |---|---|---|
 | S3 holdout, log score and CRPS | `case_study/holdout.py` | `results/holdout.json` |
 | S4 retained gain, fold-level count | `case_study/holdout.py` | `results/holdout.json` |
-| S6 the two yearly fits | `case_study/fits.py` | `results/tables.json` |
+| S5 the two yearly fits | `case_study/fits.py` | `results/tables.json` |
 | 25 of 35 dimension-fold comparisons | `case_study/holdout.py` | `results/holdout.json` |
-| the degenerate component (T2, S6) | `case_study/audit.py` | `results/audit.json` |
+| the degenerate component (T2, S5) | `case_study/audit.py` | `results/audit.json` |
 
 Two figures only read these artifacts: the BIC curve reads
 `results/bic_curve.json` and the separability figure reads
