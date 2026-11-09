@@ -69,7 +69,7 @@ extraction itself needs the LLM API and is not part of this package.
 
 ## Citation
 
-Cite the paper, not the code; `CITATION.cff` carries the same entry.
+Cite the paper, not the code.
 
 ```bibtex
 @article{li2026separating,
