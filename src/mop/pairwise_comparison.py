@@ -74,7 +74,7 @@ def comparisons2regression(
 
     nJ = len(pcvector)
     d = np.array([pc.agent_id for pc in pcvector])
-    
+
     unique_agents = sorted(set(d))
     agent_to_idx = {agent: idx for idx, agent in enumerate(unique_agents)}
     nE = len(unique_agents)

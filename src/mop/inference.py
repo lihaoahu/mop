@@ -19,14 +19,14 @@ def e_gamma(X, y, u, sigma2, mp):
     """Posterior allocation of each judgment to each component."""
     means = X @ u.T
     stds = np.sqrt(sigma2)
-    
+
     log_probs = np.log(mp) + norm.logpdf(y[:, np.newaxis], loc=means, scale=stds)
-    
+
     max_vals = np.max(log_probs, axis=1, keepdims=True)
     gkc = np.exp(log_probs - max_vals)
     row_sums = np.maximum(np.sum(gkc, axis=1, keepdims=True), 1e-300)
     gkc = gkc / row_sums
-    
+
     return gkc
 
 
